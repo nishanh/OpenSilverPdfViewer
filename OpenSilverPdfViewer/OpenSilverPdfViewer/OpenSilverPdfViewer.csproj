@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <DefineSilverlight>true</DefineSilverlight>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenSilver" Version="3.2.0" />
+    <PackageReference Include="OpenSilver.Themes.Modern" Version="3.2.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </ApplicationDefinition>
+    <Page Include="MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="App.xaml.cs" />
+    <Compile Include="JSInterop\JSAsyncTaskRunner.cs" />
+    <Compile Include="JSInterop\PdfJsWrapper.cs" />
+    <Compile Include="MainPage.xaml.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="JSInterop\pdfJsInterop.js">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Data\compressed.tracemonkey-pldi-09.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\POH_Calidus_4.0_EN.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  
+  <Target Name="Copy Resources" AfterTargets="Build">
+    <Message Text="Copying sample pdfs wwwroot" Importance="high" />
+    <Copy SourceFiles="Data\POH_Calidus_4.0_EN.pdf" DestinationFolder="..\OpenSilverPdfViewer.Browser\wwwroot\Data" />
+    <Copy SourceFiles="Data\compressed.tracemonkey-pldi-09.pdf" DestinationFolder="..\OpenSilverPdfViewer.Browser\wwwroot\Data" />
+  </Target>
+
+</Project>

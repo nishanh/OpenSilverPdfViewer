@@ -1,0 +1,155 @@
+﻿let pdfjsLib;
+let libVersion;
+let cachedPdf;
+
+// ALL OpenSilver interop calls must include a C# callback function as the last parameter.
+// This is because OpenSilver does not support the consumption of JS promises.
+// The callback function is invoked when the promise is fulfilled.
+function loadPdfJs(callback) {
+    if (pdfjsLib == undefined) {
+        var promise = (async () => await loadPdfJsAsync())();
+        if (callback != undefined) {
+            promise.then((result) => callback(result));
+        }
+    }
+    else {
+        console.log("loadPdfJs() already called");
+        callback(pdfjsLib);
+    }
+}
+
+function getLibraryVersion(callback) {
+    if (libVersion == undefined) {
+        console.log("logLibraryVersion() begin");
+        var promise = (async () => await getLibraryVersionAsync())();
+        if (callback != undefined) {
+            promise.then((result) => callback(result));
+        }
+    }
+    else {
+        console.log("logLibraryVersion() already called");
+        callback(libVersion);
+    }
+}
+
+function loadPdfFile(pdfFilename, callback) {
+    console.log("loadPdfFile() begin: ", pdfFilename);
+    var promise = (async () => await loadPdfFileAsync(pdfFilename))();
+    if (callback != undefined) {
+        promise.then((result) => callback(result));
+    }
+}
+
+function loadPdfStream(pdfFileStream, callback) {
+    console.log("loadPdfStream() begin");
+    var promise = (async () => await loadPdfStreamAsync(pdfFileStream))();
+    if (callback != undefined) {
+        promise.then((result) => callback(result));
+    }
+}
+
+function renderPage(pageNumber, canvasId, callback) {
+    console.log("renderPage() begin: ", pageNumber, canvasId);
+    var promise = (async () => await renderPageAsync(pageNumber, canvasId))();
+    if (callback != undefined) {
+        promise.then((result) => callback(result));
+    }
+}
+
+function logToConsole(msg) {
+    console.log(msg);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// DO NOT call these from C# code. It won't work.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+async function loadPdfJsAsync() {
+    if (pdfjsLib == undefined) {
+        pdfjsLib = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@5.0.375/build/pdf.min.mjs');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.0.375/build/pdf.worker.min.mjs';
+    }
+}
+
+async function getLibraryVersionAsync() {
+    await loadPdfJsAsync();
+    const version = pdfjsLib.version
+    var versionFmt = `PDF.js version: ${version}`;
+    console.log(versionFmt);
+    libVersion = versionFmt;
+    return versionFmt;
+}
+
+// Load a PDF file from a URL
+async function loadPdfFileAsync(pdfFileName) {
+    await loadPdfJsAsync();
+
+    const loadingTask = pdfjsLib.getDocument(pdfFileName);
+    try {
+        const pdf = await loadingTask.promise;
+        console.log(`PDF loaded with ${pdf.numPages} pages`);
+        this.cachedPdf = pdf; // Cache the PDF object
+        return pdf.numPages; // Return the number of pages
+    }
+    catch (error) {
+        console.error('Error loading PDF:', error);
+        return -1; // Return -1 to indicate an error
+    }
+}
+
+// Load a PDF file from a base64 encoded string
+async function loadPdfStreamAsync(pdfFileStream) {
+    await loadPdfJsAsync();
+
+    const binaryString = atob(pdfFileStream);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    const loadingTask = pdfjsLib.getDocument(bytes);
+
+    try {
+        const pdf = await loadingTask.promise;
+        console.log(`PDF loaded with ${pdf.numPages} pages`);
+        this.cachedPdf = pdf; // Cache the PDF object
+        return pdf.numPages; // Return the number of pages
+    }
+    catch (error) {
+        console.error('Error loading PDF:', error);
+        return -1; // Return -1 to indicate an error
+    }
+}
+
+// Render a specific page from the cached PDF
+async function renderPageAsync(pageNumber, canvasId) {
+    if (!this.cachedPdf) {
+        console.error('No PDF loaded. Call loadPdfFile first.');
+        return -1; // Indicate an error
+    }
+
+    try {
+        const dpi = 96; // Set the desired DPI (dots per inch)
+        const scale = dpi / 72; // Calculate the scale factor based on the native PDF DPI
+
+        const page = await this.cachedPdf.getPage(pageNumber);
+        const viewport = page.getViewport({ scale });
+        const canvas = document.getElementById(canvasId);
+        const context = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const renderContext = {
+            canvasContext: context,
+            viewport: viewport
+        };
+        await page.render(renderContext).promise;
+        console.log(`Page ${pageNumber} rendered successfully`);
+        return pageNumber; // Return the rendered page number
+    }
+    catch (error) {
+        console.error(`Error rendering page ${pageNumber}:`, error);
+        return -1; // Indicate an error
+    }
+}
+
