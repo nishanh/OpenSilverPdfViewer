@@ -5,6 +5,8 @@ let cachedPdf;
 // All OpenSilver interop calls must include a C# callback function as the last parameter.
 // This is because OpenSilver does not support the consumption of JS promises.
 // The callback function is invoked when the promise is fulfilled.
+// The functions are separated into synchronous and asynchronous to avoid nesting promises for readability
+
 function loadPdfJs(callback) {
     if (pdfjsLib == undefined) {
         var promise = (async () => await loadPdfJsAsync())();
@@ -51,6 +53,36 @@ function loadPdfStream(pdfFileStream, callback) {
 function renderPage(pageNumber, canvasId, callback) {
     console.log("renderPage() begin: ", pageNumber, canvasId);
     var promise = (async () => await renderPageAsync(pageNumber, canvasId))();
+    if (callback != undefined) {
+        promise.then((result) => callback(result));
+    }
+}
+
+function getViewportSize(canvasId) {
+    var canvas = document.getElementById(canvasId);
+    if (canvas == null) {
+        console.error("Canvas not found");
+        return null;
+    }
+    var rect = canvas.getBoundingClientRect();
+    var viewportSize = {
+        width: rect.width,
+        height: rect.height
+    };
+    console.log("getViewportSize(): ", viewportSize.width, viewportSize.height);
+    return JSON.stringify(viewportSize);
+}
+function createCanvas(width, height) {
+    var canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.id = "pdfSourceCanvas";
+    return canvas;
+}
+
+function renderPageToViewport(pageNumber, canvasId, callback) {
+    console.log("renderPage() begin: ", pageNumber, canvasId);
+    var promise = (async () => await renderPageToViewportAsync(pageNumber, canvasId))();
     if (callback != undefined) {
         promise.then((result) => callback(result));
     }
@@ -121,6 +153,74 @@ async function loadPdfStreamAsync(pdfFileStream) {
     }
 }
 
+async function renderPageToViewportAsync(pageNumber, canvasId) {
+    if (!this.cachedPdf) {
+        console.error('No PDF loaded. Call loadPdfFile first.');
+        return -1; // Indicate an error
+    }
+    try {
+        // Set the render desired dpi.
+        // Higher values will result in better quality images, but reduce performance.
+        // Values that are not multiples of 72 may cause interpolation artifacts as it will be misaligned with
+        // native Pdf 72pt grid.
+        const dpi = 144; 
+        const scale = dpi / 72.0; // Calculate the scale factor based on the native PDF DPI
+
+        const page = await this.cachedPdf.getPage(pageNumber);
+        const contentView = page.getViewport({ scale });
+
+        // Create an unattached canvas element to render the PDF page onto
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = contentView.width;
+        canvas.height = contentView.height;
+
+        const renderContext = {
+            canvasContext: context,
+            viewport: contentView
+        };
+        await page.render(renderContext).promise;
+
+        //var dataUrl = canvas.toDataURL('image/png', 100);
+        //console.log("canvas.toDataURL: ", dataUrl);
+
+        var viewportCanvas = document.getElementById(canvasId);
+        var htmlPresenter = viewportCanvas.parentNode.parentNode; 
+        htmlPresenter.style.overflow = "hidden"; // Hide browser default. I do my own styled scrollbars in XAML
+
+        // Reset the default target canvas element size
+        var parentRect = htmlPresenter.getBoundingClientRect();
+        viewportCanvas.width = parentRect.width;
+        viewportCanvas.height = parentRect.height;
+
+        var fitToViewScale = Math.min(viewportCanvas.width / contentView.width, viewportCanvas.height / contentView.height);
+        var scaledWidth = contentView.width * fitToViewScale;
+        var scaledHeight = contentView.height * fitToViewScale;
+
+        var centerX = (viewportCanvas.width - scaledWidth) / 2;
+        var centerY = (viewportCanvas.height - scaledHeight) / 2;
+        const scrollX = 0;
+        const scrollY = 0;
+
+        var ctx = viewportCanvas.getContext('2d');
+        // ctx.drawImage(canvas, -scrollX, -scrollY, scaledWidth, scaledHeight);
+        ctx.drawImage(canvas, centerX, centerY, scaledWidth, scaledHeight);
+
+        console.log(`Page ${pageNumber} rendered successfully`);
+        console.log("displayScale: ", fitToViewScale);
+        console.log(`Source size: ${contentView.width} x ${contentView.height}`);
+        console.log(`Viewport size: ${viewportCanvas.width} x ${viewportCanvas.height}`);
+        console.log(`Scaled size: ${scaledWidth} x ${scaledHeight}`);
+        console.log(`Scroll offset: X: ${scrollX}, Y: ${scrollY}`);
+
+        return pageNumber; // Return the rendered page number
+    }
+    catch (error) {
+        console.error(`Error rendering page ${pageNumber}:`, error);
+        return -1; // Indicate an error
+    }
+}
+
 // Render a specific page from the cached PDF
 async function renderPageAsync(pageNumber, canvasId) {
     if (!this.cachedPdf) {
@@ -131,7 +231,7 @@ async function renderPageAsync(pageNumber, canvasId) {
     try {
         const dpi = 96; // Set the desired DPI (dots per inch)
         const scale = dpi / 72; // Calculate the scale factor based on the native PDF DPI
-
+        
         const page = await this.cachedPdf.getPage(pageNumber);
         const viewport = page.getViewport({ scale });
         const canvas = document.getElementById(canvasId);
@@ -145,6 +245,8 @@ async function renderPageAsync(pageNumber, canvasId) {
         };
         await page.render(renderContext).promise;
         console.log(`Page ${pageNumber} rendered successfully`);
+        console.log(`Canvas size: ${viewport.width} x ${viewport.height}`);
+        
         return pageNumber; // Return the rendered page number
     }
     catch (error) {

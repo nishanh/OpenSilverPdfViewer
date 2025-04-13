@@ -7,6 +7,16 @@ namespace OpenSilverPdfViewer.JSInterop
     public static class JSAsyncTaskRunner
     {
         // HACK: Convert JS promise to C# Task - kinda...
+        public static async Task RunJavaScriptAsync(string functionName, params object[] args)
+        {
+            (string jsFunc, object[] arguments) = FormatJSFunctionCall(functionName, args);
+
+            var taskCompletionSource = new TaskCompletionSource<object>();
+            arguments[arguments.Length - 1] = (Action)(() => taskCompletionSource.SetResult(null));
+
+            OpenSilver.Interop.ExecuteJavaScript(jsFunc, arguments);
+            await taskCompletionSource.Task;
+        }
         public static async Task<T> RunJavaScriptAsync<T>(string functionName, params object[] args)
         {
             (string jsFunc, object[] arguments) = FormatJSFunctionCall(functionName, args);
@@ -17,16 +27,6 @@ namespace OpenSilverPdfViewer.JSInterop
             OpenSilver.Interop.ExecuteJavaScript(jsFunc, arguments);
             await taskCompletionSource.Task;
             return taskCompletionSource.Task.Result;
-        }
-        public static async Task RunJavaScriptAsync(string functionName, params object[] args)
-        {
-            (string jsFunc, object[] arguments) = FormatJSFunctionCall(functionName, args);
-
-            var taskCompletionSource = new TaskCompletionSource<object>();
-            arguments[arguments.Length - 1] = (Action)(() => taskCompletionSource.SetResult(null));
-
-            OpenSilver.Interop.ExecuteJavaScript(jsFunc, arguments);
-            await taskCompletionSource.Task;
         }
         private static (string, object[]) FormatJSFunctionCall(string functionName, params object[] args)
         {

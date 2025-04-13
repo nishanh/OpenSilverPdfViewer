@@ -1,16 +1,98 @@
-﻿<Page x:Class="OpenSilverPdfViewer.MainPage"
-      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:local="clr-namespace:OpenSilverPdfViewer"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      mc:Ignorable="d"
-      Loaded="Page_Loaded"
-      Foreground="{DynamicResource Theme_TextBrush}">
-
-    <Grid Background="{DynamicResource Theme_BackgroundBrush}">
-        <TextBlock Text="Hello, World!" FontSize="23" Margin="32,32,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <Button Content="Click Me" Width="100" Height="50" Margin="32,80,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
-                Click="Button_Click"/>
+﻿<!--
+// Copyright (c) 2025 Nishan Hossepian. All rights reserved.              
+// Free to use, modify, and distribute under the terms of the MIT license.
+// See the LICENSE file in the project root for full license information.
+-->
+<Page 
+    x:Class="OpenSilverPdfViewer.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:OpenSilverPdfViewer"
+    xmlns:viewModel="clr-namespace:OpenSilverPdfViewer.ViewModels"
+    xmlns:conv="clr-namespace:OpenSilverPdfViewer.Converters"
+    xmlns:ctrls="clr-namespace:OpenSilverPdfViewer.Controls"
+    xmlns:native="clr-namespace:CSHTML5.Native.Html.Controls;assembly=OpenSilver"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Loaded="Page_Loaded"
+    Foreground="{DynamicResource Theme_TextBrush}">
+     
+    <Page.DataContext>
+        <viewModel:MainPageViewModel/>
+    </Page.DataContext>
+    
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/BrushStyles.xaml"/>
+                <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/SeparatorStyles.xaml"/>
+                <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/GridSplitterStyles.xaml"/>
+                <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/PanelCtrlStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <conv:BoolToEnabledConverterInvert x:Key="BoolToEnabledConverterInvert"/>
+        </ResourceDictionary>
+    </Page.Resources>
+    <Grid 
+        Background="{StaticResource CMSCtrlInsetBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <ctrls:PanelCtrl 
+                Margin="3,3,0,0" 
+                Title="Impose">
+                <StackPanel VerticalAlignment="Center">
+                    <Button 
+                        Width="100"
+                        Height="35"
+                        Content="Load Pdf"
+                        IsEnabled="{Binding IsPdfLoaded, Converter={StaticResource BoolToEnabledConverterInvert}}"
+                        Command="{Binding LoadPdfCommand}"/>
+                    <Button 
+                        Width="100"
+                        Height="35"
+                        Margin="0,5,0,0"
+                        Click="Button_Click"
+                        Content="Id Query"/>
+                </StackPanel>
+            </ctrls:PanelCtrl>
+            <GridSplitter Style="{StaticResource CMSVericalGridSplitterStyle}" Grid.Column="1" Width="5"/>
+            <ctrls:PanelCtrl 
+                Margin="0,3,3,0"
+                Grid.Column="2"
+                Title="Document">
+                <Grid Margin="10">
+                    <native:HtmlPresenter>
+                        <canvas id="pageViewCanvas"/>
+                    </native:HtmlPresenter>
+                </Grid>
+            </ctrls:PanelCtrl>
+        </Grid>
+        <!-- Status bar -->
+        <Grid 
+            Grid.Row="1" 
+            Height="30">
+            <Border
+                Margin="3"
+                Background="{StaticResource CMSBackgroundBrush}"
+                BorderBrush="{StaticResource CMSLightBorderBrush}"
+                BorderThickness="1"
+                Padding="5,3"
+                CornerRadius="3">
+                <Grid>
+                    <TextBlock 
+                        FontWeight="Bold" 
+                        VerticalAlignment="Center" 
+                        Text="{Binding StatusText, FallbackValue='Unknown'}"/>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </Page>

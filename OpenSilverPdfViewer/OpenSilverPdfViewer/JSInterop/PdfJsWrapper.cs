@@ -21,11 +21,18 @@ namespace OpenSilverPdfViewer.JSInterop
         }
         public async Task<int> LoadPdfFile(string fileName)
         {
+            await Init();
             return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("loadPdfFile", fileName);
         }
         public async Task<int> RenderPage(int pageNumber, string canvasId)
         {
-            return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("loadPdfFile", pageNumber, canvasId);
+            await Init();
+            return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("renderPage", pageNumber, canvasId);
+        }
+        public async Task<int> RenderPageToViewport(int pageNumber, string canvasId)
+        {
+            await Init();
+            return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("renderPageToViewport", pageNumber, canvasId);
         }
     }
 }

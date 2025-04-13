@@ -1,0 +1,91 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls">
+    
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/BrushStyles.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+    
+    <Color x:Key="PanelColor">#FF3B3B3B</Color>
+    <Color x:Key="PanelBorderColor">#FF555555</Color>
+    <Color x:Key="DropShadowColor">#FF404040</Color>
+    <SolidColorBrush x:Key="PanelBrush" Color="{StaticResource PanelColor}"/>
+    <LinearGradientBrush x:Key="HeaderBackgroundBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+        <GradientStop Color="#FF343434" Offset="0.059"/>
+        <GradientStop Color="#FF1B1B1B" Offset="0.982"/>
+        <GradientStop Color="#FF171717" Offset="0.695"/>
+    </LinearGradientBrush>
+    <Style x:Key="BorderHeaderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource HeaderBackgroundBrush}"/>
+        <Setter Property="CornerRadius" Value="3,3,0,0"/>
+        <Setter Property="BorderThickness" Value="1,1,1,0"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CMSLightBorderBrush}"/>
+        <Setter Property="Height" Value="34"/>
+    </Style>
+    <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="{StaticResource ElectricBlueBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style TargetType="local:PanelCtrl">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:PanelCtrl">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Border
+							Style="{StaticResource BorderHeaderStyle}">
+                            <TextBlock
+		                        Style="{StaticResource HeaderTextStyle}"
+								Margin="10,-5,0,0"
+								VerticalAlignment="Center"
+								Text="{TemplateBinding Title}"/>
+                        </Border>
+                        <Border
+							Grid.Row="1"
+                            ClipToBounds="True"
+                            CornerRadius="0,0,3,3"
+                            BorderThickness="1,0,1,1"
+                            BorderBrush="{StaticResource CMSLightBorderBrush}"
+                            Background="{StaticResource CMSBackgroundBrush}">
+                            <ContentPresenter/>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="CMSInsetPanelStyle" TargetType="local:PanelCtrl">
+        <Setter Property="Background" Value="{StaticResource SunkenBackground}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:PanelCtrl}">
+                    <Grid>
+                        <Border 
+                            Background="{TemplateBinding Background}" 
+                            CornerRadius="2"/>
+                        <Border 
+                            BorderBrush="{StaticResource Highlight1}" 
+                            BorderThickness="0,0,0,1" 
+                            CornerRadius="2"/>
+                        <Border 
+                            BorderBrush="{StaticResource Shadow}" 
+                            BorderThickness="0,1,0,0" 
+                            CornerRadius="2"/>
+                        <ContentPresenter/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

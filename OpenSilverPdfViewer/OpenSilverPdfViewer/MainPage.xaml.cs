@@ -1,35 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using OpenSilverPdfViewer.JSInterop;
-using OpenSilver;
+using OpenSilverPdfViewer.ViewModels;
 
 namespace OpenSilverPdfViewer
 {
     public partial class MainPage : Page
     {
-        public PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Interop;
-
         public MainPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
+        }
+        public async void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            await PdfJsWrapper.Interop.Init();
+            (DataContext as MainPageViewModel).StatusText = PdfJsWrapper.Interop.Version;
+        }
+        public void Button_Click(object sender, RoutedEventArgs e)
+        {
+            /*
+            var canvasCtrl = pageViewCanvas;
+            if (canvasCtrl != null)
+            {
+                var id = canvasCtrl.GetDOMId();
+                MessageBox.Show($"Field id: {id}");
 
-            InitPdfJs();
-        }
-        private async void InitPdfJs()
-        {
-            await PdfJs.Init();
-            MessageBox.Show($"Library version: {PdfJsWrapper.Interop.Version}");
-        }
-        private async void Button_Click(object sender, RoutedEventArgs e)
-        {
-            var fileName = "Data\\compressed.tracemonkey-pldi-09.pdf";
-            var pageCount = await PdfJs.LoadPdfFile(fileName);
-            MessageBox.Show($"PDF loaded with pages: {pageCount}");
-        }
-        private void Page_Loaded(object sender, RoutedEventArgs e)
-        {
+                //var canvas = OpenSilver.Interop.ExecuteJavaScript("createCanvas($0,$1)", 100, 100);
+                //var newId = OpenSilver.Interop.ExecuteJavaScript("$0.getAttribute('id')", canvas);
+                //MessageBox.Show($"Canvas id: {newId}");
+            }
+            */
         }
     }
 }
