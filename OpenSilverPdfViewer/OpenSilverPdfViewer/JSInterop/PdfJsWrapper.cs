@@ -4,7 +4,10 @@
 // See the LICENSE file in the project root for full license information.
 
 
+using System;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media.Imaging;
 
 namespace OpenSilverPdfViewer.JSInterop
 {
@@ -21,8 +24,15 @@ namespace OpenSilverPdfViewer.JSInterop
         {
             if (string.IsNullOrEmpty(Version))
             {
-                await OpenSilver.Interop.LoadJavaScriptFile(scriptResourceName);
-                Version = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getLibraryVersion");
+                try
+                {
+                    await OpenSilver.Interop.LoadJavaScriptFile(scriptResourceName);
+                    Version = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getLibraryVersion");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"PdfJsWrapper.Init failed: {ex.Message}");
+                }
             }
         }
         public async Task<int> LoadPdfFile(string fileName)
@@ -39,6 +49,14 @@ namespace OpenSilverPdfViewer.JSInterop
         {
             await Init();
             return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("renderPageToViewport", pageNumber, canvasId);
+        }
+        public async Task<byte[]> RenderPageThumbnail(int pageNumber, double scaleFactor)
+        {
+            await Init();
+
+            var dataUrl = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("renderPageThumbnail", pageNumber, scaleFactor);
+            dataUrl = dataUrl.Substring(dataUrl.IndexOf(",") + 1); // strip header
+            return Convert.FromBase64String(dataUrl);
         }
     }
 }

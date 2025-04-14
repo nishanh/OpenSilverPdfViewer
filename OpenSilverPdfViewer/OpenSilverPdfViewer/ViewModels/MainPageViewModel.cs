@@ -4,8 +4,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
-using System.ComponentModel;
 using System.Windows.Input;
+using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 
 using OpenSilverPdfViewer.JSInterop;
@@ -16,6 +17,9 @@ namespace OpenSilverPdfViewer.ViewModels
 {
     public class MainPageViewModel : INotifyPropertyChanged
     {
+        private const string viewCanvasId = "pageViewCanvas";
+        #region Properties
+
         private PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Interop;
 
         private string _statusText;
@@ -46,6 +50,23 @@ namespace OpenSilverPdfViewer.ViewModels
             }
         }
 
+        private int _currentPage = 1;
+        public int CurrentPage
+        {
+            get => _currentPage;
+            set
+            {
+                if (_currentPage != value)
+                {
+                    _currentPage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        #endregion Properties
+        #region Commands
+
         private ICommand _loadPdfCommand;
         public ICommand LoadPdfCommand 
         { 
@@ -55,23 +76,25 @@ namespace OpenSilverPdfViewer.ViewModels
             }
         }
 
-        public MainPageViewModel() { }
+        #endregion Commands
 
         public async void LoadPdf(object param)
         {
-            var baseFileName = "POH_Calidus_4.0_EN.pdf";
-            // var baseFileName = "compressed.tracemonkey-pldi-09.pdf";
-            var fileName = $"Data\\{baseFileName}";
-            var pageCount = await PdfJs.LoadPdfFile(fileName);
+            const string baseFileName = "POH_Calidus_4.0_EN.pdf";
+            // const string baseFileName = "compressed.tracemonkey-pldi-09.pdf";
 
-            await PdfJs.RenderPageToViewport(1, "pageViewCanvas");
+            var pageCount = await PdfJs.LoadPdfFile($@"Data\{baseFileName}");
+            IsPdfLoaded = true;
+            CurrentPage = 1;
 
-            //var size = OpenSilver.Interop.ExecuteJavaScript("getViewportSize($0)", domId).ToString();
-            //var sizeObj = ViewportSize.Deserialize(size);
-            //MessageBox.Show($"Canvas size: {sizeObj.width} x {sizeObj.height}");
+            await RenderCurrentPage();
+            StatusText = $"PDF - {baseFileName} loaded with {pageCount} pages";
+        }
 
-            StatusText = $"PDF {baseFileName} loaded with {pageCount} pages";
-            //IsPdfLoaded = true;
+        public async Task RenderCurrentPage()
+        {
+            if (IsPdfLoaded)
+                await PdfJs.RenderPageToViewport(CurrentPage, viewCanvasId);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -80,7 +103,6 @@ namespace OpenSilverPdfViewer.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
-
     public class ViewportSize
     {
         public double width;
@@ -101,7 +123,6 @@ namespace OpenSilverPdfViewer.ViewModels
             return new ViewportSize(width, height);
         }
     }
-
     public class DelegateCommand : ICommand
     {
         private Predicate<object> _canExecute;

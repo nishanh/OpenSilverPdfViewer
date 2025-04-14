@@ -56,24 +56,32 @@
                         IsEnabled="{Binding IsPdfLoaded, Converter={StaticResource BoolToEnabledConverterInvert}}"
                         Command="{Binding LoadPdfCommand}"/>
                     <Button 
+                        Margin="0,10,0,0"
                         Width="100"
                         Height="35"
-                        Margin="0,5,0,0"
                         Click="Button_Click"
-                        Content="Id Query"/>
+                        Content="Test"/>
                 </StackPanel>
             </ctrls:PanelCtrl>
             <GridSplitter Style="{StaticResource CMSVericalGridSplitterStyle}" Grid.Column="1" Width="5"/>
-            <ctrls:PanelCtrl 
-                Margin="0,3,3,0"
-                Grid.Column="2"
-                Title="Document">
-                <Grid Margin="10">
-                    <native:HtmlPresenter>
-                        <canvas id="pageViewCanvas"/>
-                    </native:HtmlPresenter>
-                </Grid>
-            </ctrls:PanelCtrl>
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="150"/>
+                </Grid.RowDefinitions>
+                <ctrls:PanelCtrl 
+                    Margin="0,3,3,0"
+                    Title="Document">
+                    <Grid
+                        SizeChanged="Grid_SizeChanged"
+                        Margin="10">
+                        <native:HtmlPresenter>
+                            <canvas id="pageViewCanvas"/>
+                        </native:HtmlPresenter>
+                    </Grid>
+                </ctrls:PanelCtrl>
+                <Canvas Grid.Row="1" x:Name="thumbCanvas"/>
+            </Grid>
         </Grid>
         <!-- Status bar -->
         <Grid 

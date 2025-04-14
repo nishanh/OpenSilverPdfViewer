@@ -78,17 +78,18 @@ function getViewportSize(canvasId) {
     console.log("getViewportSize(): ", viewportSize.width, viewportSize.height);
     return JSON.stringify(viewportSize);
 }
-function createCanvas(width, height) {
-    var canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    canvas.id = "pdfSourceCanvas";
-    return canvas;
-}
 
 function renderPageToViewport(pageNumber, canvasId, callback) {
-    console.log("renderPage() begin: ", pageNumber, canvasId);
+    console.log("renderPageToViewport() begin: ", pageNumber, canvasId);
     var promise = (async () => await renderPageToViewportAsync(pageNumber, canvasId))();
+    if (callback != undefined) {
+        promise.then((result) => callback(result));
+    }
+}
+
+function renderPageThumbnail(pageNumber, thumbScale, callback) {
+    console.log("renderPageThumbnail() begin: ", pageNumber);
+    var promise = (async () => await renderPageThumbnailAsync(pageNumber, thumbScale))();
     if (callback != undefined) {
         promise.then((result) => callback(result));
     }
@@ -106,6 +107,7 @@ async function loadPdfJsAsync() {
     if (pdfjsLib == undefined) {
         pdfjsLib = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@5.0.375/build/pdf.min.mjs');
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.0.375/build/pdf.worker.min.mjs';
+        console.log("PDF.js library loaded");
     }
 }
 
@@ -224,6 +226,39 @@ async function renderPageToViewportAsync(pageNumber, canvasId) {
     catch (error) {
         console.error(`Error rendering page ${pageNumber}:`, error);
         return -1; // Indicate an error
+    }
+}
+
+async function renderPageThumbnailAsync(pageNumber, thumbScale) {
+    if (!this.cachedPdf) {
+        console.error('No PDF loaded. Call loadPdfFile first.');
+        return null; // Indicate an error
+    }
+    try {
+        const page = await this.cachedPdf.getPage(pageNumber);
+        const contentView = page.getViewport({ scale: thumbScale });
+
+        // Create an unattached canvas element to render the PDF page onto
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = contentView.width;
+        canvas.height = contentView.height;
+
+        const renderContext = {
+            canvasContext: context,
+            viewport: contentView
+        };
+        await page.render(renderContext).promise;
+        var thumbData = canvas.toDataURL('image/png', 100);
+
+        console.log(`Page ${pageNumber} thumbnail rendered successfully`);
+        console.log(`Output size: ${contentView.width} x ${contentView.height}`);
+
+        return thumbData;
+    }
+    catch (error) {
+        console.error(`Error rendering thumbnail page ${pageNumber}:`, error);
+        return null; // Indicate an error
     }
 }
 
