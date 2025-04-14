@@ -1,0 +1,10 @@
+﻿<UserControl
+    x:Class="OpenSilverPdfViewer.Controls.PageNavigationCtrl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls">
+    
+    <Grid>
+
+    </Grid>
+</UserControl>

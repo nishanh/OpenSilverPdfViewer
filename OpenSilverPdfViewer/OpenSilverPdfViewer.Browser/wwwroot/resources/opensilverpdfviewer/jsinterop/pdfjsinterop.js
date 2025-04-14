@@ -3,10 +3,9 @@
 // Free to use, modify, and distribute under the terms of the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-
 let pdfjsLib;
 let libVersion;
-let cachedPdf;
+let pdfDocument;
 
 // All OpenSilver interop calls must include a C# callback function as the last parameter.
 // This is because OpenSilver does not support the consumption of JS promises.
@@ -37,6 +36,16 @@ function getLibraryVersion(callback) {
     else {
         console.log("logLibraryVersion() already called");
         callback(libVersion);
+    }
+}
+
+function getPageSize(pageNumber, callback) {
+    var promise = (async () => await getPageSizeAsync(pageNumber))();
+    if (callback != undefined) {
+        promise.then((result) => {
+            var pageSizeJson = JSON.stringify(result);
+            callback(pageSizeJson)
+        });
     }
 }
 
@@ -120,6 +129,16 @@ async function getLibraryVersionAsync() {
     return versionFmt;
 }
 
+async function getPageSizeAsync(pageNumber) {
+    if (!this.pdfDocument) {
+        console.error('No PDF loaded. Call loadPdfFile first.');
+        return -1; 
+    }
+    const page = await this.pdfDocument.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 1.0 });
+    return { width: viewport.width, height: viewport.height };
+}
+
 // Load a PDF file from a URL
 async function loadPdfFileAsync(pdfFileName) {
     await loadPdfJsAsync();
@@ -128,7 +147,7 @@ async function loadPdfFileAsync(pdfFileName) {
     try {
         const pdf = await loadingTask.promise;
         console.log(`PDF loaded with ${pdf.numPages} pages`);
-        this.cachedPdf = pdf; // Cache the PDF object
+        this.pdfDocument = pdf; // Cache the PDF object
         return pdf.numPages; // Return the number of pages
     }
     catch (error) {
@@ -152,7 +171,7 @@ async function loadPdfStreamAsync(pdfFileStream) {
     try {
         const pdf = await loadingTask.promise;
         console.log(`PDF loaded with ${pdf.numPages} pages`);
-        this.cachedPdf = pdf; // Cache the PDF object
+        this.pdfDocument = pdf; // Cache the PDF object
         return pdf.numPages; // Return the number of pages
     }
     catch (error) {
@@ -162,7 +181,7 @@ async function loadPdfStreamAsync(pdfFileStream) {
 }
 
 async function renderPageToViewportAsync(pageNumber, canvasId) {
-    if (!this.cachedPdf) {
+    if (!this.pdfDocument) {
         console.error('No PDF loaded. Call loadPdfFile first.');
         return -1; // Indicate an error
     }
@@ -174,7 +193,7 @@ async function renderPageToViewportAsync(pageNumber, canvasId) {
         const dpi = 144; 
         const scale = dpi / 72.0; // Calculate the scale factor based on the native PDF DPI
 
-        const page = await this.cachedPdf.getPage(pageNumber);
+        const page = await this.pdfDocument.getPage(pageNumber);
         const contentView = page.getViewport({ scale });
 
         // Create an unattached canvas element to render the PDF page onto
@@ -230,12 +249,12 @@ async function renderPageToViewportAsync(pageNumber, canvasId) {
 }
 
 async function renderPageThumbnailAsync(pageNumber, thumbScale) {
-    if (!this.cachedPdf) {
+    if (!this.pdfDocument) {
         console.error('No PDF loaded. Call loadPdfFile first.');
         return null; // Indicate an error
     }
     try {
-        const page = await this.cachedPdf.getPage(pageNumber);
+        const page = await this.pdfDocument.getPage(pageNumber);
         const contentView = page.getViewport({ scale: thumbScale });
 
         // Create an unattached canvas element to render the PDF page onto
@@ -264,7 +283,7 @@ async function renderPageThumbnailAsync(pageNumber, thumbScale) {
 
 // Render a specific page from the cached PDF
 async function renderPageAsync(pageNumber, canvasId) {
-    if (!this.cachedPdf) {
+    if (!this.pdfDocument) {
         console.error('No PDF loaded. Call loadPdfFile first.');
         return -1; // Indicate an error
     }
@@ -273,7 +292,7 @@ async function renderPageAsync(pageNumber, canvasId) {
         const dpi = 96; // Set the desired DPI (dots per inch)
         const scale = dpi / 72; // Calculate the scale factor based on the native PDF DPI
         
-        const page = await this.cachedPdf.getPage(pageNumber);
+        const page = await this.pdfDocument.getPage(pageNumber);
         const viewport = page.getViewport({ scale });
         const canvas = document.getElementById(canvasId);
         const context = canvas.getContext('2d');

@@ -2,11 +2,38 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup />
   <ItemGroup>
+    <Compile Update="Controls\DocumentViewCtrl.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Controls\PageNavigationCtrl.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Controls\PageViewer.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Controls\PageViewToolbar.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Controls\PanelCtrl.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Controls\ToolBarButton.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Controls\DocumentViewCtrl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Controls\PageNavigationCtrl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Controls\PageViewer.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Controls\PageViewToolbar.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Styles\BrushStyles.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -17,6 +44,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Styles\SeparatorStyles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Styles\ToolBarButtonStyles.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

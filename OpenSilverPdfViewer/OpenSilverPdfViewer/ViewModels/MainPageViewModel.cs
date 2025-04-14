@@ -103,26 +103,6 @@ namespace OpenSilverPdfViewer.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
-    public class ViewportSize
-    {
-        public double width;
-        public double height;
-
-        public ViewportSize(double width, double height) 
-        {
-            this.width = width;
-            this.height = height;
-        }
-        public static ViewportSize Deserialize(string json)
-        {
-            var sizes = json.Trim('{').Trim('}').Split(',');
-            var widthStr = sizes[0].Substring(sizes[0].IndexOf(':') + 1);
-            var width = double.Parse(widthStr);
-            var heightStr = sizes[1].Substring(sizes[1].IndexOf(':') + 1);
-            var height = double.Parse(heightStr);
-            return new ViewportSize(width, height);
-        }
-    }
     public class DelegateCommand : ICommand
     {
         private Predicate<object> _canExecute;

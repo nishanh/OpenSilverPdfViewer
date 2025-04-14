@@ -65,10 +65,6 @@
             </ctrls:PanelCtrl>
             <GridSplitter Style="{StaticResource CMSVericalGridSplitterStyle}" Grid.Column="1" Width="5"/>
             <Grid Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="150"/>
-                </Grid.RowDefinitions>
                 <ctrls:PanelCtrl 
                     Margin="0,3,3,0"
                     Title="Document">
@@ -80,7 +76,6 @@
                         </native:HtmlPresenter>
                     </Grid>
                 </ctrls:PanelCtrl>
-                <Canvas Grid.Row="1" x:Name="thumbCanvas"/>
             </Grid>
         </Grid>
         <!-- Status bar -->

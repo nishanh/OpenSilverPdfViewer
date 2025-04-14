@@ -5,9 +5,11 @@
 
 
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using System.Windows.Controls;
 
 namespace OpenSilverPdfViewer.JSInterop
 {
@@ -50,13 +52,38 @@ namespace OpenSilverPdfViewer.JSInterop
             await Init();
             return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("renderPageToViewport", pageNumber, canvasId);
         }
-        public async Task<byte[]> RenderPageThumbnail(int pageNumber, double scaleFactor)
+        public async Task<Size> GetPdfPageSize(int pageNumber)
+        {
+            await Init();
+            var json = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getPageSize", pageNumber);
+
+            var dimensions = json.Trim('{').Trim('}').Split(',');
+            var widthStr = dimensions[0].Substring(dimensions[0].IndexOf(':') + 1);
+            var width = double.Parse(widthStr);
+            var heightStr = dimensions[1].Substring(dimensions[1].IndexOf(':') + 1);
+            var height = double.Parse(heightStr);
+
+            return new Size(width, height);
+        }
+        public async Task<Image> GetPdfPageImage(int pageNumber, double scaleFactor)
         {
             await Init();
 
             var dataUrl = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("renderPageThumbnail", pageNumber, scaleFactor);
             dataUrl = dataUrl.Substring(dataUrl.IndexOf(",") + 1); // strip header
-            return Convert.FromBase64String(dataUrl);
+            var imageBytes = Convert.FromBase64String(dataUrl);
+
+            Image image = new Image();
+            using (var stream = new MemoryStream(imageBytes))
+            {
+                stream.Write(imageBytes, 0, imageBytes.Length);
+                stream.Position = 0;
+
+                var bitmap = new BitmapImage();
+                bitmap.SetSource(stream);
+                image.Source = bitmap;
+            }
+            return image;
         }
     }
 }

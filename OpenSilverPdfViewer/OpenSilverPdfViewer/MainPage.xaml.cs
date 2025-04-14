@@ -3,10 +3,8 @@
 // Free to use, modify, and distribute under the terms of the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
 using OpenSilverPdfViewer.JSInterop;
 using OpenSilverPdfViewer.ViewModels;
 
@@ -31,22 +29,13 @@ namespace OpenSilverPdfViewer
             ViewModel.StatusText = panelSize;
             await ViewModel.RenderCurrentPage();
         }
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
-            Image image = new Image();
-
-            var imageBytes = await PdfJsWrapper.Interop.RenderPageThumbnail(1, 0.2);
-
-            using (var stream = new MemoryStream(imageBytes))
-            {
-                stream.Write(imageBytes, 0, imageBytes.Length);
-                stream.Position = 0; 
-
-                var bitmap = new BitmapImage();
-                bitmap.SetSource(stream);
-                image.Source = bitmap;
-            }
+            /*
+            var image = await PdfJsWrapper.Interop.GetPdfPageImage(1, 0.2);
+            var size = await PdfJsWrapper.Interop.GetPdfPageSize(1);
             thumbCanvas.Children.Add(image);
+            */
         }
     }
 }
