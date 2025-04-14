@@ -1,10 +1,102 @@
 ﻿<UserControl
     x:Class="OpenSilverPdfViewer.Controls.PageNavigationCtrl"
+    x:Name="navCtrlInternal"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls">
     
-    <Grid>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/BrushStyles.xaml"/>
+                <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ToolBarButtonStyles.xaml"/>
+                <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/NumericSpinStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
 
+    <Grid>
+        <StackPanel 
+            Height="30"
+            Orientation="Horizontal"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+            <local:ToolBarButton
+                FontFamily="Webdings"
+                FontSize="14"
+                IsEnabled="{Binding IsNotFirstPage, ElementName=navCtrlInternal}"
+                Click="FirstPageButton_Click"
+                ShadowThickness="0,0,1,1"
+                DisabledRadius="2,0,0,2"
+                DisabledMargin="0,1,1,1"
+                CornerRadius="3,0,0,3">
+            <TextBlock IsEnabled="False" Text="9"/>
+            </local:ToolBarButton>
+            <local:ToolBarButton
+                FontFamily="Webdings"
+                FontSize="14"
+                IsEnabled="{Binding IsNotFirstPage, ElementName=navCtrlInternal}"
+                Click="PreviousPageButton_Click"
+                ShadowThickness="0,0,1,1"
+                DisabledMargin="0,1,1,1"
+                CornerRadius="0">
+            <TextBlock IsEnabled="False" Text="3"/>
+            </local:ToolBarButton>
+            <Grid MinWidth="100">
+                <TextBox x:Name="focusSink"/>
+                <TextBox
+                    x:Name="bxCurrentPage"
+                    Height="30"
+                    FontSize="12"
+                    FontWeight="Normal"
+                    Text="{Binding ElementName=navCtrlInternal, Path=NavigationPage, Mode=TwoWay}"
+                    LostFocus="PageNavTextBox_LostFocus"
+                    KeyDown="PageNavTextBox_PreviewKeyDown"
+                    KeyUp="PageNavTextBox_PreviewKeyUp"
+                    IsReadOnly="True"
+                    MaxLength="7"
+                    SelectionBackground="{StaticResource CMSSpinTextSelectionBrush}"
+                    CaretBrush="{StaticResource CMSCtrlButtonForegroundBrush}"
+                    Foreground="{StaticResource CMSSolidBorderBrush}"
+                    Background="{StaticResource CMSSolidBorderBrush}"
+                    TextAlignment="Center"
+                    Template="{StaticResource CMSSpinTextBox}">
+                    <TextBox.ContextMenu>
+                        <ContextMenu Visibility="Collapsed"/>
+                    </TextBox.ContextMenu>
+                </TextBox>
+                <TextBlock 
+                    x:Name="tbCurrentPage"
+                    FontSize="12"
+                    FontWeight="Normal"
+                    Padding="6,0"
+                    Text="{Binding PageNavText, ElementName=navCtrlInternal}"
+                    MouseLeftButtonDown="PageNavTextBlock_PreviewMouseLeftButtonDown"
+                    Foreground="{StaticResource ForegroundBrush}"
+                    TextAlignment="Center"
+                    VerticalAlignment="Center"/>
+            </Grid>
+            <local:ToolBarButton
+                FontFamily="Webdings"
+                FontSize="14"
+                IsEnabled="{Binding IsNotLastPage, ElementName=navCtrlInternal}"
+                Click="NextPageButton_Click"
+                ShadowThickness="1,0,1,1"
+                DisabledMargin="1"
+                CornerRadius="0">
+                <TextBlock IsEnabled="False" Text="4"/>
+            </local:ToolBarButton>
+            <local:ToolBarButton
+                FontFamily="Webdings"
+                FontSize="14"
+                IsEnabled="{Binding IsNotLastPage, ElementName=navCtrlInternal}"
+                Click="LastPageButton_Click"
+                ShadowThickness="0,0,1,1"
+                DisabledMargin="0,1,1,1"
+                DisabledRadius="0,2,2,0"
+                CornerRadius="0,3,3,0">
+                <TextBlock IsEnabled="False" Text=":"/>
+            </local:ToolBarButton>
+        </StackPanel>
     </Grid>
 </UserControl>

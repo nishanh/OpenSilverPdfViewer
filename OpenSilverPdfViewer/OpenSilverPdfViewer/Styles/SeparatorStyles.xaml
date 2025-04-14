@@ -18,8 +18,8 @@
                 <ControlTemplate TargetType="{x:Type Separator}">
                     <StackPanel 
                         Height="2" >
-                        <Rectangle Height="1" Fill="{StaticResource KDSSeparatorStartBrush}" />
-                        <Rectangle Height="2" Fill="{StaticResource KDSSeparatorEndBrush}" />
+                        <Rectangle Height="1" Fill="{StaticResource CMSSeparatorStartBrush}" />
+                        <Rectangle Height="2" Fill="{StaticResource CMSSeparatorEndBrush}" />
                     </StackPanel>
                 </ControlTemplate>
             </Setter.Value>
@@ -34,8 +34,8 @@
                     <StackPanel 
                         Orientation="Horizontal" 
                         Width="2" >
-                        <Rectangle Width="1" Fill="{StaticResource KDSSeparatorStartBrush}" />
-                        <Rectangle Width="2" Fill="{StaticResource KDSSeparatorEndBrush}" />
+                        <Rectangle Width="1" Fill="{StaticResource CMSSeparatorStartBrush}" />
+                        <Rectangle Width="2" Fill="{StaticResource CMSSeparatorEndBrush}" />
                     </StackPanel>
                 </ControlTemplate>
             </Setter.Value>

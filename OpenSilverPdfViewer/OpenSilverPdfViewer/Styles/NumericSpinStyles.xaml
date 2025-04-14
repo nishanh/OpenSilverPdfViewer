@@ -1,0 +1,44 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/BrushStyles.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+    
+    <ControlTemplate x:Key="CMSSpinTextBox" TargetType="TextBox">
+        <Grid 
+           x:Name="LayoutRoot"
+           Background="{TemplateBinding Background}">
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="Disabled"/>
+                    <VisualState x:Name="ReadOnly"/>
+                    <VisualState x:Name="MouseOver" />
+                </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+            <Border 
+               x:Name="Background" 
+               BorderBrush="{StaticResource RaisedHighlightBrush}" 
+               Background="{StaticResource CtrlNormalBrush}"
+               BorderThickness="0,1,0,0">
+            </Border>
+            <Border 
+               x:Name="Shadow" 
+               BorderBrush="{StaticResource RaisedShadowBrush}" 
+               BorderThickness="0,0,0,1"/>
+            <Border 
+               Margin="0,1"
+               Background="{TemplateBinding Background}"/>
+            <ScrollViewer 
+               Margin="0,0,2,0"
+               VerticalAlignment="Center"
+               HorizontalContentAlignment="Right"
+               VerticalContentAlignment="Center"
+               x:Name="PART_ContentHost" />
+        </Grid>
+    </ControlTemplate>
+
+</ResourceDictionary>

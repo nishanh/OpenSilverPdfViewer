@@ -31,6 +31,7 @@ namespace OpenSilverPdfViewer
         }
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            // var test = new TextBox();
             /*
             var image = await PdfJsWrapper.Interop.GetPdfPageImage(1, 0.2);
             var size = await PdfJsWrapper.Interop.GetPdfPageSize(1);

@@ -59,6 +59,21 @@ namespace OpenSilverPdfViewer.ViewModels
                 if (_currentPage != value)
                 {
                     _currentPage = value;
+                    CurrentPageChanged.Invoke(this, EventArgs.Empty);
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private int _pageCount;
+        public int PageCount
+        {
+            get => _pageCount;
+            set
+            {
+                if (_pageCount != value)
+                {
+                    _pageCount = value;
                     OnPropertyChanged();
                 }
             }
@@ -78,6 +93,16 @@ namespace OpenSilverPdfViewer.ViewModels
 
         #endregion Commands
 
+        public MainPageViewModel()
+        {
+            CurrentPageChanged += MainPageViewModel_CurrentPageChanged;
+        }
+
+        private async void MainPageViewModel_CurrentPageChanged(object sender, EventArgs e)
+        {
+            await RenderCurrentPage();
+        }
+
         public async void LoadPdf(object param)
         {
             const string baseFileName = "POH_Calidus_4.0_EN.pdf";
@@ -89,6 +114,7 @@ namespace OpenSilverPdfViewer.ViewModels
 
             await RenderCurrentPage();
             StatusText = $"PDF - {baseFileName} loaded with {pageCount} pages";
+            PageCount = pageCount;
         }
 
         public async Task RenderCurrentPage()
@@ -102,6 +128,8 @@ namespace OpenSilverPdfViewer.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        private event EventHandler CurrentPageChanged;
     }
     public class DelegateCommand : ICommand
     {

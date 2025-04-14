@@ -68,12 +68,8 @@
                 <ctrls:PanelCtrl 
                     Margin="0,3,3,0"
                     Title="Document">
-                    <Grid
-                        SizeChanged="Grid_SizeChanged"
-                        Margin="10">
-                        <native:HtmlPresenter>
-                            <canvas id="pageViewCanvas"/>
-                        </native:HtmlPresenter>
+                    <Grid SizeChanged="Grid_SizeChanged">
+                        <ctrls:PageViewer/>
                     </Grid>
                 </ctrls:PanelCtrl>
             </Grid>

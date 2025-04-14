@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenSilverPdfViewer.JSInterop;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,6 +18,10 @@ namespace OpenSilverPdfViewer.Controls
         public PageViewer()
         {
             this.InitializeComponent();
+        }
+        public void Ctrl_Loaded(object sender, RoutedEventArgs e)
+        {
+            var dc = this.DataContext;
         }
     }
 }

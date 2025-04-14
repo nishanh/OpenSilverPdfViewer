@@ -15,9 +15,6 @@
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
     </ApplicationDefinition>
-    <Page Include="Controls\DocumentViewCtrl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Controls\PageNavigationCtrl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -36,7 +33,13 @@
     <Page Include="Styles\GridSplitterStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Styles\NumericSpinStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Styles\PanelCtrlStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\ScrollViewerStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Styles\SeparatorStyles.xaml">
@@ -49,7 +52,6 @@
 
   <ItemGroup>
     <Compile Include="App.xaml.cs" />
-    <Compile Include="Controls\DocumentViewCtrl.xaml.cs" />
     <Compile Include="Controls\PageNavigationCtrl.xaml.cs" />
     <Compile Include="Controls\PageViewer.xaml.cs" />
     <Compile Include="Controls\PageViewToolbar.xaml.cs" />
@@ -60,6 +62,8 @@
     <Compile Include="JSInterop\JSAsyncTaskRunner.cs" />
     <Compile Include="JSInterop\PdfJsWrapper.cs" />
     <Compile Include="MainPage.xaml.cs" />
+    <Compile Include="Utility\Enumerations.cs" />
+    <Compile Include="Utility\ExtMethods.cs" />
     <Compile Include="Utility\Matrix2d.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
   </ItemGroup>

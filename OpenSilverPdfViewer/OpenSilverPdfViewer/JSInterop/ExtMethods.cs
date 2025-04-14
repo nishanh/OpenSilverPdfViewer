@@ -11,7 +11,7 @@ using CSHTML5.Native.Html.Controls;
 
 namespace OpenSilverPdfViewer.JSInterop
 {
-    internal static class ExtMethods
+    internal static partial class ExtensionMethods
     {
         public static string GetDOMId(this HtmlCanvas canvas)
         {

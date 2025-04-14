@@ -2,9 +2,6 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup />
   <ItemGroup>
-    <Compile Update="Controls\DocumentViewCtrl.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Update="Controls\PageNavigationCtrl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -22,9 +19,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Controls\DocumentViewCtrl.xaml">
-      <SubType>Designer</SubType>
-    </Page>
     <Page Update="Controls\PageNavigationCtrl.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -40,7 +34,13 @@
     <Page Update="Styles\GridSplitterStyles.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="Styles\NumericSpinStyles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Styles\PanelCtrlStyles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Styles\ScrollViewerStyles.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Styles\SeparatorStyles.xaml">

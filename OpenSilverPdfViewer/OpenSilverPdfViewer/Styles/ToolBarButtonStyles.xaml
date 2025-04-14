@@ -8,6 +8,12 @@
     </ResourceDictionary.MergedDictionaries>
 
     <Style TargetType="local:ToolBarButton">
+        <Setter Property="MinWidth" Value="30"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="ContentHighlightColor" Value="{StaticResource ControlLightColor}"/>
+        <Setter Property="Foreground" Value="{StaticResource CMSCtrlButtonForegroundBrush}"/>
+        <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:ToolBarButton">
@@ -42,17 +48,25 @@
                                         <ColorAnimation
                                             Storyboard.TargetProperty="(Control.Foreground).(SolidColorBrush.Color)"
                                             Storyboard.TargetName="ContentForegroundColorizer"
+                                            Duration="0:0:0.1"
                                             To="{StaticResource ControlLightColor}"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <Storyboard>
+                                            <DoubleAnimation 
+                                                Storyboard.TargetProperty="Opacity" 
+                                                Storyboard.TargetName="DisabledOverlay"
+                                                To="1" 
+                                                Duration="0"/>
+                                        </Storyboard>
                                     </Storyboard>
                                 </VisualState>
                             </VisualStateGroup>
                             <VisualStateGroup x:Name="FocusedStates">
                                 <VisualState x:Name="Focused"/>
                                 <VisualState x:Name="Unfocused" />
-                            </VisualStateGroup>
-                            <VisualStateGroup x:Name="EnableStates">
-                                <VisualState x:Name="Enabled"/>
-                                <VisualState x:Name="Disabled" />
                             </VisualStateGroup>
                         </VisualStateManager.VisualStateGroups>
                         <Border 
@@ -82,17 +96,17 @@
                         <ContentControl 
                             x:Name="ContentForegroundColorizer"
                             Margin="{TemplateBinding Padding}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             Foreground="{TemplateBinding Foreground}">
-                            <ContentPresenter 
-                                x:Name="ContentArea"
-                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                            <ContentPresenter x:Name="ContentArea"/>
                         </ContentControl>
                         <Border 
                             x:Name="DisabledOverlay"
                             Margin="{TemplateBinding DisabledMargin}"
-                            Visibility="Collapsed"
-                            Background="{StaticResource KDSCtrlDisabledBodyBrush}"
+                            Opacity="0"
+                            IsHitTestVisible="False"
+                            Background="{StaticResource CMSCtrlDisabledBodyBrush}"
                             CornerRadius="{TemplateBinding DisabledRadius}"/>
                     </Grid>
                 </ControlTemplate>
