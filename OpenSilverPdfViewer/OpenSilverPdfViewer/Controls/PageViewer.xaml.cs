@@ -1,15 +1,9 @@
-﻿using OpenSilverPdfViewer.JSInterop;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Windows;
+﻿
+// Copyright (c) 2025 Nishan Hossepian. All rights reserved.              
+// Free to use, modify, and distribute under the terms of the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Navigation;
 
 namespace OpenSilverPdfViewer.Controls
 {
@@ -18,10 +12,6 @@ namespace OpenSilverPdfViewer.Controls
         public PageViewer()
         {
             this.InitializeComponent();
-        }
-        public void Ctrl_Loaded(object sender, RoutedEventArgs e)
-        {
-            var dc = this.DataContext;
         }
     }
 }

@@ -25,8 +25,6 @@ namespace OpenSilverPdfViewer
         }
         private async void Grid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            var panelSize = $"View size: {e.NewSize.Width} x {e.NewSize.Height}";
-            ViewModel.StatusText = panelSize;
             await ViewModel.RenderCurrentPage();
         }
         private void Button_Click(object sender, RoutedEventArgs e)

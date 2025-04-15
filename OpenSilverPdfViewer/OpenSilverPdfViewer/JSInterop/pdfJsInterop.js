@@ -230,6 +230,7 @@ async function renderPageToViewportAsync(pageNumber, canvasId) {
         const scrollY = 0;
 
         var ctx = viewportCanvas.getContext('2d');
+        ctx.clearRect(0, 0, viewportCanvas.width, viewportCanvas.height); 
         // ctx.drawImage(canvas, -scrollX, -scrollY, scaledWidth, scaledHeight);
         ctx.drawImage(canvas, centerX, centerY, scaledWidth, scaledHeight);
 

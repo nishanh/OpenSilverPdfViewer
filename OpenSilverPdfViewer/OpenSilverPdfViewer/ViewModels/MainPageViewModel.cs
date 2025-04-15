@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 
 using OpenSilverPdfViewer.JSInterop;
+using OpenSilver.IO;
+using System.IO;
+using Microsoft.JSInterop;
 
 #pragma warning disable CS0067 // The event 'CanExecuteChanged' is never used
 
@@ -31,6 +34,20 @@ namespace OpenSilverPdfViewer.ViewModels
                 if (_statusText != value)
                 {
                     _statusText = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private string _pageSizeText;
+        public string PageSizeText
+        {
+            get => _pageSizeText;
+            set
+            {
+                if (_pageSizeText != value)
+                {
+                    _pageSizeText = value;
                     OnPropertyChanged();
                 }
             }
@@ -87,7 +104,7 @@ namespace OpenSilverPdfViewer.ViewModels
         { 
             get
             {
-                return _loadPdfCommand ?? (_loadPdfCommand = new DelegateCommand((param) => LoadPdf(param), (param) => !IsPdfLoaded));
+                return _loadPdfCommand ?? (_loadPdfCommand = new DelegateCommand((param) => LoadPdf(param), (param) => true));
             }
         }
 
@@ -105,10 +122,25 @@ namespace OpenSilverPdfViewer.ViewModels
 
         public async void LoadPdf(object param)
         {
-            const string baseFileName = "POH_Calidus_4.0_EN.pdf";
-            // const string baseFileName = "compressed.tracemonkey-pldi-09.pdf";
+            var sourceOption = param as string;
+            if (string.IsNullOrEmpty(sourceOption))
+                return;
 
-            var pageCount = await PdfJs.LoadPdfFile($@"Data\{baseFileName}");
+            int pageCount;
+            string baseFileName;
+            
+            if (sourceOption == "file")
+            {
+                (string filename, int pages) = await LoadPdfFile();
+                baseFileName = filename;
+                pageCount = pages;
+            }
+            else
+            {
+                baseFileName = sourceOption == "sample1" ? "POH_Calidus_4.0_EN.pdf" : "compressed.tracemonkey-pldi-09.pdf";
+                pageCount = await PdfJs.LoadPdfFile($@"Data\{baseFileName}");
+            }
+
             IsPdfLoaded = true;
             CurrentPage = 1;
 
@@ -117,10 +149,39 @@ namespace OpenSilverPdfViewer.ViewModels
             PageCount = pageCount;
         }
 
+        public async Task<(string, int)> LoadPdfFile()
+        {
+            string filename = string.Empty;
+            int pageCount = 0;
+
+            var dlg = new OpenSilver.Controls.OpenFileDialog
+            {
+                Multiselect = false,
+                Filter = "PDF files (*.pdf)|*.pdf"
+            };
+            
+            var result = await dlg.ShowDialogAsync();
+
+            if ((bool)result == true)
+            {
+                filename = dlg.File.Name;
+                using (var pdfStream = dlg.File.OpenRead() as MemoryStream)
+                {
+                    var base64Stream = Convert.ToBase64String(pdfStream.ToArray());
+                    pageCount = await PdfJs.LoadPdfFileStream(base64Stream);
+                }
+            }
+            return (filename, pageCount);
+        }
+
         public async Task RenderCurrentPage()
         {
             if (IsPdfLoaded)
+            {
                 await PdfJs.RenderPageToViewport(CurrentPage, viewCanvasId);
+                var size = await PdfJs.GetPdfPageSize(CurrentPage);
+                PageSizeText = $"Page size: { Math.Round(size.Width / 72d, 2) } x {Math.Round(size.Height / 72d, 2)} in";
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

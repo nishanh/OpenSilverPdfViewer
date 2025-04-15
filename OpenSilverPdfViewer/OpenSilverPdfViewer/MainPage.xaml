@@ -41,29 +41,66 @@
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="Auto" MinWidth="300" MaxWidth="500"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition/>
+                <ColumnDefinition MinWidth="500"/>
             </Grid.ColumnDefinitions>
-            <ctrls:PanelCtrl 
-                Margin="3,3,0,0" 
-                Title="Impose">
-                <StackPanel VerticalAlignment="Center">
-                    <Button 
-                        Width="100"
-                        Height="35"
-                        Content="Load Pdf"
-                        IsEnabled="{Binding IsPdfLoaded, Converter={StaticResource BoolToEnabledConverterInvert}}"
-                        Command="{Binding LoadPdfCommand}"/>
-                    <Button 
-                        Margin="0,10,0,0"
-                        Width="100"
-                        Height="35"
-                        Click="Button_Click"
-                        Content="Test"/>
-                </StackPanel>
-            </ctrls:PanelCtrl>
-            <GridSplitter Style="{StaticResource CMSVericalGridSplitterStyle}" Grid.Column="1" Width="5"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="200" MinHeight="200"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition MinHeight="200"/>
+                </Grid.RowDefinitions>
+                <ctrls:PanelCtrl 
+                    Margin="3,3,0,0" 
+                    Title="Pdf Source">
+                    <StackPanel VerticalAlignment="Center">
+                        <Button 
+                            Width="200"
+                            Height="35"
+                            Content="Load Sample Pdf 1"
+                            CommandParameter="sample1"
+                            Command="{Binding LoadPdfCommand}"/>
+                        <Button 
+                            Width="200"
+                            Height="35"
+                            Margin="0,10,0,0"
+                            Content="Load Sample Pdf 2"
+                            CommandParameter="sample2"
+                            Command="{Binding LoadPdfCommand}"/>
+                        <Button 
+                            Width="200"
+                            Height="35"
+                            Margin="0,10,0,0"
+                            Content="Load From File"
+                            CommandParameter="file"
+                            Command="{Binding LoadPdfCommand}"/>
+                    </StackPanel>
+                </ctrls:PanelCtrl>
+                <GridSplitter 
+                    Style="{StaticResource CMSHorizontalGridSplitterStyle}" 
+                    Grid.Row="1" 
+                    Height="7"/>
+                <ctrls:PanelCtrl 
+                    Grid.Row="2"
+                    Margin="3,0,0,0" 
+                    Title="Render Options">
+                    <StackPanel 
+                        Margin="20,10,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top">
+                        <RadioButton
+                            Margin="0,0,0,5"
+                            Content="Direct DOM Renderer"/>
+                        <RadioButton 
+                            Content="OpenSilver Canvas Renderer"/>
+                    </StackPanel>
+                </ctrls:PanelCtrl>
+            </Grid>
+            <GridSplitter 
+                Style="{StaticResource CMSVericalGridSplitterStyle}" 
+                Grid.Column="1" 
+                Width="7"/>
             <Grid Grid.Column="2">
                 <ctrls:PanelCtrl 
                     Margin="0,3,3,0"
@@ -86,10 +123,19 @@
                 Padding="5,3"
                 CornerRadius="3">
                 <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
                     <TextBlock 
-                        FontWeight="Bold" 
                         VerticalAlignment="Center" 
-                        Text="{Binding StatusText, FallbackValue='Unknown'}"/>
+                        Text="{Binding StatusText}"/>
+                    <TextBlock 
+                        Grid.Column="1"
+                        Margin="0,0,5,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center" 
+                        Text="{Binding PageSizeText}"/>
                 </Grid>
             </Border>
         </Grid>

@@ -3,7 +3,6 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:native="clr-namespace:CSHTML5.Native.Html.Controls;assembly=OpenSilver"    
-    Loaded="Ctrl_Loaded"
     xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls">
 
     <UserControl.Resources>
