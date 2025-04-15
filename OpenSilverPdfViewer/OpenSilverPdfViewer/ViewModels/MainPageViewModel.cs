@@ -4,15 +4,14 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.IO;
 using System.Windows.Input;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 
+using OpenSilverPdfViewer.Utility;
 using OpenSilverPdfViewer.JSInterop;
-using OpenSilver.IO;
-using System.IO;
-using Microsoft.JSInterop;
 
 #pragma warning disable CS0067 // The event 'CanExecuteChanged' is never used
 
@@ -20,7 +19,6 @@ namespace OpenSilverPdfViewer.ViewModels
 {
     public class MainPageViewModel : INotifyPropertyChanged
     {
-        private const string viewCanvasId = "pageViewCanvas";
         #region Properties
 
         private PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Interop;
@@ -53,21 +51,7 @@ namespace OpenSilverPdfViewer.ViewModels
             }
         }
 
-        private bool _isPdfLoaded = false;
-        public bool IsPdfLoaded
-        {
-            get => _isPdfLoaded;
-            set
-            {
-                if (_isPdfLoaded != value)
-                {
-                    _isPdfLoaded = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        private int _currentPage = 1;
+        private int _currentPage = 0;
         public int CurrentPage
         {
             get => _currentPage;
@@ -76,8 +60,8 @@ namespace OpenSilverPdfViewer.ViewModels
                 if (_currentPage != value)
                 {
                     _currentPage = value;
-                    CurrentPageChanged.Invoke(this, EventArgs.Empty);
                     OnPropertyChanged();
+                    ShowPageSize();
                 }
             }
         }
@@ -96,6 +80,48 @@ namespace OpenSilverPdfViewer.ViewModels
             }
         }
 
+        private bool _canLoadPdf = false;
+        public bool CanLoadPdf
+        {
+            get => _canLoadPdf;
+            set
+            {
+                if (_canLoadPdf != value)
+                {
+                    _canLoadPdf = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private int _pageZoomLevel = 0;
+        public int PageZoomLevel
+        {
+            get => _pageZoomLevel;
+            set
+            {
+                if (_pageZoomLevel != value)
+                {
+                    _pageZoomLevel = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private RenderModeType _renderMode;
+        public RenderModeType RenderMode
+        {
+            get => _renderMode;
+            set
+            {
+                if (_renderMode != value)
+                {
+                    _renderMode = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         #endregion Properties
         #region Commands
 
@@ -108,17 +134,17 @@ namespace OpenSilverPdfViewer.ViewModels
             }
         }
 
+        private ICommand _setRenderModeCommand;
+        public ICommand SetRenderModeCommand
+        {
+            get
+            {
+                return _setRenderModeCommand ?? (_setRenderModeCommand = new DelegateCommand((param) => SetRenderMode(param), (param) => true));
+            }
+        }
+
         #endregion Commands
-
-        public MainPageViewModel()
-        {
-            CurrentPageChanged += MainPageViewModel_CurrentPageChanged;
-        }
-
-        private async void MainPageViewModel_CurrentPageChanged(object sender, EventArgs e)
-        {
-            await RenderCurrentPage();
-        }
+        #region Methods
 
         public async void LoadPdf(object param)
         {
@@ -140,15 +166,12 @@ namespace OpenSilverPdfViewer.ViewModels
                 baseFileName = sourceOption == "sample1" ? "POH_Calidus_4.0_EN.pdf" : "compressed.tracemonkey-pldi-09.pdf";
                 pageCount = await PdfJs.LoadPdfFile($@"Data\{baseFileName}");
             }
+            CurrentPage = 0; // invalidate current page on new document
 
-            IsPdfLoaded = true;
-            CurrentPage = 1;
-
-            await RenderCurrentPage();
             StatusText = $"PDF - {baseFileName} loaded with {pageCount} pages";
             PageCount = pageCount;
+            CurrentPage = 1;
         }
-
         public async Task<(string, int)> LoadPdfFile()
         {
             string filename = string.Empty;
@@ -173,16 +196,18 @@ namespace OpenSilverPdfViewer.ViewModels
             }
             return (filename, pageCount);
         }
-
-        public async Task RenderCurrentPage()
+        private async void ShowPageSize()
         {
-            if (IsPdfLoaded)
-            {
-                await PdfJs.RenderPageToViewport(CurrentPage, viewCanvasId);
-                var size = await PdfJs.GetPdfPageSize(CurrentPage);
-                PageSizeText = $"Page size: { Math.Round(size.Width / 72d, 2) } x {Math.Round(size.Height / 72d, 2)} in";
-            }
+            var size = await PdfJs.GetPdfPageSize(CurrentPage);
+            PageSizeText = $"Page size: {Math.Round(size.Width / 72d, 2)} x {Math.Round(size.Height / 72d, 2)} in";
         }
+        public void SetRenderMode(object param)
+        {
+            RenderMode = (RenderModeType)param;
+        }
+
+        #endregion Methods
+        #region Events
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
@@ -190,28 +215,6 @@ namespace OpenSilverPdfViewer.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        private event EventHandler CurrentPageChanged;
-    }
-    public class DelegateCommand : ICommand
-    {
-        private Predicate<object> _canExecute;
-        private Action<object> _method;
-
-        public DelegateCommand(Action<object> method, Predicate<object> canExecute)
-        {
-            _method = method;
-            _canExecute = canExecute;
-        }
-
-        public bool CanExecute(object parameter)
-        {
-            return _canExecute == null || _canExecute(parameter);
-        }
-
-        public void Execute(object parameter)
-        {
-            _method(parameter);
-        }
-        public event EventHandler CanExecuteChanged;
+        #endregion Events
     }
 }

@@ -5,6 +5,11 @@
 
 namespace OpenSilverPdfViewer
 {
+    public enum RenderModeType
+    {
+        Dom,
+        OpenSilver
+    }
     public enum ViewModeType
     {
         PageView,

@@ -57,6 +57,26 @@
     <Color x:Key="CMSCellSelectionColor">#80FF0000</Color>
     <Color x:Key="CMSThumbnailSelectionColor">#FF2699D6</Color>
 
+    
+    
+    
+    <Color x:Key="CMSColorHover">#FF4EBFFA</Color>
+    <Color x:Key="CMSColorBorderSelected">#FF1F81E9</Color>
+    <Color x:Key="CMSColorForegroundPressed">White</Color>
+    <Color x:Key="CMSColorDisabledMedium">#FFC9C8CD</Color>
+    <Color x:Key="CMSColorBackgroundSelected">#FF1F81E9</Color>
+    <Color x:Key="CMSColorForegroundNormal">Black</Color>
+    <Color x:Key="CMSColorBorderNormal">#FF808285</Color>
+    <Color x:Key="CMSColorDropShadow">#FF1D1D1D</Color>
+
+    <SolidColorBrush x:Key="CMSBrushBackgroundSelected" Color="{StaticResource CMSColorBackgroundSelected}"/>
+    <SolidColorBrush x:Key="CMSBrushForegroundNormal" Color="{StaticResource CMSColorForegroundNormal}"/>
+    <SolidColorBrush x:Key="CMSBrushHover" Color="{StaticResource CMSColorHover}"/>
+    <SolidColorBrush x:Key="CMSBrushBorderNormal" Color="{StaticResource CMSColorBorderNormal}"/>
+
+
+
+
     <SolidColorBrush x:Key="ElectricBlueBrush" Color="{StaticResource ElectricBlue}"/>
     <SolidColorBrush x:Key="Highlight" Color="#808080" />
     <SolidColorBrush x:Key="Highlight1" Color="#606060" />

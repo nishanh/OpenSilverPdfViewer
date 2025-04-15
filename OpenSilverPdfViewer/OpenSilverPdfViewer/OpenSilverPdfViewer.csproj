@@ -21,13 +21,16 @@
     <Page Include="Controls\PageViewer.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\PageViewToolbar.xaml">
+    <Page Include="Controls\PageZoomCtrl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Styles\BrushStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\ComboBoxStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Styles\GridSplitterStyles.xaml">
@@ -37,6 +40,9 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Styles\PanelCtrlStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\ScrollBarStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Styles\ScrollViewerStyles.xaml">
@@ -54,7 +60,7 @@
     <Compile Include="App.xaml.cs" />
     <Compile Include="Controls\PageNavigationCtrl.xaml.cs" />
     <Compile Include="Controls\PageViewer.xaml.cs" />
-    <Compile Include="Controls\PageViewToolbar.xaml.cs" />
+    <Compile Include="Controls\PageZoomCtrl.xaml.cs" />
     <Compile Include="Controls\PanelCtrl.cs" />
     <Compile Include="Controls\ToolBarButton.cs" />
     <Compile Include="Converters\ValueConverters.cs" />
@@ -62,6 +68,7 @@
     <Compile Include="JSInterop\JSAsyncTaskRunner.cs" />
     <Compile Include="JSInterop\PdfJsWrapper.cs" />
     <Compile Include="MainPage.xaml.cs" />
+    <Compile Include="Utility\DelegateCommand.cs" />
     <Compile Include="Utility\Enumerations.cs" />
     <Compile Include="Utility\ExtMethods.cs" />
     <Compile Include="Utility\Matrix2d.cs" />
@@ -69,6 +76,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Assets\pageview.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\thumbview.png" />
     <Content Include="JSInterop\pdfJsInterop.js">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

@@ -43,4 +43,16 @@ namespace OpenSilverPdfViewer.Converters
             return base.Convert(value, targetType, parameter, culture);
         }
     }
+    
+    public class RenderModeToBoolConverter : ValueConverterBase<RenderModeType>
+    {
+        public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is RenderModeType renderModeType)
+            {
+                return renderModeType == (RenderModeType)parameter;
+            }
+            return false;
+        }
+    }
 }
