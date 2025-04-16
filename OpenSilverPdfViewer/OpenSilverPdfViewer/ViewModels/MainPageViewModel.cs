@@ -13,8 +13,6 @@ using System.Runtime.CompilerServices;
 using OpenSilverPdfViewer.Utility;
 using OpenSilverPdfViewer.JSInterop;
 
-#pragma warning disable CS0067 // The event 'CanExecuteChanged' is never used
-
 namespace OpenSilverPdfViewer.ViewModels
 {
     public class MainPageViewModel : INotifyPropertyChanged
@@ -167,6 +165,7 @@ namespace OpenSilverPdfViewer.ViewModels
                 pageCount = await PdfJs.LoadPdfFile($@"Data\{baseFileName}");
             }
             CurrentPage = 0; // invalidate current page on new document
+            PdfJs.InvalidatePageCache();
 
             StatusText = $"PDF - {baseFileName} loaded with {pageCount} pages";
             PageCount = pageCount;
@@ -198,6 +197,9 @@ namespace OpenSilverPdfViewer.ViewModels
         }
         private async void ShowPageSize()
         {
+            if (CurrentPage < 1 || CurrentPage > PageCount)
+                return;
+
             var size = await PdfJs.GetPdfPageSize(CurrentPage);
             PageSizeText = $"Page size: {Math.Round(size.Width / 72d, 2)} x {Math.Round(size.Height / 72d, 2)} in";
         }

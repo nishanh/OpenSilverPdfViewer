@@ -7,14 +7,21 @@ using System;
 using System.Windows;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+
 using OpenSilverPdfViewer.JSInterop;
 
 namespace OpenSilverPdfViewer.Controls
 {
     public partial class PageViewer : UserControl
     {
+        #region Fields
+
         private const string viewCanvasId = "pageViewCanvas";
         private PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Interop;
+
+        #endregion Fields
+        #region Dependency Properties
 
         public static readonly DependencyProperty PreviewPageProperty = DependencyProperty.Register("PreviewPage", typeof(int), typeof(PageViewer),
             new PropertyMetadata(1, OnPreviewPageChanged));
@@ -41,19 +48,25 @@ namespace OpenSilverPdfViewer.Controls
             set => SetValue(RenderModeProperty, value);
         }
 
+        #endregion Dependency Properties
+        #region Dependency Property Event Handlers
+
         private static async void OnPreviewPageChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
             await ctrl.RenderCurrentPage();
         }
-        private static void OnZoomLevelChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
+        private static async void OnZoomLevelChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
+            await ctrl.RenderCurrentPage();
         }
         private static void OnRenderModeChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
         }
+
+        #endregion Dependency Property Event Handlers
 
         public PageViewer()
         {
@@ -66,20 +79,53 @@ namespace OpenSilverPdfViewer.Controls
             */
         }
 
-        public async Task RenderCurrentPage()
+        private async Task RenderCurrentPage()
         {
             if (PreviewPage > 0)
-                await PdfJs.RenderPageToViewport(PreviewPage, viewCanvasId);
+            {
+                await PdfJs.RenderPageToViewport(PreviewPage, ZoomLevel, viewCanvasId);
+                SetScrollBars();
+            }
         }
-
-        private void PageScrollHorz_Scroll(object sender, System.Windows.Controls.Primitives.ScrollEventArgs e)
+        private void SetScrollBars()
         {
+            var viewportSize = PdfJs.GetViewportSize(viewCanvasId);
+            var pageSize = PdfJs.GetPageImageSize(PreviewPage);
+            var displayScale = ZoomLevel == 0 ?
+                Math.Min(viewportSize.Width / pageSize.Width, viewportSize.Height / pageSize.Height) :
+                ZoomLevel / 100d;
 
+            var deviceSize = new Size(pageSize.Width * displayScale, pageSize.Height * displayScale);
+
+            var scrollViewWidth = Math.Max(deviceSize.Width, viewportSize.Width);
+            var scrollViewHeight = Math.Max(deviceSize.Height, viewportSize.Height);
+            var scrollExtentX = Math.Max(0, deviceSize.Width - viewportSize.Width);
+            var scrollExtentY = Math.Max(0, deviceSize.Height - viewportSize.Height);
+
+            pageScrollBarHorz.Value *= displayScale;
+            pageScrollBarHorz.Maximum = scrollExtentX;
+            pageScrollBarHorz.ViewportSize = scrollViewWidth;
+
+            pageScrollBarVert.Value *= displayScale;
+            pageScrollBarVert.Maximum = scrollExtentY;
+            pageScrollBarVert.ViewportSize = scrollViewHeight;
+
+            if (ZoomLevel != 0)
+                PdfJs.ScrollViewportImage(PreviewPage, viewCanvasId, ZoomLevel,
+                    (int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
         }
-
-        private void PageScrollVert_Scroll(object sender, System.Windows.Controls.Primitives.ScrollEventArgs e)
+        private double GetDisplayScale()
         {
-
+            var pageSize = PdfJs.GetPageImageSize(PreviewPage);
+            var viewportSize = PdfJs.GetViewportSize(viewCanvasId);
+            return ZoomLevel == 0 ?
+                Math.Min(viewportSize.Width / pageSize.Width, viewportSize.Height / pageSize.Height) :
+                ZoomLevel / 100d;
+        }
+        private void PageScrollBars_Scroll(object sender, ScrollEventArgs e)
+        {
+            PdfJs.ScrollViewportImage(PreviewPage, viewCanvasId, ZoomLevel,
+                (int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
         }
 
         private async void Preview_SizeChanged(object sender, SizeChangedEventArgs e)

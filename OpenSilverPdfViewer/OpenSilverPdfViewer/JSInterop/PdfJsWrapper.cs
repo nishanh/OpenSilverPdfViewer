@@ -22,6 +22,8 @@ namespace OpenSilverPdfViewer.JSInterop
         public string Version { get; private set; }
 
         private PdfJsWrapper() { }
+        #region Asynchronous Tasks
+
         public async Task Init()
         {
             if (string.IsNullOrEmpty(Version))
@@ -29,7 +31,7 @@ namespace OpenSilverPdfViewer.JSInterop
                 try
                 {
                     await OpenSilver.Interop.LoadJavaScriptFile(scriptResourceName);
-                    Version = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getLibraryVersion");
+                    Version = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getLibraryVersion2");
                 }
                 catch (Exception ex)
                 {
@@ -47,28 +49,16 @@ namespace OpenSilverPdfViewer.JSInterop
             await Init();
             return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("loadPdfStream", base64stream);
         }
-        public async Task<int> RenderPage(int pageNumber, string canvasId)
+        public async Task<int> RenderPageToViewport(int pageNumber, int zoomLevel, string canvasId)
         {
             await Init();
-            return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("renderPage", pageNumber, canvasId);
-        }
-        public async Task<int> RenderPageToViewport(int pageNumber, string canvasId)
-        {
-            await Init();
-            return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("renderPageToViewport", pageNumber, canvasId);
+            return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("renderPageToViewport", pageNumber, zoomLevel, canvasId);
         }
         public async Task<Size> GetPdfPageSize(int pageNumber)
         {
             await Init();
-            var json = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getPageSize", pageNumber);
-
-            var dimensions = json.Trim('{').Trim('}').Split(',');
-            var widthStr = dimensions[0].Substring(dimensions[0].IndexOf(':') + 1);
-            var width = double.Parse(widthStr);
-            var heightStr = dimensions[1].Substring(dimensions[1].IndexOf(':') + 1);
-            var height = double.Parse(heightStr);
-
-            return new Size(width, height);
+            var json = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getLogicalPageSize", pageNumber);
+            return json.ParseJsonSize();
         }
         public async Task<Image> GetPdfPageImage(int pageNumber, double scaleFactor)
         {
@@ -90,5 +80,32 @@ namespace OpenSilverPdfViewer.JSInterop
             }
             return image;
         }
+
+        #endregion Asynchronous Tasks
+        #region Synchronous Tasks
+
+        public Size GetPageImageSize(int pageNumber)
+        {
+            var result = OpenSilver.Interop.ExecuteJavaScript("getDevicePageSize($0)", pageNumber);
+            var json = (string)Convert.ChangeType(result, typeof(string));
+            return json.ParseJsonSize();
+        }
+        public Size GetViewportSize(string canvasId)
+        {
+            var result = OpenSilver.Interop.ExecuteJavaScript("getViewportSize($0)", canvasId);
+            var json = (string)Convert.ChangeType(result, typeof(string));
+            return json.ParseJsonSize();
+        }
+        public void ScrollViewportImage(int pageNumber, string canvasId, int zoomLevel, int scrollX, int scrollY)
+        {
+            OpenSilver.Interop.ExecuteJavaScript("scrollViewportImage($0,$1,$2,$3,$4)", 
+                pageNumber, canvasId, zoomLevel, scrollX, scrollY);
+        }
+        public void InvalidatePageCache()
+        {
+            OpenSilver.Interop.ExecuteJavaScript("invalidatePageCache()");
+        }
+
+        #endregion Synchronous Tasks
     }
 }

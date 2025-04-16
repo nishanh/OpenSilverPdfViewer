@@ -6,7 +6,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
-
+using System.Windows;
 using CSHTML5.Native.Html.Controls;
 
 namespace OpenSilverPdfViewer.JSInterop
@@ -30,6 +30,15 @@ namespace OpenSilverPdfViewer.JSInterop
             }
             else
                  throw new InvalidOperationException("No field with the specified name was found");
+        }
+        public static Size ParseJsonSize(this string json)
+        {
+            var dimensions = json.Trim('{').Trim('}').Split(',');
+            var widthStr = dimensions[0].Substring(dimensions[0].IndexOf(':') + 1);
+            var width = double.Parse(widthStr);
+            var heightStr = dimensions[1].Substring(dimensions[1].IndexOf(':') + 1);
+            var height = double.Parse(heightStr);
+            return new Size(width, height);
         }
     }
 }

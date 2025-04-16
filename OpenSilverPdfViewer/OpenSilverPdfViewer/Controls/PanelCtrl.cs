@@ -27,12 +27,6 @@ namespace OpenSilverPdfViewer.Controls
             // this.DefaultStyleKey = typeof(PanelCtrl);
             SizeChanged += PanelCtrl_SizeChanged;
         }
-        /*
-        public override void OnApplyTemplate()
-        {
-            base.OnApplyTemplate();
-        }
-        */
         private void PanelCtrl_SizeChanged(object sender, SizeChangedEventArgs e)
         {
         }

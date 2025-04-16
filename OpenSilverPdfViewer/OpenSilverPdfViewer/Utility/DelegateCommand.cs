@@ -6,6 +6,8 @@
 using System;
 using System.Windows.Input;
 
+#pragma warning disable CS0067 // The event 'CanExecuteChanged' is never used
+
 namespace OpenSilverPdfViewer.Utility
 {
     public class DelegateCommand : ICommand
@@ -30,4 +32,9 @@ namespace OpenSilverPdfViewer.Utility
         }
         public event EventHandler CanExecuteChanged;
     }
+
+    public interface IRenderStrategy
+    {
+        void RenderPage(int pageNumber);
+    }   
 }

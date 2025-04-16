@@ -50,24 +50,22 @@
                 <ScrollBar 
                     x:Name="pageScrollBarHorz"
                     Style="{StaticResource CMSScrollBarHorizontal}"
-                    Scroll="PageScrollHorz_Scroll"
+                    Scroll="PageScrollBars_Scroll"
                     Margin="7,0,0,3"
                     Grid.Row="1"
                     Orientation="Horizontal"
                     Minimum="0"
-                    ViewportSize="250"
-                    Maximum="100"
+                    Maximum="0"
                     Value="0"/>
                 <ScrollBar 
                     x:Name="pageScrollBarVert"
                     Style="{StaticResource CMSScrollBarVertical}"
-                    Scroll="PageScrollVert_Scroll"
+                    Scroll="PageScrollBars_Scroll"
                     Grid.Column="1"
                     Orientation="Vertical"
                     Margin="0,7,3,0"
-                    ViewportSize="200"
                     Minimum="0"
-                    Maximum="100"
+                    Maximum="0"
                     Value="0"/>
             </Grid>
         </Border>
