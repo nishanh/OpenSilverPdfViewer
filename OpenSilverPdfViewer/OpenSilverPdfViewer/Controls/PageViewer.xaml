@@ -8,8 +8,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:native="clr-namespace:CSHTML5.Native.Html.Controls;assembly=OpenSilver"    
-    xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls"
-    SizeChanged="Preview_SizeChanged">
+    xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -19,10 +18,45 @@
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ToolBarButtonStyles.xaml"/>
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ComboBoxStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <SolidColorBrush x:Key="RulerBrush" Color="#FF343434"/>
         </ResourceDictionary>
     </UserControl.Resources>
 
     <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="RulerStates">
+                <VisualState x:Name="RulerOn">
+                    <Storyboard 
+                        Completed="RulerOnStoryboard_Completed">
+                        <DoubleAnimation 
+                            Storyboard.TargetName="horzRulerBorder"
+                            Storyboard.TargetProperty="(FrameworkElement.Height)"
+                            Duration="0:0:0.2"
+                            To="30"/>
+                        <DoubleAnimation 
+                            Storyboard.TargetName="vertRulerBorder"
+                            Storyboard.TargetProperty="(FrameworkElement.Width)"
+                            Duration="0:0:0.2"
+                            To="30"/>
+                    </Storyboard>
+                </VisualState>
+                <VisualState x:Name="RulerOff">
+                    <Storyboard 
+                        Completed="RulerOffStoryboard_Completed">
+                        <DoubleAnimation 
+                            Storyboard.TargetName="horzRulerBorder"
+                            Storyboard.TargetProperty="(FrameworkElement.Height)"
+                            Duration="0:0:0.2"
+                            To="0"/>
+                        <DoubleAnimation 
+                            Storyboard.TargetName="vertRulerBorder"
+                            Storyboard.TargetProperty="(FrameworkElement.Width)"
+                            Duration="0:0:0.2"
+                            To="0"/>
+                    </Storyboard>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
         <Grid.RowDefinitions>
             <RowDefinition/>
             <RowDefinition Height="Auto"/>
@@ -30,14 +64,38 @@
         <Border>
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Grid Margin="10,10,10,3">
+                <Border 
+                    x:Name="horzRulerBorder"
+                    Grid.Row="0" 
+                    Grid.ColumnSpan="3" 
+                    Background="{StaticResource RulerBrush}"
+                    BorderBrush="{StaticResource CMSDarkBorderBrush}"
+                    Height="0">
+                    <Canvas x:Name="horzRuler"/>
+                </Border>
+                <Border 
+                    x:Name="vertRulerBorder"
+                    Grid.Row="1" 
+                    Grid.RowSpan="2" 
+                    Background="{StaticResource RulerBrush}"
+                    BorderBrush="{StaticResource CMSDarkBorderBrush}"
+                    Width="0">
+                    <Canvas x:Name="vertRuler"/>
+                </Border>
+                <Grid 
+                    Grid.Row="1" 
+                    Grid.Column="1" 
+                    SizeChanged="Preview_SizeChanged"
+                    Margin="10,10,10,3">
                     <Canvas 
                         x:Name="pageImageCanvas" 
                         ClipToBounds="True"
@@ -52,7 +110,8 @@
                     Style="{StaticResource CMSScrollBarHorizontal}"
                     Scroll="PageScrollBars_Scroll"
                     Margin="7,0,0,3"
-                    Grid.Row="1"
+                    Grid.Row="2"
+                    Grid.Column="1"
                     Orientation="Horizontal"
                     Minimum="0"
                     Maximum="0"
@@ -61,7 +120,8 @@
                     x:Name="pageScrollBarVert"
                     Style="{StaticResource CMSScrollBarVertical}"
                     Scroll="PageScrollBars_Scroll"
-                    Grid.Column="1"
+                    Grid.Row="1"
+                    Grid.Column="2"
                     Orientation="Vertical"
                     Margin="0,7,3,0"
                     Minimum="0"
@@ -69,6 +129,7 @@
                     Value="0"/>
             </Grid>
         </Border>
+        <!-- Toolbar -->
         <Border 
             Grid.Row="1"
             Padding="10"
@@ -86,6 +147,7 @@
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
                     <local:ToolBarButton
+                        Click="RulerButtonOn_Click"
                         ShadowThickness="1,0,1,1"
                         DisabledMargin="1"
                         CornerRadius="3,0,0,3">
@@ -94,6 +156,7 @@
                             Source="/OpenSilverPdfViewer;component/Assets/pageview.png"/>
                     </local:ToolBarButton>
                     <local:ToolBarButton
+                        Click="RulerButtonOff_Click"
                         ShadowThickness="1,0,1,1"
                         DisabledMargin="1"
                         CornerRadius="0,3,3,0">

@@ -49,10 +49,10 @@ namespace OpenSilverPdfViewer.JSInterop
             await Init();
             return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("loadPdfStream", base64stream);
         }
-        public async Task<int> RenderPageToViewport(int pageNumber, int zoomLevel, string canvasId)
+        public async Task<int> RenderPageToViewport(int pageNumber, int dpi, int zoomLevel, string canvasId)
         {
             await Init();
-            return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("renderPageToViewport", pageNumber, zoomLevel, canvasId);
+            return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("renderPageToViewport", pageNumber, dpi, zoomLevel, canvasId);
         }
         public async Task<Size> GetPdfPageSize(int pageNumber)
         {

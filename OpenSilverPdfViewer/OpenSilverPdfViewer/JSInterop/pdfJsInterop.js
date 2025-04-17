@@ -115,9 +115,9 @@ function getViewportSize(canvasId) {
     return JSON.stringify(viewportSize);
 }
 
-function renderPageToViewport(pageNumber, zoomLevel, canvasId, callback) {
+function renderPageToViewport(pageNumber, dpi, zoomLevel, canvasId, callback) {
     console.log("renderPageToViewport() begin: ", pageNumber, canvasId);
-    var promise = (async () => await renderPageToViewportAsync(pageNumber, zoomLevel, canvasId))();
+    var promise = (async () => await renderPageToViewportAsync(pageNumber, dpi, zoomLevel, canvasId))();
     if (callback != undefined) {
         promise.then((result) => callback(result));
     }
@@ -152,7 +152,6 @@ function scrollViewportImage(pageNumber, canvasId, zoomLevel, scrollX, scrollY) 
 
     var ctx = destinationCanvas.getContext('2d');
     ctx.clearRect(0, 0, viewportRect.width, viewportRect.height);
-    // ctx.drawImage(sourceCanvas, -scrollX, -scrollY, scaledWidth, scaledHeight);
 
     // Draw only a sub-rect of the source to the destination
     ctx.drawImage(sourceCanvas,
@@ -267,16 +266,14 @@ async function loadPdfStreamAsync(pdfFileStream) {
 
 // First renders the page to an offscreen canvas and then draws it to the target canvas at scale
 // Will attempt to retrieve the page image from the cache if it has already been rendered
-async function renderPageToViewportAsync(pageNumber, zoomLevel, canvasId) {
+async function renderPageToViewportAsync(pageNumber, dpi, zoomLevel, canvasId) {
     if (!this.pdfDocument) {
         console.error('No PDF loaded. Call loadPdfFile first.');
         return -1; // Indicate an error
     }
     try {
-        // Set the render desired dpi.
-        // Higher values will result in better quality images, but reduce performance.
+        // Higher dpi values will result in better quality images, but reduce performance.
         // Values that are not multiples of 72 may cause interpolation artifacts as it will be misaligned with the native Pdf 72pt grid.
-        const dpi = 144; 
         const sourceScale = dpi / 72.0; // Calculate the scale factor based on the native PDF DPI
 
         var canvas = pageCache.get(pageNumber);
@@ -336,8 +333,8 @@ async function renderPageToViewportAsync(pageNumber, zoomLevel, canvasId) {
     }
 }
 
-// Renders the page to an offscreen canvas and returns the image data URL.
-// Using scale factors that create large images is not recommended as it will cause the browser to exceed its memory limits.
+// Renders the page to an offscreen canvas and returns the image data stream as a string.
+// Using scale factors that generate large images is not recommended as it will cause the browser to exceed its memory limits.
 async function renderPageThumbnailAsync(pageNumber, thumbScale) {
     if (!this.pdfDocument) {
         console.error('No PDF loaded. Call loadPdfFile first.');

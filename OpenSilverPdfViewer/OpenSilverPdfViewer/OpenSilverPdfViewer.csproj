@@ -79,6 +79,7 @@
     <Content Include="Assets\pageview.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\ruler2.png" />
     <Content Include="Assets\thumbview.png" />
     <Content Include="JSInterop\pdfJsInterop.js">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>

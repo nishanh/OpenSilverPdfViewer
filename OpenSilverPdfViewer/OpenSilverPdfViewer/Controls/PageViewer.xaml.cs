@@ -10,6 +10,11 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 
 using OpenSilverPdfViewer.JSInterop;
+using System.ComponentModel.DataAnnotations;
+using System.Windows.Controls.DataVisualization.Charting;
+using System.Windows.Media;
+using System.Windows.Shapes;
+using System.Globalization;
 
 namespace OpenSilverPdfViewer.Controls
 {
@@ -17,9 +22,12 @@ namespace OpenSilverPdfViewer.Controls
     {
         #region Fields
 
+        private const int renderDPI = 144;
         private const string viewCanvasId = "pageViewCanvas";
+        private bool _rulersOn = false;
         private PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Interop;
 
+      
         #endregion Fields
         #region Dependency Properties
 
@@ -83,9 +91,162 @@ namespace OpenSilverPdfViewer.Controls
         {
             if (PreviewPage > 0)
             {
-                await PdfJs.RenderPageToViewport(PreviewPage, ZoomLevel, viewCanvasId);
+                await PdfJs.RenderPageToViewport(PreviewPage, renderDPI, ZoomLevel, viewCanvasId);
                 SetScrollBars();
+                DrawRulers();
             }
+        }
+        private void DrawRulers()
+        {
+            if (PreviewPage == 0 || _rulersOn == false) return;
+
+            double logScale = GetLogicalViewportScale();
+
+            // Font size and tick color
+            const int fontSize = 10;
+            var rulerFont = new FontFamily("Verdana");
+            var tickBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0xA9, 0xA9, 0xA9));
+
+            // Tick mark length constants
+            const int wholeTickLength = 12;
+            const int sixteenthTick = wholeTickLength / 8 + 1;
+            const int eighthTick = wholeTickLength / 4 + 1;
+            const int quarterTick = wholeTickLength / 3 + 2;
+            const int halfTick = wholeTickLength / 2 + 2;
+            
+            var resRuler = 0.125;
+            var wholeUnitInterval = (int)(1d / resRuler);
+
+            var margin = 10;
+            var rulerSize = 30d;
+            var offset = margin + rulerSize;
+
+            var posX = offset - pageScrollBarHorz.Value;
+            var posY = margin - pageScrollBarVert.Value;
+
+            if (ZoomLevel == 0)
+            {
+                var displayScale = GetDisplayScale();
+                var sourcePageSize = PdfJs.GetPageImageSize(PreviewPage);
+                var viewportSize = PdfJs.GetViewportSize(viewCanvasId);
+                var pxWidth = sourcePageSize.Width * displayScale;
+                var pxHeight = sourcePageSize.Height * displayScale;
+                posX = ((viewportSize.Width - pxWidth) / 2) + offset;
+                posY = ((viewportSize.Height - pxHeight) / 2) + margin;
+            }
+
+            // Erase previous ruler ticks
+            horzRuler.Children.Clear();
+            vertRuler.Children.Clear();
+
+            // Clip to ruler bounds
+            horzRuler.Clip = new RectangleGeometry { Rect = new Rect(rulerSize, 0, horzRuler.ActualWidth, horzRuler.ActualHeight) };
+            vertRuler.Clip = new RectangleGeometry { Rect = new Rect(0, 0, vertRuler.ActualWidth, vertRuler.ActualHeight) };
+
+            var rulerBorderBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0x48, 0x48, 0x48));
+            horzRuler.Children.Add(new Line { X1 = vertRuler.ActualWidth, Y1 = horzRuler.ActualHeight - 1, X2 = horzRuler.ActualWidth, Y2 = horzRuler.ActualHeight - 1, Stroke = rulerBorderBrush });
+            vertRuler.Children.Add(new Line { X1 = vertRuler.ActualWidth - 1, Y1 = 0, X2 = vertRuler.ActualWidth - 1, Y2 = vertRuler.ActualHeight, Stroke = rulerBorderBrush });
+
+            // Find the first tick mark we can reasonably draw
+            var originX = posX * logScale;
+            var startX = originX - (int)originX;
+            var i = -(int)(startX / resRuler);
+            var devStartX = startX / logScale;
+
+            var pos = 0d;
+            while (pos < horzRuler.ActualWidth)
+            {
+                pos = Math.Round(devStartX + ((i * resRuler) / logScale), 0);
+
+                var tickLength = sixteenthTick;
+                if (i % wholeUnitInterval == 0) tickLength = wholeTickLength;
+                else if (i % (wholeUnitInterval / 2) == 0) tickLength = halfTick;
+                else if (i % (wholeUnitInterval / 4) == 0) tickLength = quarterTick;
+                else if (i % (wholeUnitInterval / 8) == 0) tickLength = eighthTick;
+
+                // Draw the ruler tick mark
+                horzRuler.Children.Add(new Line
+                {
+                    X1 = pos,
+                    X2 = pos,
+                    Y1 = horzRuler.ActualHeight,
+                    Y2 = horzRuler.ActualHeight - tickLength,
+                    Stroke = tickBrush,
+                    StrokeThickness = 1
+                });
+                if (i % wholeUnitInterval == 0)
+                {
+                    var unitVal = (i / wholeUnitInterval) - (int)originX;
+                    var rulerVal = new TextBlock
+                    {
+                        Foreground = tickBrush,
+                        FontFamily = rulerFont,
+                        FontSize = fontSize,
+                        Text = unitVal.ToString(CultureInfo.InvariantCulture)
+                    };
+                    rulerVal.SetValue(Canvas.TopProperty, 2d); // wholeTickLength - textSize.Height + 2);
+                    rulerVal.SetValue(Canvas.LeftProperty, pos - (rulerVal.ActualWidth / 2));
+                    horzRuler.Children.Add(rulerVal);
+                }
+                i++;
+            }
+
+            var originY = posY * logScale;
+            var startY = originY - (int)originY;
+            i = -(int)(startY / resRuler);
+            var devStartY = startY / logScale;
+
+            pos = 0d;
+            while (pos < vertRuler.ActualHeight)
+            {
+                pos = Math.Round(devStartY + ((i * resRuler) / logScale), 0);
+
+                var tickLength = sixteenthTick;
+                if (i % wholeUnitInterval == 0) tickLength = wholeTickLength;
+                else if (i % (wholeUnitInterval / 2) == 0) tickLength = halfTick;
+                else if (i % (wholeUnitInterval / 4) == 0) tickLength = quarterTick;
+                else if (i % (wholeUnitInterval / 8) == 0) tickLength = eighthTick;
+
+                // Draw the ruler tick mark
+                vertRuler.Children.Add(new Line
+                {
+                    Y1 = pos,
+                    Y2 = pos,
+                    X1 = vertRuler.ActualWidth,
+                    X2 = vertRuler.ActualWidth - tickLength,
+                    Stroke = tickBrush,
+                    StrokeThickness = 1
+                });
+
+                if (i % wholeUnitInterval == 0)
+                {
+                    var unitVal = (i / wholeUnitInterval) - (int)originY;
+                    var rulerVal = new TextBlock
+                    {
+                        Foreground = tickBrush,
+                        FontFamily = rulerFont,
+                        FontSize = fontSize,
+                        Text = unitVal.ToString(CultureInfo.InvariantCulture)
+                    };
+                    rulerVal.SetValue(Canvas.LeftProperty, 2d);
+                    rulerVal.SetValue(Canvas.TopProperty, pos - (rulerVal.ActualHeight / 2));
+                    vertRuler.Children.Add(rulerVal);
+                }
+                i++;
+            }
+        }
+        private double GetLogicalViewportScale()
+        {
+            var displayScale = GetDisplayScale();
+            var sourcePageSize = PdfJs.GetPageImageSize(PreviewPage);
+
+            var dpiScale = renderDPI / 72d;
+            var ptWidth = sourcePageSize.Width / dpiScale;
+            var pxWidth = sourcePageSize.Width * displayScale;
+            var logScale = pxWidth / ptWidth * 72d;
+
+            // Scale to convert from pixels to inches at the current zoom level
+            return 1d / logScale;
         }
         private void SetScrollBars()
         {
@@ -126,11 +287,32 @@ namespace OpenSilverPdfViewer.Controls
         {
             PdfJs.ScrollViewportImage(PreviewPage, viewCanvasId, ZoomLevel,
                 (int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
+
+            DrawRulers(); 
         }
 
         private async void Preview_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             await RenderCurrentPage();
+        }
+        private void RulerOnStoryboard_Completed(object sender, EventArgs e)
+        {
+            _rulersOn = true;
+            DrawRulers();
+        }
+        private void RulerOffStoryboard_Completed(object sender, EventArgs e)
+        {
+            _rulersOn = false;
+            horzRuler.Children.Clear();
+            vertRuler.Children.Clear();
+        }
+        public void RulerButtonOn_Click(object sender, RoutedEventArgs e)
+        {
+            VisualStateManager.GoToState(this, "RulerOn", false);
+        }
+        public void RulerButtonOff_Click(object sender, RoutedEventArgs e)
+        {
+            VisualStateManager.GoToState(this, "RulerOff", false);
         }
     }
 }
