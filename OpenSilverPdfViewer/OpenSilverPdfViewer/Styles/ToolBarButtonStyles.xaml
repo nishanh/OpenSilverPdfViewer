@@ -112,52 +112,127 @@
                             Opacity="0"
                             IsHitTestVisible="False"
                             Background="{StaticResource CMSCtrlDisabledBodyBrush}"
-                            CornerRadius="{TemplateBinding DisabledRadius}"/>
+                            CornerRadius="{TemplateBinding CornerRadius}"/>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
-    <Style x:Key="CMSToggleButtonStyle" TargetType="ToggleButton">
-        <Setter Property="OverridesDefaultStyle" Value="true"/>
-        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
-        <Setter Property="MinHeight" Value="20"/>
-        <Setter Property="MinWidth" Value="20"/>
-        <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Style x:Key="CMSToggleButtonStyle"  TargetType="ToggleButton">
+        <Setter Property="FontFamily" Value="Verdana" />
+        <Setter Property="FontSize" Value="10" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
-                    <Grid>
+                    <Grid 
+                        Cursor="Hand"
+                        TextOptions.TextHintingMode="Fixed">
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
-                                <VisualState x:Name="Normal"/>
+                                <VisualState x:Name="Normal" />
                                 <VisualState x:Name="MouseOver">
                                     <Storyboard>
                                         <ColorAnimation 
-                                            Storyboard.TargetName="Bg" 
+                                            Storyboard.TargetName="Background" 
                                             Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" 
                                             To="{StaticResource RaisedHighlightColor}" 
                                             Duration="0:0:0.1" />
                                         <ColorAnimation 
-                                            Storyboard.TargetName="Bg" 
+                                            Storyboard.TargetName="Background" 
                                             Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[0].(GradientStop.Color)" 
                                             To="{StaticResource CtrlHoverStartColor}" 
                                             Duration="0:0:0.1" />
                                         <ColorAnimation 
-                                            Storyboard.TargetName="Bg" 
+                                            Storyboard.TargetName="Background" 
                                             Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].(GradientStop.Color)" 
                                             To="{StaticResource CtrlNormalEndColor}" 
                                             Duration="0:0:0.1" />
                                     </Storyboard>
                                 </VisualState>
-                                <VisualState x:Name="Pressed"/>
-                                <VisualState x:Name="Disabled"/>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Duration="0"
+                                            To="1"
+                                            Storyboard.TargetName="contentPresenterChecked"
+                                            Storyboard.TargetProperty="(RenderTransform).(TranslateTransform.Y)"/>
+                                        <DoubleAnimation 
+                                            Duration="0"
+                                            To="1"
+                                            Storyboard.TargetProperty="Opacity"
+                                            Storyboard.TargetName="BackgroundChecked" />
+                                        <ObjectAnimationUsingKeyFrames 
+                                            Storyboard.TargetName="contentControlChecked"
+                                            Storyboard.TargetProperty="Visibility">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <Visibility>Visible</Visibility>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames 
+                                            Storyboard.TargetProperty="Visibility"
+                                            Storyboard.TargetName="contentControl">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <Visibility>Collapsed</Visibility>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <Storyboard>
+                                            <DoubleAnimation 
+                                                Storyboard.TargetProperty="Opacity" 
+                                                Storyboard.TargetName="DisabledOverlay"
+                                                To="1" 
+                                                Duration="0"/>
+                                        </Storyboard>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="CheckStates">
+                                <VisualState x:Name="Checked">
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Duration="0"
+                                            To="1"
+                                            Storyboard.TargetName="contentPresenterChecked"
+                                            Storyboard.TargetProperty="(RenderTransform).(TranslateTransform.Y)"/>
+                                        <DoubleAnimation 
+                                            Duration="0"
+                                            To="1"
+                                            Storyboard.TargetProperty="Opacity"
+                                            Storyboard.TargetName="BackgroundChecked" />
+                                        <ObjectAnimationUsingKeyFrames 
+                                            Storyboard.TargetName="contentControlChecked"
+                                            Storyboard.TargetProperty="Visibility">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <Visibility>Visible</Visibility>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames 
+                                            Storyboard.TargetProperty="Visibility"
+                                            Storyboard.TargetName="contentControl">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <Visibility>Collapsed</Visibility>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Unchecked" />
                             </VisualStateGroup>
                         </VisualStateManager.VisualStateGroups>
                         <Border 
-                            x:Name="Bg" 
-                            CornerRadius="3" 
+                            x:Name="Background"
+                            CornerRadius="4" 
+                            Opacity="1"
                             BorderBrush="{StaticResource RaisedHighlightBrush}" 
                             BorderThickness="0,1,0,0">
                             <Border.Background>
@@ -168,31 +243,61 @@
                             </Border.Background>
                         </Border>
                         <Border 
-                            x:Name="Dn" 
+                            x:Name="BackgroundChecked"
                             Opacity="0" 
                             BorderThickness="0,1,0,1" 
-                            CornerRadius="3" 
-                            BorderBrush="{StaticResource CtrlBorderBrush}" >
+                            CornerRadius="4" 
+                            BorderBrush="{StaticResource CtrlBorderBrush}">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Offset="0.0" Color="{StaticResource CtrlPressedStartColor}" />
-                                    <GradientStop Offset="1.2" Color="{StaticResource CtrlPressedEndColor}" />
+                                    <GradientStop Offset="0.0" Color="{StaticResource CtrlCheckedStartColor}" />
+                                    <GradientStop Offset="1.2" Color="{StaticResource CtrlCheckedEndColor}" />
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>
                         <Border 
                             x:Name="Sh" 
                             BorderBrush="{StaticResource RaisedShadowBrush}" 
-                            BorderThickness="0,0,0,1" 
-                            CornerRadius="3" />
-                        <ContentPresenter
-                            x:Name="Content"
-                            Margin="0,0,0,2"
-                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                            VerticalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                            BorderThickness="1,0,1,1" 
+                            CornerRadius="4"/>
+                        <ContentControl 
+                            x:Name="contentControl"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                            <ContentPresenter 
+                                x:Name="contentPresenter"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+                        </ContentControl>
+                        <ContentControl 
+                            x:Name="contentControlChecked"
+                            Foreground="Transparent"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Visibility="Collapsed">
+                            <ContentPresenter 
+                                x:Name="contentPresenterChecked"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                                <ContentPresenter.RenderTransform>
+                                    <TranslateTransform Y="0"/>
+                                </ContentPresenter.RenderTransform>
+                            </ContentPresenter>
+                        </ContentControl>
+                        <Border 
+                            x:Name="DisabledOverlay"
+                            Opacity="0"
+                            IsHitTestVisible="False"
+                            Background="{StaticResource CMSCtrlDisabledBodyBrush}"
+                            CornerRadius="4"/>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
+
 </ResourceDictionary>

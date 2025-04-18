@@ -5,16 +5,14 @@
 
 using System;
 using System.Windows;
+using System.Globalization;
+using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 
 using OpenSilverPdfViewer.JSInterop;
-using System.ComponentModel.DataAnnotations;
-using System.Windows.Controls.DataVisualization.Charting;
-using System.Windows.Media;
-using System.Windows.Shapes;
-using System.Globalization;
 
 namespace OpenSilverPdfViewer.Controls
 {
@@ -62,6 +60,7 @@ namespace OpenSilverPdfViewer.Controls
         private static async void OnPreviewPageChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
+            ctrl.rulerToggleBtn.IsEnabled = (int)e.NewValue > 0;
             await ctrl.RenderCurrentPage();
         }
         private static async void OnZoomLevelChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
@@ -75,6 +74,7 @@ namespace OpenSilverPdfViewer.Controls
         }
 
         #endregion Dependency Property Event Handlers
+        #region Implementation
 
         public PageViewer()
         {
@@ -235,19 +235,6 @@ namespace OpenSilverPdfViewer.Controls
                 i++;
             }
         }
-        private double GetLogicalViewportScale()
-        {
-            var displayScale = GetDisplayScale();
-            var sourcePageSize = PdfJs.GetPageImageSize(PreviewPage);
-
-            var dpiScale = renderDPI / 72d;
-            var ptWidth = sourcePageSize.Width / dpiScale;
-            var pxWidth = sourcePageSize.Width * displayScale;
-            var logScale = pxWidth / ptWidth * 72d;
-
-            // Scale to convert from pixels to inches at the current zoom level
-            return 1d / logScale;
-        }
         private void SetScrollBars()
         {
             var viewportSize = PdfJs.GetViewportSize(viewCanvasId);
@@ -283,6 +270,19 @@ namespace OpenSilverPdfViewer.Controls
                 Math.Min(viewportSize.Width / pageSize.Width, viewportSize.Height / pageSize.Height) :
                 ZoomLevel / 100d;
         }
+        private double GetLogicalViewportScale()
+        {
+            var displayScale = GetDisplayScale();
+            var sourcePageSize = PdfJs.GetPageImageSize(PreviewPage);
+
+            var dpiScale = renderDPI / 72d;
+            var ptWidth = sourcePageSize.Width / dpiScale;
+            var pxWidth = sourcePageSize.Width * displayScale;
+            var logScale = pxWidth / ptWidth * 72d;
+
+            // Scale to convert from pixels to inches at the current zoom level
+            return 1d / logScale;
+        }
         private void PageScrollBars_Scroll(object sender, ScrollEventArgs e)
         {
             PdfJs.ScrollViewportImage(PreviewPage, viewCanvasId, ZoomLevel,
@@ -306,13 +306,13 @@ namespace OpenSilverPdfViewer.Controls
             horzRuler.Children.Clear();
             vertRuler.Children.Clear();
         }
-        public void RulerButtonOn_Click(object sender, RoutedEventArgs e)
+        public void RulerToggle(object sender, RoutedEventArgs e)
         {
-            VisualStateManager.GoToState(this, "RulerOn", false);
+            var toggleButton = (ToggleButton)sender;
+            var state = (bool)toggleButton.IsChecked ? "RulerOn" : "RulerOff";
+            VisualStateManager.GoToState(this, state, false);
         }
-        public void RulerButtonOff_Click(object sender, RoutedEventArgs e)
-        {
-            VisualStateManager.GoToState(this, "RulerOff", false);
-        }
+
+        #endregion Implementation
     }
 }

@@ -146,8 +146,17 @@
                 <StackPanel
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
+                    <ToggleButton 
+                        x:Name="rulerToggleBtn"
+                        Style="{StaticResource CMSToggleButtonStyle}"
+                        Click="RulerToggle"
+                        Width="30"
+                        Margin="0,0,5,0">
+                        <Image
+                            Width="16"
+                            Source="/OpenSilverPdfViewer;component/Assets/ruler2.png"/>
+                    </ToggleButton>
                     <local:ToolBarButton
-                        Click="RulerButtonOn_Click"
                         ShadowThickness="1,0,1,1"
                         DisabledMargin="1"
                         CornerRadius="3,0,0,3">
@@ -156,7 +165,6 @@
                             Source="/OpenSilverPdfViewer;component/Assets/pageview.png"/>
                     </local:ToolBarButton>
                     <local:ToolBarButton
-                        Click="RulerButtonOff_Click"
                         ShadowThickness="1,0,1,1"
                         DisabledMargin="1"
                         CornerRadius="0,3,3,0">
