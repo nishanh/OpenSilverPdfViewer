@@ -21,9 +21,6 @@
     <Page Include="Controls\PageViewer.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\PageZoomCtrl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -37,6 +34,9 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Styles\NumericSpinStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\PageZoomCtrlStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Styles\PanelCtrlStyles.xaml">
@@ -60,9 +60,9 @@
     <Compile Include="App.xaml.cs" />
     <Compile Include="Controls\PageNavigationCtrl.xaml.cs" />
     <Compile Include="Controls\PageViewer.xaml.cs" />
-    <Compile Include="Controls\PageZoomCtrl.xaml.cs" />
     <Compile Include="Controls\PanelCtrl.cs" />
     <Compile Include="Controls\ToolBarButton.cs" />
+    <Compile Include="Controls\ZoomViewCtrl.cs" />
     <Compile Include="Converters\ValueConverters.cs" />
     <Compile Include="JSInterop\ExtMethods.cs" />
     <Compile Include="JSInterop\JSAsyncTaskRunner.cs" />

@@ -8,25 +8,38 @@ using System.Windows;
 using System.Globalization;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Runtime.CompilerServices;
 using System.Windows.Controls.Primitives;
 
 using OpenSilverPdfViewer.JSInterop;
 
 namespace OpenSilverPdfViewer.Controls
 {
-    public partial class PageViewer : UserControl
+    public partial class PageViewer : INotifyPropertyChanged
     {
-        #region Fields
+        #region Fields / Properties
 
         private const int renderDPI = 144;
         private const string viewCanvasId = "pageViewCanvas";
         private bool _rulersOn = false;
         private PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Interop;
+        public event PropertyChangedEventHandler PropertyChanged;
 
-      
-        #endregion Fields
+        private ViewModeType _viewMode = ViewModeType.Unknown;
+        public ViewModeType ViewMode
+        {
+            get { return _viewMode; }
+            set 
+            { 
+                _viewMode = value;
+                OnPropertyChanged();
+            }
+        }
+
+        #endregion Fields / Properties
         #region Dependency Properties
 
         public static readonly DependencyProperty PreviewPageProperty = DependencyProperty.Register("PreviewPage", typeof(int), typeof(PageViewer),
@@ -37,6 +50,7 @@ namespace OpenSilverPdfViewer.Controls
 
         public static readonly DependencyProperty RenderModeProperty = DependencyProperty.Register("RenderMode", typeof(RenderModeType), typeof(PageViewer),
             new PropertyMetadata(RenderModeType.Dom, OnRenderModeChanged));
+
 
         public int PreviewPage
         {
@@ -60,7 +74,10 @@ namespace OpenSilverPdfViewer.Controls
         private static async void OnPreviewPageChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
-            ctrl.rulerToggleBtn.IsEnabled = (int)e.NewValue > 0;
+
+            if ((int)e.NewValue > 0 && ctrl.ViewMode == ViewModeType.Unknown) 
+                ctrl.ViewMode = ViewModeType.PageView;
+
             await ctrl.RenderCurrentPage();
         }
         private static async void OnZoomLevelChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
@@ -283,6 +300,10 @@ namespace OpenSilverPdfViewer.Controls
             // Scale to convert from pixels to inches at the current zoom level
             return 1d / logScale;
         }
+
+        #endregion Implementation
+        #region Event Handlers
+
         private void PageScrollBars_Scroll(object sender, ScrollEventArgs e)
         {
             PdfJs.ScrollViewportImage(PreviewPage, viewCanvasId, ZoomLevel,
@@ -312,7 +333,16 @@ namespace OpenSilverPdfViewer.Controls
             var state = (bool)toggleButton.IsChecked ? "RulerOn" : "RulerOff";
             VisualStateManager.GoToState(this, state, false);
         }
+        public void ViewModeBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var toggleButton = (ToggleButton)sender;
+            ViewMode = toggleButton.Name == "pageViewBtn" ? ViewModeType.PageView : ViewModeType.ThumbnailView;
+        }
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
-        #endregion Implementation
+        #endregion Event Handlers
     }
 }

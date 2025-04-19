@@ -8,9 +8,6 @@
     <Compile Update="Controls\PageViewer.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Controls\PageZoomCtrl.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Update="Controls\PanelCtrl.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -25,9 +22,6 @@
     <Page Update="Controls\PageViewer.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Controls\PageZoomCtrl.xaml">
-      <SubType>Designer</SubType>
-    </Page>
     <Page Update="Styles\BrushStyles.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -38,6 +32,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Styles\NumericSpinStyles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Styles\PageZoomCtrlStyles.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Styles\PanelCtrlStyles.xaml">

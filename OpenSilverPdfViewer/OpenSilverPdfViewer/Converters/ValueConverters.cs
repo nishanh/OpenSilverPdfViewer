@@ -55,4 +55,26 @@ namespace OpenSilverPdfViewer.Converters
             return false;
         }
     }
+    public class IntToEnabledConverter : ValueConverterBase<int>
+    {
+        public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int propValue)
+            {
+                return propValue > 0;
+            }
+            return false;
+        }
+    }
+    public class ViewModeToCheckedConverter : ValueConverterBase<ViewModeType>
+    {
+        public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is ViewModeType renderModeType)
+            {
+                return renderModeType == (ViewModeType)parameter;
+            }
+            return false;
+        }
+    }
 }

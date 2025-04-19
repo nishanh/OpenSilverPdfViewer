@@ -12,6 +12,7 @@
 
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/BrushStyles.xaml"/>
+        <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ScrollBarStyles.xaml"/>
     </ResourceDictionary.MergedDictionaries>
     
     <Style x:Key="OriginalScrollBarStyle" TargetType="ScrollBar">
@@ -459,4 +460,40 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <Style x:Key="CMSScrollViewerStyle" TargetType="ScrollViewer">
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollViewer">
+                    <Grid x:Name="Grid" Background="Transparent">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ScrollContentPresenter
+                            x:Name="PART_ScrollContentPresenter" 
+                            CanHorizontallyScroll="False" 
+                            CanVerticallyScroll="False" 
+                            ContentTemplate="{TemplateBinding ContentTemplate}" 
+                            Content="{TemplateBinding Content}" 
+                            Grid.Column="0" 
+                            Margin="{TemplateBinding Padding}"/>
+                        <ScrollBar
+                            x:Name="PART_VerticalScrollBar"
+                            Style="{StaticResource CMSScrollBarVertical}"
+                            Grid.Column="1"
+                            Margin="0,4,4,4"
+                            AutomationProperties.AutomationId="VerticalScrollBar"
+                            Maximum="{TemplateBinding ScrollableHeight}"
+                            Minimum="0"
+                            Value="{Binding Path=VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                            ViewportSize="{TemplateBinding ViewportHeight}"
+                            Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

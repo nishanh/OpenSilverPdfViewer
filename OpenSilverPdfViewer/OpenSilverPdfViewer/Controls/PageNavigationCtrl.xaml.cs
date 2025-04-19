@@ -14,7 +14,7 @@ using OpenSilverPdfViewer.Utility;
 
 namespace OpenSilverPdfViewer.Controls
 {
-    public partial class PageNavigationCtrl : UserControl, INotifyPropertyChanged
+    public partial class PageNavigationCtrl : INotifyPropertyChanged
     {
         #region Dependency Properties
 

@@ -60,4 +60,19 @@ namespace OpenSilverPdfViewer.Controls
             DefaultStyleKeyProperty.OverrideMetadata(typeof(ToolBarButton), new FrameworkPropertyMetadata(typeof(ToolBarButton)));
         }
     }
+    internal sealed class ToolBarToggleButton : ToggleButton
+    {
+        public static readonly DependencyProperty CornerRadiusProperty = DependencyProperty.Register("CornerRadius", typeof(CornerRadius), typeof(ToolBarToggleButton),
+          new PropertyMetadata(new CornerRadius()));
+
+        public CornerRadius CornerRadius
+        {
+            get => (CornerRadius)GetValue(CornerRadiusProperty);
+            set => SetValue(CornerRadiusProperty, value);
+        }
+        static ToolBarToggleButton()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ToolBarToggleButton), new FrameworkPropertyMetadata(typeof(ToolBarToggleButton)));
+        }
+    }
 }

@@ -11,7 +11,209 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/BrushStyles.xaml"/>
     </ResourceDictionary.MergedDictionaries>
-    
+
+    <ControlTemplate x:Key="CMSDecrementButton" TargetType="RepeatButton">
+        <Grid>
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualStateGroup.Transitions>
+                        <VisualTransition GeneratedDuration="0:0:0.1"/>
+                    </VisualStateGroup.Transitions>
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="MouseOver">
+                        <Storyboard>
+                            <ColorAnimation 
+                                Storyboard.TargetName="Background" 
+                                Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" 
+                                To="{StaticResource RaisedHighlightColor}" 
+                                Duration="0:0:0.1" />
+                            <ColorAnimation 
+                                Storyboard.TargetName="Background" 
+                                Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[0].(GradientStop.Color)" 
+                                To="{StaticResource CtrlHoverStartColor}" 
+                                Duration="0:0:0.1" />
+                            <ColorAnimation 
+                                Storyboard.TargetName="Background" 
+                                Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].(GradientStop.Color)" 
+                                To="{StaticResource CtrlNormalEndColor}" 
+                                Duration="0:0:0.1" />
+                        </Storyboard>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                        <Storyboard>
+                            <ColorAnimation
+                                Storyboard.TargetProperty="(Path.Stroke).(SolidColorBrush.Color)"
+                                Storyboard.TargetName="ButtonPath"
+                                To="{StaticResource ControlLightColor}"/>
+                        </Storyboard>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <Storyboard>
+                            <ObjectAnimationUsingKeyFrames 
+                                Duration="0:0:0"
+                                Storyboard.TargetProperty="(Border.Visibility)" 
+                                Storyboard.TargetName="DisabledOverlay">
+                                <DiscreteObjectKeyFrame 
+                                    KeyTime="0:0:0.0" 
+                                    Value="{x:Static Visibility.Visible}"/>
+                            </ObjectAnimationUsingKeyFrames>
+                        </Storyboard>
+                    </VisualState>
+                </VisualStateGroup>
+                <VisualStateGroup x:Name="FocusedStates">
+                    <VisualState x:Name="Focused"/>
+                    <VisualState x:Name="Unfocused" />
+                </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+            <Grid>
+                <Border 
+                    x:Name="Background" 
+                    CornerRadius="3,0,0,3" 
+                    BorderBrush="{StaticResource RaisedHighlightBrush}" 
+                    BorderThickness="0,1,0,0">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Offset="0.0" Color="{StaticResource CtrlNormalStartColor}" />
+                            <GradientStop Offset="1.2" Color="{StaticResource CtrlNormalEndColor}" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+                <Border 
+                    x:Name="Hover" 
+                    Opacity="0" 
+                    BorderThickness="0,1,0,1" 
+                    CornerRadius="3,0,0,3" 
+                    Background="{StaticResource CtrlHighlightBrush}"
+                    BorderBrush="{StaticResource CtrlBorderBrush}" >
+                </Border>
+                <Border 
+                    x:Name="Shadow" 
+                    BorderBrush="{StaticResource RaisedShadowBrush}" 
+                    BorderThickness="0,0,1,1" 
+                    CornerRadius="3,0,0,3" />
+                <Path 
+                    x:Name="ButtonPath"
+                    IsHitTestVisible="False"
+                    Margin="6,5"
+                    Stretch="Uniform"
+                    Stroke="{StaticResource CMSCtrlButtonForegroundBrush}"
+                    StrokeThickness="2">
+                    <Path.Data>
+                        <GeometryGroup>
+                            <LineGeometry StartPoint="0,.5" EndPoint="1,.5"/>
+                        </GeometryGroup>
+                    </Path.Data>
+                </Path>
+                <Border 
+                    x:Name="DisabledOverlay"
+                    Margin="0,1,1,1"
+                    Visibility="Collapsed"
+                    Background="{StaticResource CMSCtrlDisabledBodyBrush}"
+                    CornerRadius="2,0,0,2"/>
+            </Grid>
+        </Grid>
+    </ControlTemplate>
+    <ControlTemplate x:Key="CMSIncrementButton" TargetType="RepeatButton">
+        <Grid>
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualStateGroup.Transitions>
+                        <VisualTransition GeneratedDuration="0:0:0.1"/>
+                    </VisualStateGroup.Transitions>
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="MouseOver">
+                        <Storyboard>
+                            <ColorAnimation 
+                                Storyboard.TargetName="Background" 
+                                Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" 
+                                To="{StaticResource RaisedHighlightColor}" 
+                                Duration="0:0:0.1" />
+                            <ColorAnimation 
+                                Storyboard.TargetName="Background" 
+                                Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[0].(GradientStop.Color)" 
+                                To="{StaticResource CtrlHoverStartColor}" 
+                                Duration="0:0:0.1" />
+                            <ColorAnimation 
+                                Storyboard.TargetName="Background" 
+                                Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].(GradientStop.Color)" 
+                                To="{StaticResource CtrlNormalEndColor}" 
+                                Duration="0:0:0.1" />
+                        </Storyboard>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                        <Storyboard>
+                            <ColorAnimation
+                                Storyboard.TargetProperty="(Path.Stroke).(SolidColorBrush.Color)"
+                                Storyboard.TargetName="ButtonPath"
+                                To="{StaticResource ControlLightColor}"/>
+                        </Storyboard>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <Storyboard>
+                            <ObjectAnimationUsingKeyFrames 
+                                Duration="0:0:0"
+                                Storyboard.TargetProperty="(Border.Visibility)" 
+                                Storyboard.TargetName="DisabledOverlay">
+                                <DiscreteObjectKeyFrame 
+                                    KeyTime="0:0:0.0" 
+                                    Value="{x:Static Visibility.Visible}"/>
+                            </ObjectAnimationUsingKeyFrames>
+                        </Storyboard>
+                    </VisualState>
+                </VisualStateGroup>
+                <VisualStateGroup x:Name="FocusedStates">
+                    <VisualState x:Name="Focused"/>
+                    <VisualState x:Name="Unfocused" />
+                </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+            <Grid>
+                <Border 
+                    x:Name="Background" 
+                    CornerRadius="0,3,3,0" 
+                    BorderBrush="{StaticResource RaisedHighlightBrush}" 
+                    BorderThickness="0,1,0,0">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Offset="0.0" Color="{StaticResource CtrlNormalStartColor}" />
+                            <GradientStop Offset="1.2" Color="{StaticResource CtrlNormalEndColor}" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+                <Border 
+                    x:Name="Hover" 
+                    Opacity="0" 
+                    BorderThickness="0,1,0,1" 
+                    CornerRadius="0,3,3,0" 
+                    Background="{StaticResource CtrlHighlightBrush}"
+                    BorderBrush="{StaticResource CtrlBorderBrush}"/>
+                <Border 
+                    x:Name="Shadow" 
+                    BorderBrush="{StaticResource RaisedShadowBrush}" 
+                    BorderThickness="1,0,0,1" 
+                    CornerRadius="0,3,3,0" />
+                <Path 
+                    x:Name="ButtonPath"
+                    IsHitTestVisible="False"
+                    Stretch="Uniform"
+                    Margin="5,5"
+                    Stroke="{StaticResource CMSCtrlButtonForegroundBrush}"
+                    StrokeThickness="2">
+                    <Path.Data>
+                        <GeometryGroup>
+                            <LineGeometry StartPoint="0,.5" EndPoint="1,.5"/>
+                            <LineGeometry StartPoint="0.5,0" EndPoint="0.5,1"/>
+                        </GeometryGroup>
+                    </Path.Data>
+                </Path>
+                <Border 
+                    x:Name="DisabledOverlay"
+                    Margin="1,1,0,1"
+                    Visibility="Collapsed"
+                    Background="{StaticResource CMSCtrlDisabledBodyBrush}"
+                    CornerRadius="0,2,2,0"/>
+            </Grid>
+        </Grid>
+    </ControlTemplate>
     <ControlTemplate x:Key="CMSSpinTextBox" TargetType="TextBox">
         <Grid 
            x:Name="LayoutRoot"

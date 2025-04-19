@@ -12,12 +12,8 @@ namespace OpenSilverPdfViewer
     }
     public enum ViewModeType
     {
+        Unknown,
         PageView,
-        SideView,
-        SheetView,
-        ThumbnailView,
-        Primary,
-        Secondary,
-        Unknown
+        ThumbnailView
     }
 }

@@ -5,9 +5,12 @@
 -->
 <UserControl
     x:Class="OpenSilverPdfViewer.Controls.PageViewer"
+    x:Name="pvCtrlInternal"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:native="clr-namespace:CSHTML5.Native.Html.Controls;assembly=OpenSilver"    
+    xmlns:conv="clr-namespace:OpenSilverPdfViewer.Converters"
+    xmlns:app="clr-namespace:OpenSilverPdfViewer"
     xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls">
 
     <UserControl.Resources>
@@ -17,7 +20,10 @@
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ScrollBarStyles.xaml"/>
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ToolBarButtonStyles.xaml"/>
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ComboBoxStyles.xaml"/>
+                <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/PageZoomCtrlStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <conv:IntToEnabledConverter x:Key="IntToEnabledConverter"/>
+            <conv:ViewModeToCheckedConverter x:Key="ViewModeToCheckedConverter"/>
             <SolidColorBrush x:Key="RulerBrush" Color="#FF343434"/>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -137,8 +143,9 @@
             BorderThickness="0,1,0,0"
             Background="{StaticResource ToolbarBackgroundBrush}">
             <Grid VerticalAlignment="Center">
-                <local:PageZoomCtrl 
-                    ZoomLevel="{Binding PageZoomLevel, Mode=TwoWay}"
+                <local:ZoomViewCtrl 
+                    Width="175"
+                    ZoomSelection="{Binding PageZoomLevel, Mode=TwoWay}"
                     HorizontalAlignment="Left"/>
                 <local:PageNavigationCtrl 
                     NavigationPage="{Binding CurrentPage, Mode=TwoWay}"
@@ -146,32 +153,34 @@
                 <StackPanel
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
-                    <ToggleButton 
-                        x:Name="rulerToggleBtn"
-                        Style="{StaticResource CMSToggleButtonStyle}"
+                    <local:ToolBarToggleButton
+                        IsEnabled="{Binding CurrentPage, Converter={StaticResource IntToEnabledConverter}}"
                         Click="RulerToggle"
-                        Width="30"
                         Margin="0,0,5,0">
                         <Image
                             Width="16"
                             Source="/OpenSilverPdfViewer;component/Assets/ruler2.png"/>
-                    </ToggleButton>
-                    <local:ToolBarButton
-                        ShadowThickness="1,0,1,1"
-                        DisabledMargin="1"
+                    </local:ToolBarToggleButton>
+                    <local:ToolBarToggleButton
+                        Name="pageViewBtn"
+                        Click="ViewModeBtn_Click"
+                        IsChecked="{Binding ViewMode, ElementName=pvCtrlInternal, Converter={StaticResource ViewModeToCheckedConverter}, ConverterParameter={x:Static app:ViewModeType.PageView}}"
+                        IsEnabled="{Binding CurrentPage, Converter={StaticResource IntToEnabledConverter}}"
                         CornerRadius="3,0,0,3">
                         <Image
                             Width="20"
                             Source="/OpenSilverPdfViewer;component/Assets/pageview.png"/>
-                    </local:ToolBarButton>
-                    <local:ToolBarButton
-                        ShadowThickness="1,0,1,1"
-                        DisabledMargin="1"
+                    </local:ToolBarToggleButton>
+                    <local:ToolBarToggleButton
+                        Name="thumbViewBtn"
+                        Click="ViewModeBtn_Click"
+                        IsChecked="{Binding ViewMode, ElementName=pvCtrlInternal, Converter={StaticResource ViewModeToCheckedConverter}, ConverterParameter={x:Static app:ViewModeType.ThumbnailView}}"
+                        IsEnabled="{Binding CurrentPage, Converter={StaticResource IntToEnabledConverter}}"
                         CornerRadius="0,3,3,0">
                         <Image
                             Width="20"
                             Source="/OpenSilverPdfViewer;component/Assets/thumbview.png"/>
-                    </local:ToolBarButton>
+                    </local:ToolBarToggleButton>
                 </StackPanel>
             </Grid>
         </Border>
