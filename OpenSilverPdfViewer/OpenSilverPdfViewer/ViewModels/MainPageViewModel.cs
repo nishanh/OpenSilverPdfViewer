@@ -19,7 +19,7 @@ namespace OpenSilverPdfViewer.ViewModels
     {
         #region Properties
 
-        private PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Interop;
+        private PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Instance;
 
         private string _statusText;
         public string StatusText
@@ -106,6 +106,20 @@ namespace OpenSilverPdfViewer.ViewModels
             }
         }
 
+        private double _pageZoomValue = 100d;
+        public double PageZoomValue
+        {
+            get => _pageZoomValue;
+            set
+            {
+                if (_pageZoomValue != value)
+                {
+                    _pageZoomValue = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         private RenderModeType _renderMode;
         public RenderModeType RenderMode
         {
@@ -162,7 +176,7 @@ namespace OpenSilverPdfViewer.ViewModels
             else
             {
                 baseFileName = sourceOption == "sample1" ? "POH_Calidus_4.0_EN.pdf" : "compressed.tracemonkey-pldi-09.pdf";
-                pageCount = await PdfJs.LoadPdfFile($@"Data\{baseFileName}");
+                pageCount = await PdfJs.LoadPdfFileAsync($@"Data\{baseFileName}");
             }
             CurrentPage = 0; // invalidate current page on new document
             PdfJs.InvalidatePageCache();
@@ -190,7 +204,7 @@ namespace OpenSilverPdfViewer.ViewModels
                 using (var pdfStream = dlg.File.OpenRead() as MemoryStream)
                 {
                     var base64Stream = Convert.ToBase64String(pdfStream.ToArray());
-                    pageCount = await PdfJs.LoadPdfFileStream(base64Stream);
+                    pageCount = await PdfJs.LoadPdfFileStreamAsync(base64Stream);
                 }
             }
             return (filename, pageCount);
@@ -200,7 +214,7 @@ namespace OpenSilverPdfViewer.ViewModels
             if (CurrentPage < 1 || CurrentPage > PageCount)
                 return;
 
-            var size = await PdfJs.GetPdfPageSize(CurrentPage);
+            var size = await PdfJs.GetPdfPageSizeAsync(CurrentPage);
             PageSizeText = $"Page size: {Math.Round(size.Width / 72d, 2)} x {Math.Round(size.Height / 72d, 2)} in";
         }
         public void SetRenderMode(object param)

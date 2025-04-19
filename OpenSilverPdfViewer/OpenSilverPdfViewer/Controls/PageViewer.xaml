@@ -16,10 +16,8 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/BrushStyles.xaml"/>
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ScrollBarStyles.xaml"/>
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ToolBarButtonStyles.xaml"/>
-                <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ComboBoxStyles.xaml"/>
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/PageZoomCtrlStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <conv:IntToEnabledConverter x:Key="IntToEnabledConverter"/>
@@ -145,6 +143,7 @@
             <Grid VerticalAlignment="Center">
                 <local:ZoomViewCtrl 
                     Width="175"
+                    ZoomLevel="{Binding PageZoomValue, Mode=TwoWay}"
                     ZoomSelection="{Binding PageZoomLevel, Mode=TwoWay}"
                     HorizontalAlignment="Left"/>
                 <local:PageNavigationCtrl 

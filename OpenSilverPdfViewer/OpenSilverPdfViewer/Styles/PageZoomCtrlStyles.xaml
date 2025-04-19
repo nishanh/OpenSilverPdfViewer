@@ -4,12 +4,9 @@
     xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/BrushStyles.xaml"/>
-        <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ComboBoxStyles.xaml"/>
         <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/NumericSpinStyles.xaml"/>
         <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ScrollViewerStyles.xaml"/>
     </ResourceDictionary.MergedDictionaries>
-
 
     <Style x:Key="CMSZoomComboBoxItemStyle" TargetType="ComboBoxItem">
         <Setter Property="Padding" Value="6,3"/>
@@ -82,21 +79,21 @@
                         </VisualStateManager.VisualStateGroups>
                         <Rectangle 
                             x:Name="fillColor" 
-                            Fill="{StaticResource CMSBrushHover}" 
+                            Fill="{StaticResource CMSListItemHighlightBrush}" 
                             IsHitTestVisible="False" 
                             Opacity="0" 
                             RadiusY="1" 
                             RadiusX="1"/>
                         <Rectangle 
                             x:Name="fillColor2" 
-                            Fill="{StaticResource CMSBrushBackgroundSelected}"
+                            Fill="Transparent"
                             IsHitTestVisible="False" 
                             Opacity="0" 
                             RadiusY="1" 
                             RadiusX="1"/>
                         <UserControl
                             x:Name="ContentPresenterColorizer"
-                            Foreground="{StaticResource CMSBrushForegroundNormal}">
+                            Foreground="{StaticResource ForegroundBrush}">
                             <ContentPresenter 
                                 x:Name="contentPresenter" 
                                 ContentTemplate="{TemplateBinding ContentTemplate}" 
@@ -342,7 +339,7 @@
                                         CornerRadius="4" />
                                     <ScrollViewer 
                                         x:Name="ScrollViewer" 
-                                        Style="{StaticResource CMSScrollViewerStyle}"                                    
+                                        Style="{StaticResource CMSVerticalScrollViewerStyle}"                                    
                                         BorderThickness="0" 
                                         Padding="1">
                                         <ItemsPresenter/>
@@ -380,10 +377,45 @@
                                 x:Name="PART_DecrementButton"
                                 Template="{StaticResource CMSDecrementButton}">
                             </RepeatButton>
-                            <ComboBox
-                                x:Name="PART_ComboBox"
-                                Style="{StaticResource CMSZoomComboBoxStyle}"
-                                Grid.Column="1"/>
+                            <Grid  
+                                Grid.Column="1">
+                                <ComboBox
+                                    x:Name="PART_ComboBox"
+                                    Style="{StaticResource CMSZoomComboBoxStyle}"/>
+                                <TextBlock
+                                    x:Name="PART_ZoomValueText"
+                                    Margin="0,0,22,0"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{StaticResource ForegroundBrush}"
+                                    IsHitTestVisible="False"
+                                    FontSize="12"/>
+                                <Border 
+                                    x:Name="PART_TextBlockHitTester"
+                                    Visibility="Collapsed"
+                                    Background="Transparent"
+                                    Margin="0,0,22,0">
+                                </Border>
+                                <TextBox 
+                                    x:Name="PART_EditableTextBox"
+                                    FontSize="12"
+                                    Style="{StaticResource CMSZoomComboBoxTextStyle}"
+                                    Cursor="Arrow"
+                                    Background="{StaticResource CtrlNormalBrush}"
+                                    Foreground="{TemplateBinding ForegroundBrush}"
+                                    HorizontalAlignment="Center"
+                                    HorizontalContentAlignment="Center"
+                                    MaxLength="3"
+                                    Height="20"
+                                    Margin="0,0,22,0"
+                                    Focusable="True"
+                                    Visibility="Collapsed"
+                                    IsReadOnly="True">
+                                    <TextBox.ContextMenu>
+                                        <ContextMenu Visibility="Collapsed"/>
+                                    </TextBox.ContextMenu>
+                                </TextBox>
+                            </Grid>
                             <!-- Increment Button -->
                             <RepeatButton
                                 x:Name="PART_IncrementButton"

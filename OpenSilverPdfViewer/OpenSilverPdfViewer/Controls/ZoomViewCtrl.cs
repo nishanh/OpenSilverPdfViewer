@@ -19,6 +19,9 @@ namespace OpenSilverPdfViewer.Controls
     [TemplatePart(Name = "PART_DecrementButton", Type = typeof(RepeatButton))]
     [TemplatePart(Name = "PART_IncrementButton", Type = typeof(RepeatButton))]
     [TemplatePart(Name = "PART_ComboBox", Type = typeof(ComboBox))]
+    [TemplatePart(Name = "PART_ZoomValueText", Type = typeof(TextBlock))]
+    [TemplatePart(Name = "PART_TextBlockHitTester", Type = typeof(Border))]
+    [TemplatePart(Name = "PART_EditableTextBox", Type = typeof(TextBox))]
     public sealed class ZoomViewCtrl : Control
     {
         #region Constants
@@ -26,6 +29,9 @@ namespace OpenSilverPdfViewer.Controls
         private const string DecrementButtonPart = "PART_DecrementButton";
         private const string IncrementButtonPart = "PART_IncrementButton";
         private const string ComboBoxPart = "PART_ComboBox";
+        private const string TextBlockPart = "PART_ZoomValueText";
+        private const string TextBlockBorderPart = "PART_TextBlockHitTester";
+        private const string TextBoxPart = "PART_EditableTextBox";
 
         #endregion Constants
         #region Dependency Properties
@@ -101,6 +107,8 @@ namespace OpenSilverPdfViewer.Controls
         /// Reference to the textbox element of the combobox element
         /// </summary>
         private TextBox ZoomTextBox { get; set; }
+        private TextBlock ZoomValueTextBlock { get; set; }
+        private Border TextBlockBorder { get; set; }
 
         /// <summary>
         /// Property that keeps track of the shift-button keyboard state while editable portion
@@ -142,7 +150,7 @@ namespace OpenSilverPdfViewer.Controls
                 "Fit to View",
                 "25%", "50%", "75%", "100%", "125%", "150%", "175%", "200%"
             };
-            MouseLeftButtonDown += ZoomViewCtrl_PreviewMouseLeftButtonDown;
+            // MouseLeftButtonDown += ZoomViewCtrl_PreviewMouseLeftButtonDown;
         }
 
         /// <summary>
@@ -153,6 +161,9 @@ namespace OpenSilverPdfViewer.Controls
         {
             base.OnApplyTemplate();
             // Remove prior event handler
+
+            ZoomValueTextBlock = GetTemplateChild(TextBlockPart) as TextBlock;
+            TextBlockBorder = GetTemplateChild(TextBlockBorderPart) as Border;
 
             if (DecrementButton != null)
                 DecrementButton.Click -= DecrementButton_Click;
@@ -175,6 +186,20 @@ namespace OpenSilverPdfViewer.Controls
             if (IncrementButton != null)
                 IncrementButton.Click += IncrementButton_Click;
 
+            if (ZoomTextBox != null)
+            {
+                ZoomTextBox.KeyDown -= TextBox_PreviewKeyDown;
+                ZoomTextBox.KeyUp -= TextBox_PreviewKeyUp;
+            }
+
+            ZoomTextBox = GetTemplateChild(TextBoxPart) as TextBox;
+
+            if (ZoomTextBox != null)
+            {
+                ZoomTextBox.KeyDown += TextBox_PreviewKeyDown;
+                ZoomTextBox.KeyUp += TextBox_PreviewKeyUp;
+            }
+
             // Remove prior event handlers
             if (ZoomComboBox != null)
             {
@@ -191,17 +216,7 @@ namespace OpenSilverPdfViewer.Controls
                 ZoomComboBox.ItemsSource = ZoomOptions;
                 ZoomComboBox.SelectionChanged += ZoomComboBox_SelectionChanged;
                 ZoomComboBox.DropDownOpened += ZoomComboBox_DropDownOpened;
-
                 ZoomComboBox.SelectedIndex = 0;
-
-                // Dig the textbox element out of the combobox and attach the keyboard event-handlers
-                ZoomTextBox = ZoomComboBox.Template.FindName("PART_EditableTextBox", ZoomComboBox) as TextBox;
-
-                if (ZoomTextBox != null)
-                {
-                    ZoomTextBox.KeyDown += TextBox_PreviewKeyDown;
-                    ZoomTextBox.KeyUp += TextBox_PreviewKeyUp;
-                }
             }
         }
 
@@ -238,6 +253,9 @@ namespace OpenSilverPdfViewer.Controls
 
             // If 'Fit to View' selected, set the integer zoom value to zero, else parse the zoom level value
             ZoomSelection = selection == ZoomOptions[0] ? 0 : int.Parse(selection.Trim('%'));
+
+            //ZoomValueTextBlock.Visibility = Visibility.Collapsed;
+            ZoomValueTextBlock.Text = "";
         }
 
         /// <summary>
@@ -256,12 +274,13 @@ namespace OpenSilverPdfViewer.Controls
             // Constrain the value to the maximum zoom level
             ZoomSelection = Math.Min(MaxZoom, ZoomSelection + ZoomChange);
 
+            // Tack on a percent symbol to the displayed zoom value
+            //ZoomValueTextBlock.Visibility = Visibility.Visible;
+            ZoomValueTextBlock.Text = ZoomSelection + "%";
+
             // Invalidate the selected index. Without this, we can't re-select the
             // last valid selection from the combobox drop-down list
             ZoomComboBox.SelectedIndex = -1;
-
-            // Tack on a percent symbol to the displayed zoom value
-            //ZoomComboBox.Text = ZoomSelection + "%";
         }
 
         /// <summary>
@@ -280,12 +299,13 @@ namespace OpenSilverPdfViewer.Controls
             // Constrain the value to the minimum zoom level
             ZoomSelection = Math.Max(ZoomChange, ZoomSelection - ZoomChange);
 
+            // Tack on a percent symbol to the displayed zoom value
+            //ZoomValueTextBlock.Visibility = Visibility.Visible;
+            ZoomValueTextBlock.Text = ZoomSelection + "%";
+
             // Invalidate the selected index. Without this, we can't re-select the
             // last valid selection from the combobox drop-down list
             ZoomComboBox.SelectedIndex = -1;
-
-            // Tack on a percent symbol to the displayed zoom value
-            //ZoomComboBox.Text = ZoomSelection + "%";
         }
 
         /// <summary>
@@ -297,15 +317,14 @@ namespace OpenSilverPdfViewer.Controls
         /// <param name="e"></param>
         private void ZoomViewCtrl_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            var textRect = new Rect(0, 0, ZoomTextBox.ActualWidth, ZoomTextBox.ActualHeight);
+            var textRect = new Rect(0, 0, TextBlockBorder.ActualWidth, TextBlockBorder.ActualHeight);
+            var text = "";
 
             if (textRect.Contains(e.GetPosition(ZoomTextBox)))
             {
-                ZoomTextBox.Focus();
 
                 // If 'Fit to View' is the current selection...
-                var text = ZoomTextBox.Text;
-                if (text == ZoomOptions[0])
+                if (ZoomSelection == 0)
                 {
                     // Invalidate the selection, so that it can be re-selected
                     ZoomComboBox.SelectedIndex = -1;
@@ -323,10 +342,7 @@ namespace OpenSilverPdfViewer.Controls
 
                 // Display the modified value in the textbox
                 ZoomTextBox.Text = text;
-
                 SetTextBoxEditState(true);
-
-                ZoomTextBox.SelectAll();
 
                 e.Handled = true;
             }
@@ -450,16 +466,21 @@ namespace OpenSilverPdfViewer.Controls
 
             if (canEdit)
             {
-                var bodyBrush = Application.Current.Resources["KDSSolidBorderBrush"] as Brush;
-                var selectionBrush = Application.Current.Resources["KDSSpinTextSelectionBrush"] as Brush;
+                
+                var bodyBrush = FindResource("CMSSolidBorderBrush") as Brush;
+                var selectionBrush = FindResource("CMSSpinTextSelectionBrush") as Brush;
+                ZoomTextBox.Visibility = Visibility.Visible;
                 ZoomTextBox.Background = bodyBrush;
                 ZoomTextBox.SelectionForeground = selectionBrush;
                 ZoomTextBox.IsReadOnly = false;
+                ZoomTextBox.Focus();
+                ZoomTextBox.SelectAll();
             }
             else
             {
-                var bodyBrush = Application.Current.Resources["CtrlNormalBrush"] as Brush;
+                var bodyBrush = FindResource("CtrlNormalBrush") as Brush;
                 var selectionBrush = new SolidColorBrush(Colors.Transparent);
+                ZoomTextBox.Visibility = Visibility.Collapsed;
                 ZoomTextBox.Background = bodyBrush;
                 ZoomTextBox.SelectionForeground = selectionBrush;
                 ZoomTextBox.IsReadOnly = true;

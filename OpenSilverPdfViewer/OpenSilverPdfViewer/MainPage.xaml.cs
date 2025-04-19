@@ -18,10 +18,10 @@ namespace OpenSilverPdfViewer
         {
             InitializeComponent();
         }
-        public async void Page_Loaded(object sender, RoutedEventArgs e)
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            await PdfJsWrapper.Interop.Init();
-            ViewModel.StatusText = PdfJsWrapper.Interop.Version;
+            await PdfJsWrapper.Instance.InitAsync();
+            ViewModel.StatusText = PdfJsWrapper.Instance.Version;
         }
     }
 }

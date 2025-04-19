@@ -35,7 +35,6 @@
     <Color x:Key="CMSSeparatorEndColor1">#FF666666</Color>
     <Color x:Key="CMSSeparatorEndColor">#FF444444</Color>
     <Color x:Key="CMSMenuBackgroundColor">#FF585858</Color>
-
     <Color x:Key="CtrlNormalStartColor">#FF585858</Color>
     <Color x:Key="CtrlNormalEndColor">#FF282828</Color>
     <Color x:Key="CtrlPressedStartColor">#FF505050</Color>
@@ -56,10 +55,6 @@
     <Color x:Key="CMSHeaderBackgroundColor">#FF2A709C</Color>
     <Color x:Key="CMSCellSelectionColor">#80FF0000</Color>
     <Color x:Key="CMSThumbnailSelectionColor">#FF2699D6</Color>
-
-    
-    
-    
     <Color x:Key="CMSColorHover">#FF4EBFFA</Color>
     <Color x:Key="CMSColorBorderSelected">#FF1F81E9</Color>
     <Color x:Key="CMSColorForegroundPressed">White</Color>
@@ -68,14 +63,12 @@
     <Color x:Key="CMSColorForegroundNormal">Black</Color>
     <Color x:Key="CMSColorBorderNormal">#FF808285</Color>
     <Color x:Key="CMSColorDropShadow">#FF1D1D1D</Color>
+    <Color x:Key="CMSListItemHighlightColor">#FF707070</Color>
 
     <SolidColorBrush x:Key="CMSBrushBackgroundSelected" Color="{StaticResource CMSColorBackgroundSelected}"/>
     <SolidColorBrush x:Key="CMSBrushForegroundNormal" Color="{StaticResource CMSColorForegroundNormal}"/>
     <SolidColorBrush x:Key="CMSBrushHover" Color="{StaticResource CMSColorHover}"/>
     <SolidColorBrush x:Key="CMSBrushBorderNormal" Color="{StaticResource CMSColorBorderNormal}"/>
-
-
-
 
     <SolidColorBrush x:Key="ElectricBlueBrush" Color="{StaticResource ElectricBlue}"/>
     <SolidColorBrush x:Key="Highlight" Color="#808080" />
@@ -113,6 +106,7 @@
     <SolidColorBrush x:Key="CMSCellSelectionBrush" Color="{StaticResource CMSCellSelectionColor}"/>
     <SolidColorBrush x:Key="CMSThumbnailSelectionBrush" Color="{StaticResource CMSThumbnailSelectionColor}"/>
     <SolidColorBrush x:Key="CMSMenuBackgroundBrush" Color="{StaticResource CMSMenuBackgroundColor}"/>
+    <SolidColorBrush x:Key="CMSListItemHighlightBrush" Color="{StaticResource CMSListItemHighlightColor}"/>
     <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FF343434"/>
 
     <LinearGradientBrush x:Key="CMSHeaderBackgroundBrush1" EndPoint="0.5,1" StartPoint="0.5,0">

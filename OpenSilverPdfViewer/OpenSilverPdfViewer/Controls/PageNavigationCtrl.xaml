@@ -13,7 +13,6 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/BrushStyles.xaml"/>
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ToolBarButtonStyles.xaml"/>
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/NumericSpinStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>

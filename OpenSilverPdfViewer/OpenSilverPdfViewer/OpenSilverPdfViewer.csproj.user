@@ -25,9 +25,6 @@
     <Page Update="Styles\BrushStyles.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Styles\ComboBoxStyles.xaml">
-      <SubType>Designer</SubType>
-    </Page>
     <Page Update="Styles\GridSplitterStyles.xaml">
       <SubType>Designer</SubType>
     </Page>

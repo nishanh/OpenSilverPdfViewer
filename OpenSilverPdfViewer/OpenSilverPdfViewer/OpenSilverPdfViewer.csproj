@@ -27,9 +27,6 @@
     <Page Include="Styles\BrushStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\ComboBoxStyles.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Styles\GridSplitterStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

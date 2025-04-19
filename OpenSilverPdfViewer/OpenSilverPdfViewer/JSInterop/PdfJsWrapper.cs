@@ -3,7 +3,6 @@
 // Free to use, modify, and distribute under the terms of the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -13,18 +12,19 @@ using System.Windows.Controls;
 
 namespace OpenSilverPdfViewer.JSInterop
 {
+    // Singleton interop wrapper for PdfJs 
     public class PdfJsWrapper
     {
         private const string scriptResourceName = "/OpenSilverPdfViewer;component/JSInterop/pdfJsInterop.js";
         private static PdfJsWrapper _instance;
-        public static PdfJsWrapper Interop => _instance ?? (_instance = new PdfJsWrapper());
+        public static PdfJsWrapper Instance => _instance ?? (_instance = new PdfJsWrapper());
 
         public string Version { get; private set; }
 
         private PdfJsWrapper() { }
         #region Asynchronous Tasks
 
-        public async Task Init()
+        public async Task InitAsync()
         {
             if (string.IsNullOrEmpty(Version))
             {
@@ -39,30 +39,30 @@ namespace OpenSilverPdfViewer.JSInterop
                 }
             }
         }
-        public async Task<int> LoadPdfFile(string fileName)
+        public async Task<int> LoadPdfFileAsync(string fileName)
         {
-            await Init();
+            await InitAsync();
             return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("loadPdfFile", fileName);
         }
-        public async Task<int> LoadPdfFileStream(string base64stream)
+        public async Task<int> LoadPdfFileStreamAsync(string base64stream)
         {
-            await Init();
+            await InitAsync();
             return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("loadPdfStream", base64stream);
         }
-        public async Task<int> RenderPageToViewport(int pageNumber, int dpi, int zoomLevel, string canvasId)
+        public async Task<int> RenderPageToViewportAsync(int pageNumber, int dpi, int zoomLevel, string canvasId)
         {
-            await Init();
+            await InitAsync();
             return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("renderPageToViewport", pageNumber, dpi, zoomLevel, canvasId);
         }
-        public async Task<Size> GetPdfPageSize(int pageNumber)
+        public async Task<Size> GetPdfPageSizeAsync(int pageNumber)
         {
-            await Init();
+            await InitAsync();
             var json = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getLogicalPageSize", pageNumber);
             return json.ParseJsonSize();
         }
-        public async Task<Image> GetPdfPageImage(int pageNumber, double scaleFactor)
+        public async Task<Image> GetPdfPageImageAsync(int pageNumber, double scaleFactor)
         {
-            await Init();
+            await InitAsync();
 
             var dataUrl = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("renderPageThumbnail", pageNumber, scaleFactor);
             dataUrl = dataUrl.Substring(dataUrl.IndexOf(",") + 1); // strip header

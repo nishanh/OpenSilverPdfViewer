@@ -25,7 +25,7 @@ namespace OpenSilverPdfViewer.Controls
         private const int renderDPI = 144;
         private const string viewCanvasId = "pageViewCanvas";
         private bool _rulersOn = false;
-        private PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Interop;
+        private PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Instance;
         public event PropertyChangedEventHandler PropertyChanged;
 
         private ViewModeType _viewMode = ViewModeType.Unknown;
@@ -43,14 +43,16 @@ namespace OpenSilverPdfViewer.Controls
         #region Dependency Properties
 
         public static readonly DependencyProperty PreviewPageProperty = DependencyProperty.Register("PreviewPage", typeof(int), typeof(PageViewer),
-            new PropertyMetadata(1, OnPreviewPageChanged));
+            new PropertyMetadata(0, OnPreviewPageChanged));
 
         public static readonly DependencyProperty ZoomLevelProperty = DependencyProperty.Register("ZoomLevel", typeof(int), typeof(PageViewer),
-            new PropertyMetadata(1, OnZoomLevelChanged));
+            new PropertyMetadata(0, OnZoomLevelChanged));
+
+        public static readonly DependencyProperty ZoomValueProperty = DependencyProperty.Register("ZoomValue", typeof(double), typeof(PageViewer),
+            new PropertyMetadata(100d, OnZoomValueChanged));
 
         public static readonly DependencyProperty RenderModeProperty = DependencyProperty.Register("RenderMode", typeof(RenderModeType), typeof(PageViewer),
             new PropertyMetadata(RenderModeType.Dom, OnRenderModeChanged));
-
 
         public int PreviewPage
         {
@@ -61,6 +63,11 @@ namespace OpenSilverPdfViewer.Controls
         {
             get => (int)GetValue(ZoomLevelProperty);
             set => SetValue(ZoomLevelProperty, value);
+        }
+        public double ZoomValue
+        {
+            get => (double)GetValue(ZoomValueProperty);
+            set => SetValue(ZoomValueProperty, value);
         }
         public RenderModeType RenderMode
         {
@@ -81,6 +88,11 @@ namespace OpenSilverPdfViewer.Controls
             await ctrl.RenderCurrentPage();
         }
         private static async void OnZoomLevelChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
+        {
+            var ctrl = depObj as PageViewer;
+            await ctrl.RenderCurrentPage();
+        }
+        private static async void OnZoomValueChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
             await ctrl.RenderCurrentPage();
@@ -108,7 +120,9 @@ namespace OpenSilverPdfViewer.Controls
         {
             if (PreviewPage > 0)
             {
-                await PdfJs.RenderPageToViewport(PreviewPage, renderDPI, ZoomLevel, viewCanvasId);
+                await PdfJs.RenderPageToViewportAsync(PreviewPage, renderDPI, ZoomLevel, viewCanvasId);
+                var displayScale = GetDisplayScale() * 100d;
+                ZoomValue = Math.Round(displayScale, 0);
                 SetScrollBars();
                 DrawRulers();
             }
@@ -283,9 +297,12 @@ namespace OpenSilverPdfViewer.Controls
         {
             var pageSize = PdfJs.GetPageImageSize(PreviewPage);
             var viewportSize = PdfJs.GetViewportSize(viewCanvasId);
-            return ZoomLevel == 0 ?
+            
+            var zoomValue = ZoomLevel == 0 ?
                 Math.Min(viewportSize.Width / pageSize.Width, viewportSize.Height / pageSize.Height) :
                 ZoomLevel / 100d;
+            
+            return zoomValue;
         }
         private double GetLogicalViewportScale()
         {
