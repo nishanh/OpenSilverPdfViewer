@@ -5,8 +5,8 @@
 
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Windows;
+using System.Reflection;
 using CSHTML5.Native.Html.Controls;
 
 namespace OpenSilverPdfViewer.JSInterop

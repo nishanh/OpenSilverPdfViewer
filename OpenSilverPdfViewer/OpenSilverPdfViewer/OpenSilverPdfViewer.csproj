@@ -65,6 +65,7 @@
     <Compile Include="JSInterop\JSAsyncTaskRunner.cs" />
     <Compile Include="JSInterop\PdfJsWrapper.cs" />
     <Compile Include="MainPage.xaml.cs" />
+    <Compile Include="Utility\BlobElement.cs" />
     <Compile Include="Utility\DelegateCommand.cs" />
     <Compile Include="Utility\Enumerations.cs" />
     <Compile Include="Utility\ExtMethods.cs" />

@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
+using OpenSilverPdfViewer.Utility;
+
 namespace OpenSilverPdfViewer.JSInterop
 {
     // Singleton interop wrapper for PdfJs 
@@ -65,7 +67,6 @@ namespace OpenSilverPdfViewer.JSInterop
             await InitAsync();
 
             var dataUrl = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("renderPageThumbnail", pageNumber, scaleFactor);
-            
             var sizeHeader = dataUrl.Substring(0, dataUrl.IndexOf(";"));
             var width = double.Parse(sizeHeader.Substring(0, sizeHeader.IndexOf(":")));
             var height = double.Parse(sizeHeader.Substring(sizeHeader.IndexOf(":") + 1));
@@ -86,6 +87,26 @@ namespace OpenSilverPdfViewer.JSInterop
                 image.Height = height;
             }
             return image;
+        }
+        public async Task<BlobElement> GetPdfPageBlobElementAsync(int pageNumber, double scaleFactor)
+        {
+            await InitAsync();
+
+            var blobUrl = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("renderPageToBlob", pageNumber, scaleFactor);
+            var sizeHeader = blobUrl.Substring(0, blobUrl.IndexOf(";"));
+            var width = double.Parse(sizeHeader.Substring(0, sizeHeader.IndexOf(":")));
+            var height = double.Parse(sizeHeader.Substring(sizeHeader.IndexOf(":") + 1));
+            blobUrl = blobUrl.Substring(blobUrl.IndexOf(";") + 1); // strip size header
+
+            var element = new BlobElement
+            {
+                Source = blobUrl,
+                Width = width,
+                Height = height 
+            };
+            await element.LoadBlob();
+
+            return element;
         }
 
         #endregion Asynchronous Tasks
@@ -116,6 +137,7 @@ namespace OpenSilverPdfViewer.JSInterop
         {
             OpenSilver.Interop.ExecuteJavaScript("clearViewport($0)", canvasId);
         }
+
         #endregion Synchronous Tasks
     }
 }

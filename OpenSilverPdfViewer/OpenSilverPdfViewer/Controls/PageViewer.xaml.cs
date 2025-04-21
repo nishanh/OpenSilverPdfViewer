@@ -11,10 +11,11 @@ using System.Windows.Shapes;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls.Primitives;
 
-using OpenSilverPdfViewer.JSInterop;
+using OpenSilverPdfViewer.Utility;
 
 namespace OpenSilverPdfViewer.Controls
 {
@@ -27,9 +28,6 @@ namespace OpenSilverPdfViewer.Controls
         private readonly FontFamily _rulerFont = new FontFamily("Verdana");
         private readonly Brush _tickBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0xA9, 0xA9, 0xA9));
         private readonly Brush _rulerBorderBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0x48, 0x48, 0x48));
-
-        private PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Instance;
-        public event PropertyChangedEventHandler PropertyChanged;
 
         private IRenderStrategy renderStrategy;
 
@@ -119,8 +117,15 @@ namespace OpenSilverPdfViewer.Controls
         private static async void OnRenderModeChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
-            ctrl.renderStrategy.ClearViewport();
-            ctrl.renderStrategy = RenderStrategyFactory.Create((RenderModeType)e.NewValue, ctrl.pageImageCanvas);
+            var renderMode = (RenderModeType)e.NewValue;
+
+            ctrl.renderStrategy.InvalidatePageCache();
+
+            var canvasElement = renderMode == RenderModeType.OpenSilver ? 
+                (FrameworkElement)ctrl.pageImageCanvas :
+                ctrl.pageElementCanvas;
+
+            ctrl.renderStrategy = RenderStrategyFactory.Create(renderMode, canvasElement);
             ctrl.renderStrategy.RenderPageNumber = ctrl.PreviewPage;
             ctrl.renderStrategy.RenderZoomLevel = ctrl.ZoomLevel;
             await ctrl.RenderCurrentPage();
@@ -131,10 +136,9 @@ namespace OpenSilverPdfViewer.Controls
 
         public PageViewer()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             renderStrategy = RenderStrategyFactory.Create(RenderMode, pageImageCanvas);
         }
-
         private async Task RenderCurrentPage()
         {
             if (PreviewPage > 0)
@@ -162,25 +166,15 @@ namespace OpenSilverPdfViewer.Controls
             const int quarterTick = wholeTickLength / 3 + 2;
             const int halfTick = wholeTickLength / 2 + 2;
 
-            // Every step in the draw loop is a 1/8" increment. Adjust to draw more or less tick marks, e.g, .0625 for marks every 1/16 of an inch
-            var resRuler = 0.125; 
+            var displayScale = renderStrategy.GetDisplayScale();
+
+            // Dynamically adjust the ruler resolution based on display scale.
+            // This is to avoid tightly-packed tick marks at small scale values
+            var resRuler = displayScale < 0.35 ? 0.25 : 0.125;
+            resRuler = displayScale < 0.2 ? 0.5 : resRuler;
+            resRuler = displayScale < 0.15 ? 1.0 : resRuler;
+            resRuler = displayScale > 0.9 ? 0.0625 : resRuler;
             var wholeUnitInterval = (int)(1d / resRuler);
-
-            var posX = offsetX - pageScrollBarHorz.Value;
-            var posY = margin - pageScrollBarVert.Value;
-
-            // Set ruler zero-points to the top/left edges of the centered page when in "fit to view" mode
-            if (ZoomLevel == 0)
-            {
-                var displayScale = renderStrategy.GetDisplayScale();
-                var sourcePageSize = renderStrategy.GetPageImageSize();
-                //PdfJs.GetPageImageSize(PreviewPage);
-                var viewportSize = renderStrategy.GetViewportSize();
-                var pxWidth = sourcePageSize.Width * displayScale;
-                var pxHeight = sourcePageSize.Height * displayScale;
-                posX = ((viewportSize.Width - pxWidth) / 2) + offsetX;
-                posY = ((viewportSize.Height - pxHeight) / 2) + margin;
-            }
 
             // Erase previous ruler ticks and text
             horzRuler.Children.Clear();
@@ -195,12 +189,14 @@ namespace OpenSilverPdfViewer.Controls
             vertRuler.Children.Add(new Line { X1 = vertRuler.ActualWidth - 1, Y1 = 0, X2 = vertRuler.ActualWidth - 1, Y2 = vertRuler.ActualHeight, Stroke = _rulerBorderBrush });
 
             double pxToInches = renderStrategy.GetPixelsToInchesConversion();
+            var pagePosition = renderStrategy.GetPagePosition();
+            pagePosition.Offset(offsetX, margin);
 
             // Find the first tick mark we can reasonably draw.
             // Let's say the page image is centered horizontally in the viewport in logical units at 2.125"
             // Therefore, the first tick mark that can be drawn is the fractional value .125"
             // Convert that result back to device units (pixels) to get the first X or Y value to draw at 
-            var originX = posX * pxToInches;
+            var originX = pagePosition.X * pxToInches;
             var startX = originX % 1; // get fractional part
             var i = -(int)(startX / resRuler);
             var devStartX = startX / pxToInches;
@@ -246,7 +242,7 @@ namespace OpenSilverPdfViewer.Controls
                 i++;
             }
 
-            var originY = posY * pxToInches;
+            var originY = pagePosition.Y * pxToInches;
             var startY = originY % 1; // get fractional part
             i = -(int)(startY / resRuler);
             var devStartY = startY / pxToInches;
@@ -355,6 +351,7 @@ namespace OpenSilverPdfViewer.Controls
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+        public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion Event Handlers
     }

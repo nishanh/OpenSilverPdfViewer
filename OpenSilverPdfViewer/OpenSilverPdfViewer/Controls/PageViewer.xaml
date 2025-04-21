@@ -105,6 +105,9 @@
                         ClipToBounds="True"
                         Background="Transparent">
                     </Canvas>
+                    <native:HtmlCanvas 
+                        x:Name="pageElementCanvas" 
+                        ClipToBounds="True"/>
                     <native:HtmlPresenter>
                         <canvas id="pageViewCanvas"/>
                     </native:HtmlPresenter>

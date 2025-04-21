@@ -8,7 +8,8 @@ namespace OpenSilverPdfViewer
     public enum RenderModeType
     {
         Dom,
-        OpenSilver
+        OpenSilver,
+        HTMLCanvas
     }
     public enum ViewModeType
     {

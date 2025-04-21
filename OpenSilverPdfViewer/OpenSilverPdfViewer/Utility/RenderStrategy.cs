@@ -11,6 +11,8 @@ using System.Windows.Controls;
 using System.Collections.Generic;
 
 using OpenSilverPdfViewer;
+using OpenSilverPdfViewer.Utility;
+using CSHTML5.Native.Html.Controls;
 using OpenSilverPdfViewer.JSInterop;
 
 public interface IRenderStrategy
@@ -23,17 +25,20 @@ public interface IRenderStrategy
     double GetPixelsToInchesConversion();
     Size GetViewportSize();
     Size GetPageImageSize();
+    Point GetPagePosition();
     void ClearViewport();
     void InvalidatePageCache();
 }
 public static class RenderStrategyFactory
 {
-    public static IRenderStrategy Create(RenderModeType renderMode, Canvas osCanvas)
+    public static IRenderStrategy Create(RenderModeType renderMode, FrameworkElement osCanvas)
     {
         if (renderMode == RenderModeType.Dom)
             return new DOMRenderStrategy();
+        else if (renderMode == RenderModeType.OpenSilver)
+            return new OSRenderStrategy(osCanvas as Canvas);
         else
-            return new OSRenderStrategy(osCanvas);
+            return new HTMLCanvasStrategy(osCanvas as HtmlCanvas);
     }
 }
 public abstract class RenderStrategyBase : IRenderStrategy
@@ -75,6 +80,23 @@ public abstract class RenderStrategyBase : IRenderStrategy
         // Scale to convert from pixels to inches at the current zoom level
         return 1d / logScale;
     }
+    public Point GetPagePosition()
+    {
+        var posX = 0d;
+        var posY = 0d;
+        var displayScale = GetDisplayScale();
+
+        if (RenderZoomLevel == 0)
+        {
+            var imageSize = GetPageImageSize();
+            var viewportSize = GetViewportSize();
+            var scaledWidth = imageSize.Width * displayScale;
+            var scaledHeight = imageSize.Height * displayScale;
+            posX = (viewportSize.Width - scaledWidth) / 2;
+            posY = (viewportSize.Height - scaledHeight) / 2;
+        }
+        return new Point(posX, posY);
+    }
 }
 public sealed class DOMRenderStrategy : RenderStrategyBase
 {
@@ -102,13 +124,14 @@ public sealed class DOMRenderStrategy : RenderStrategyBase
     }
     public override void InvalidatePageCache()
     {
+        ClearViewport();
         PdfJs.InvalidatePageCache();
     }
 }
 public sealed class OSRenderStrategy : RenderStrategyBase
 {
     private Dictionary<int, Image> _pageImageCache = new Dictionary<int, Image>();
-    private Canvas renderCanvas;
+    private readonly Canvas renderCanvas;
 
     public OSRenderStrategy(Canvas canvas) 
     { 
@@ -123,22 +146,11 @@ public sealed class OSRenderStrategy : RenderStrategyBase
             _pageImageCache.Add(RenderPageNumber, image);
         }
 
-        var posX = 0d; 
-        var posY = 0d;
         var displayScale = GetDisplayScale();
-
-        if (RenderZoomLevel == 0)
-        {
-            var imageSize = GetPageImageSize();
-            var viewportSize = GetViewportSize();
-            var scaledWidth = imageSize.Width * displayScale;
-            var scaledHeight = imageSize.Height * displayScale;
-            posX = (viewportSize.Width - scaledWidth) / 2;
-            posY = (viewportSize.Height - scaledHeight) / 2;
-        }
+        var pagePosition = GetPagePosition();
         var transform = new TransformGroup();
         transform.Children.Add(new ScaleTransform() { ScaleX = displayScale, ScaleY = displayScale });
-        transform.Children.Add(new TranslateTransform() { X = posX, Y = posY });
+        transform.Children.Add(new TranslateTransform() { X = pagePosition.X, Y = pagePosition.Y });
         image.RenderTransform = transform;
 
         renderCanvas.Children.Clear();
@@ -148,7 +160,9 @@ public sealed class OSRenderStrategy : RenderStrategyBase
     }
     public override void ScrollViewport(int scrollX, int scrollY)
     {
-        _pageImageCache.TryGetValue(RenderPageNumber, out var image);
+        if(_pageImageCache.TryGetValue(RenderPageNumber, out var image) == false)
+            throw new Exception($"ScrollViewport: No image found in cache for page {RenderPageNumber}");
+
         var translate = (image.RenderTransform as TransformGroup).Children[1] as TranslateTransform;
         translate.X = -scrollX;
         translate.Y = -scrollY;
@@ -159,7 +173,9 @@ public sealed class OSRenderStrategy : RenderStrategyBase
     }
     public override Size GetPageImageSize()
     {
-        _pageImageCache.TryGetValue(RenderPageNumber, out var image);
+        if (_pageImageCache.TryGetValue(RenderPageNumber, out var image) == false)
+            throw new Exception($"GetPageImageSize: No image found in cache for page {RenderPageNumber}");
+
         return new Size(image.Width, image.Height);
     }
     public override void ClearViewport()
@@ -168,6 +184,67 @@ public sealed class OSRenderStrategy : RenderStrategyBase
     }
     public override void InvalidatePageCache()
     {
+        renderCanvas.Children.Clear();
         _pageImageCache.Clear();
+    }
+}
+public sealed class HTMLCanvasStrategy : RenderStrategyBase
+{
+    private Dictionary<int, BlobElement> _pageImageCache = new Dictionary<int, BlobElement>();
+    private readonly HtmlCanvas renderCanvas;
+
+    public HTMLCanvasStrategy(HtmlCanvas canvas)
+    {
+        renderCanvas = canvas;
+    }
+    public override void ClearViewport()
+    {
+        renderCanvas.Children.Clear();
+    }
+    public override Size GetPageImageSize()
+    {
+        if (_pageImageCache.TryGetValue(RenderPageNumber, out BlobElement image) == false)
+            throw new Exception($"GetPageImageSize: No image found in cache for page {RenderPageNumber}");
+
+        return new Size(image.Width, image.Height);
+    }
+    public override Size GetViewportSize()
+    {
+        return new Size(renderCanvas.ActualWidth, renderCanvas.ActualHeight);
+    }
+    public override void InvalidatePageCache()
+    {
+        renderCanvas.Children.Clear();
+
+        foreach (var page in _pageImageCache.Values)
+            page.InvalidateImage();
+        _pageImageCache.Clear();        
+    }
+    public override async Task<int> RenderCurrentPage()
+    {
+        if (_pageImageCache.TryGetValue(RenderPageNumber, out BlobElement image) == false)
+        {
+            var renderScale = renderDPI / nativePdfDpi;
+            image = await PdfJs.GetPdfPageBlobElementAsync(RenderPageNumber, renderScale);
+            _pageImageCache.Add(RenderPageNumber, image);
+        }
+        var pagePosition = GetPagePosition();
+        image.X = pagePosition.X;
+        image.Y = pagePosition.Y;
+        image.Scale = GetDisplayScale();
+        renderCanvas.Children.Clear();
+        renderCanvas.Children.Add(image);
+        renderCanvas.Draw();
+
+        return RenderPageNumber;
+    }
+    public override void ScrollViewport(int scrollX, int scrollY)
+    {
+        if (_pageImageCache.TryGetValue(RenderPageNumber, out BlobElement image) == false)
+            throw new Exception($"ScrollViewport: No image found in cache for page {RenderPageNumber}");
+
+        image.X = -scrollX; 
+        image.Y = -scrollY;
+        renderCanvas.Draw();
     }
 }

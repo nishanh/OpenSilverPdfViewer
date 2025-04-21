@@ -131,6 +131,21 @@ function renderPageThumbnail(pageNumber, thumbScale, callback) {
     }
 }
 
+function renderPageToBlob(pageNumber, thumbScale, callback) {
+    console.log("renderPageToBlob() begin: ", pageNumber);
+    var promise = (async () => await renderPageToBlobAsync(pageNumber, thumbScale))();
+    if (callback != undefined) {
+        promise.then((result) => callback(result));
+    }
+}
+function renderPageToImage(pageNumber, thumbScale, callback) {
+    console.log("renderPageToImage() begin: ", pageNumber);
+    var promise = (async () => await renderPageToImageAsync(pageNumber, thumbScale))();
+    if (callback != undefined) {
+        promise.then((result) => callback(result));
+    }
+}
+
 // Redraws the page image to the target canvas at the specified scale and offsets to simulate viewport scrolling
 function scrollViewportImage(pageNumber, canvasId, zoomLevel, scrollX, scrollY) {
     var sourceCanvas = pageCache.get(pageNumber);
@@ -372,5 +387,95 @@ async function renderPageThumbnailAsync(pageNumber, thumbScale) {
         console.error(`Error rendering thumbnail page ${pageNumber}:`, error);
         return null; // Indicate an error
     }
+}
+
+async function renderPageToBlobAsync(pageNumber, thumbScale) {
+    if (!this.pdfDocument) {
+        console.error('No PDF loaded. Call loadPdfFile first.');
+        return null; // Indicate an error
+    }
+    try {
+        const page = await this.pdfDocument.getPage(pageNumber);
+        const contentView = page.getViewport({ scale: thumbScale });
+
+        // Create an unattached canvas element to render the PDF page onto
+        const canvas = document.createElement('canvas');
+        canvas.width = contentView.width;
+        canvas.height = contentView.height;
+
+        // new OffscreenCanvas(contentView.width, contentView.height); // No toDataURL function on OffscreenCanvas
+        const context = canvas.getContext('2d');
+
+        const renderContext = {
+            canvasContext: context,
+            viewport: contentView
+        };
+        await page.render(renderContext).promise;
+
+        var blobUrl = await new Promise(resolve => {
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                resolve(url);
+            })
+        });
+
+        console.log("Blob: ", blobUrl);
+        console.log(`Page ${pageNumber} thumbnail rendered successfully`);
+        console.log(`Output size: ${contentView.width} x ${contentView.height}`);
+
+        var sizeHeader = `${contentView.width}:${contentView.height};`;
+        return sizeHeader.concat(blobUrl);
+    }
+    catch (error) {
+        console.error(`Error rendering thumbnail page ${pageNumber}:`, error);
+        return null; // Indicate an error
+    }
+}
+
+async function renderPageToImageAsync(pageNumber, thumbScale) {
+    if (!this.pdfDocument) {
+        console.error('No PDF loaded. Call loadPdfFile first.');
+        return null; // Indicate an error
+    }
+    try {
+        const page = await this.pdfDocument.getPage(pageNumber);
+        const contentView = page.getViewport({ scale: thumbScale });
+
+        // Create an unattached canvas element to render the PDF page onto
+        const canvas = document.createElement('canvas');
+        canvas.width = contentView.width;
+        canvas.height = contentView.height;
+
+        // new OffscreenCanvas(contentView.width, contentView.height); // No toDataURL function on OffscreenCanvas
+        const context = canvas.getContext('2d');
+
+        const renderContext = {
+            canvasContext: context,
+            viewport: contentView
+        };
+        await page.render(renderContext).promise;
+
+        var image = await new Promise(resolve => {
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const imgElement = new Image();
+                imgElement.src = url;
+                imgElement.onload = () => resolve(imgElement);
+            })
+        });
+
+        return image;
+    }
+    catch (error) {
+        console.error(`Error rendering thumbnail page ${pageNumber}:`, error);
+        return null; // Indicate an error
+    }
+}
+function loadBlobImageAsync(imgElement, blobUri, callback) {
+    new Promise((resolve, reject) => {
+        imgElement.src = blobUri;
+        imgElement.onload = () => resolve(true);
+        imgElement.onerror = () => resolve(false);
+    }).then(result => callback(result))
 }
 
