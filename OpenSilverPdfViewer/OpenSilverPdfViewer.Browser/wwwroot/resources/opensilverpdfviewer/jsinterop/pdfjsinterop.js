@@ -165,6 +165,13 @@ function scrollViewportImage(pageNumber, canvasId, zoomLevel, scrollX, scrollY) 
     console.log(`Scroll offset: X: ${scrollX}, Y: ${scrollY}`);
 }
 
+function clearViewport(canvasId) {
+    var viewportCanvas = document.getElementById(canvasId);
+    var viewportRect = viewportCanvas.getBoundingClientRect();
+    var ctx = viewportCanvas.getContext('2d');
+    ctx.clearRect(0, 0, viewportRect.width, viewportRect.height);
+}
+
 function invalidatePageCache() {
     console.log("invalidatePageCache() begin");
     pageCache.clear(); // Clear the cache
@@ -341,7 +348,11 @@ async function renderPageThumbnailAsync(pageNumber, thumbScale) {
         const contentView = page.getViewport({ scale: thumbScale });
 
         // Create an unattached canvas element to render the PDF page onto
-        const canvas = new OffscreenCanvas(contentView.width, contentView.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = contentView.width;
+        canvas.height = contentView.height;
+
+        // new OffscreenCanvas(contentView.width, contentView.height); // No toDataURL function on OffscreenCanvas
         const context = canvas.getContext('2d');
 
         const renderContext = {
@@ -349,7 +360,8 @@ async function renderPageThumbnailAsync(pageNumber, thumbScale) {
             viewport: contentView
         };
         await page.render(renderContext).promise;
-        var thumbData = canvas.toDataURL('image/png', 100);
+        var sizeHeader = `${contentView.width}:${contentView.height};`;
+        var thumbData = sizeHeader.concat(canvas.toDataURL('image/png', 100));
 
         console.log(`Page ${pageNumber} thumbnail rendered successfully`);
         console.log(`Output size: ${contentView.width} x ${contentView.height}`);

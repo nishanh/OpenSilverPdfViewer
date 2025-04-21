@@ -143,6 +143,7 @@
             <Grid VerticalAlignment="Center">
                 <local:ZoomViewCtrl 
                     Width="175"
+                    IsEnabled="{Binding CurrentPage, Converter={StaticResource IntToEnabledConverter}}"
                     ZoomLevel="{Binding PageZoomValue, Mode=TwoWay}"
                     ZoomSelection="{Binding PageZoomLevel, Mode=TwoWay}"
                     HorizontalAlignment="Left"/>

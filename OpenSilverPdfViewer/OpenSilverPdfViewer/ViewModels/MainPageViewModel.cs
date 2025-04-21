@@ -15,11 +15,22 @@ using OpenSilverPdfViewer.JSInterop;
 
 namespace OpenSilverPdfViewer.ViewModels
 {
-    public class MainPageViewModel : INotifyPropertyChanged
+    public sealed class MainPageViewModel : INotifyPropertyChanged
     {
         #region Properties
 
         private PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Instance;
+
+        private string _filename = string.Empty;
+        public string Filename
+        {
+            get { return _filename; }
+            set 
+            { 
+                _filename = value;
+                OnPropertyChanged();
+            }
+        }
 
         private string _statusText;
         public string StatusText
@@ -165,23 +176,21 @@ namespace OpenSilverPdfViewer.ViewModels
                 return;
 
             int pageCount;
-            string baseFileName;
             
             if (sourceOption == "file")
             {
                 (string filename, int pages) = await LoadPdfFile();
-                baseFileName = filename;
+                Filename = filename;
                 pageCount = pages;
             }
             else
             {
-                baseFileName = sourceOption == "sample1" ? "POH_Calidus_4.0_EN.pdf" : "compressed.tracemonkey-pldi-09.pdf";
-                pageCount = await PdfJs.LoadPdfFileAsync($@"Data\{baseFileName}");
+                Filename = sourceOption == "sample1" ? "POH_Calidus_4.0_EN.pdf" : "compressed.tracemonkey-pldi-09.pdf";
+                pageCount = await PdfJs.LoadPdfFileAsync($@"Data\{Filename}");
             }
             CurrentPage = 0; // invalidate current page on new document
-            PdfJs.InvalidatePageCache();
 
-            StatusText = $"PDF - {baseFileName} loaded with {pageCount} pages";
+            StatusText = $"PDF - {Filename} loaded with {pageCount} pages";
             PageCount = pageCount;
             CurrentPage = 1;
         }

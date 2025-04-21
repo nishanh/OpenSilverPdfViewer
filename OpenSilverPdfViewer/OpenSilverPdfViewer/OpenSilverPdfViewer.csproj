@@ -69,6 +69,7 @@
     <Compile Include="Utility\Enumerations.cs" />
     <Compile Include="Utility\ExtMethods.cs" />
     <Compile Include="Utility\Matrix2d.cs" />
+    <Compile Include="Utility\RenderStrategy.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
   </ItemGroup>
 
@@ -95,8 +96,8 @@
   
   <Target Name="Copy Resources" AfterTargets="Build">
     <Message Text="Copying sample pdfs wwwroot" Importance="high" />
-    <Copy SourceFiles="Data\POH_Calidus_4.0_EN.pdf" DestinationFolder="..\OpenSilverPdfViewer.Browser\wwwroot\Data" />
-    <Copy SourceFiles="Data\compressed.tracemonkey-pldi-09.pdf" DestinationFolder="..\OpenSilverPdfViewer.Browser\wwwroot\Data" />
+    <Copy SourceFiles="Data\POH_Calidus_4.0_EN.pdf" DestinationFolder="..\$(ProjectName).Browser\wwwroot\Data" />
+    <Copy SourceFiles="Data\compressed.tracemonkey-pldi-09.pdf" DestinationFolder="..\$(ProjectName).Browser\wwwroot\Data" />
   </Target>
 
 </Project>

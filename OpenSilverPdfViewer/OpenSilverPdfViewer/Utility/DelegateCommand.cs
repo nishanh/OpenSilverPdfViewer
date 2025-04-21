@@ -10,7 +10,7 @@ using System.Windows.Input;
 
 namespace OpenSilverPdfViewer.Utility
 {
-    public class DelegateCommand : ICommand
+    public sealed class DelegateCommand : ICommand
     {
         private Predicate<object> _canExecute;
         private Action<object> _method;
@@ -32,9 +32,4 @@ namespace OpenSilverPdfViewer.Utility
         }
         public event EventHandler CanExecuteChanged;
     }
-
-    public interface IRenderStrategy
-    {
-        void RenderPage(int pageNumber);
-    }   
 }

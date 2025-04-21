@@ -5,15 +5,15 @@
 
 using System;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media.Imaging;
+using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Media.Imaging;
 
 namespace OpenSilverPdfViewer.JSInterop
 {
     // Singleton interop wrapper for PdfJs 
-    public class PdfJsWrapper
+    public sealed class PdfJsWrapper
     {
         private const string scriptResourceName = "/OpenSilverPdfViewer;component/JSInterop/pdfJsInterop.js";
         private static PdfJsWrapper _instance;
@@ -65,6 +65,11 @@ namespace OpenSilverPdfViewer.JSInterop
             await InitAsync();
 
             var dataUrl = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("renderPageThumbnail", pageNumber, scaleFactor);
+            
+            var sizeHeader = dataUrl.Substring(0, dataUrl.IndexOf(";"));
+            var width = double.Parse(sizeHeader.Substring(0, sizeHeader.IndexOf(":")));
+            var height = double.Parse(sizeHeader.Substring(sizeHeader.IndexOf(":") + 1));
+
             dataUrl = dataUrl.Substring(dataUrl.IndexOf(",") + 1); // strip header
             var imageBytes = Convert.FromBase64String(dataUrl);
 
@@ -77,6 +82,8 @@ namespace OpenSilverPdfViewer.JSInterop
                 var bitmap = new BitmapImage();
                 bitmap.SetSource(stream);
                 image.Source = bitmap;
+                image.Width = width;
+                image.Height = height;
             }
             return image;
         }
@@ -105,7 +112,10 @@ namespace OpenSilverPdfViewer.JSInterop
         {
             OpenSilver.Interop.ExecuteJavaScript("invalidatePageCache()");
         }
-
+        public void ClearViewport(string canvasId)
+        {
+            OpenSilver.Interop.ExecuteJavaScript("clearViewport($0)", canvasId);
+        }
         #endregion Synchronous Tasks
     }
 }

@@ -170,20 +170,7 @@
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Pressed"/>
-                                <VisualState x:Name="Disabled">
-                                    <Storyboard>
-                                        <DoubleAnimation
-                                            Duration="0"
-                                            To="0.75"
-                                            Storyboard.TargetName="contentPresenterChecked"
-                                            Storyboard.TargetProperty="Opacity"/>
-                                        <ColorAnimation 
-                                            Storyboard.TargetName="Background" 
-                                            Storyboard.TargetProperty="Foreground" 
-                                            To="{StaticResource DisabledForegroundColor}" 
-                                            Duration="0:0:0.1" />
-                                    </Storyboard>
-                                </VisualState>
+                                <VisualState x:Name="Disabled"/>
                             </VisualStateGroup>
                         </VisualStateManager.VisualStateGroups>
                         <Grid.ColumnDefinitions>
@@ -316,8 +303,7 @@
                         </ContentControl>
                         <Border 
                             x:Name="DisabledOverlay"
-                            Margin="3"
-                            CornerRadius="3"
+                            Margin="0,0,0,1"
                             Visibility="Collapsed"
                             Background="{StaticResource CMSCtrlDisabledBodyBrush}"/>
                         <Popup

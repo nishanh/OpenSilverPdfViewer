@@ -115,6 +115,7 @@
                     Title="Document">
                     <Grid>
                         <ctrls:PageViewer 
+                            Filename="{Binding Filename}"
                             RenderMode="{Binding RenderMode}"
                             PreviewPage="{Binding CurrentPage}"
                             ZoomValue="{Binding PageZoomValue, Mode=TwoWay}"
