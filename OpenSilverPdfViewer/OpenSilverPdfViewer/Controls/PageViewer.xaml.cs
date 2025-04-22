@@ -4,7 +4,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Linq;
 using System.Windows;
+using System.Text.Json;
 using System.Globalization;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -16,6 +18,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Controls.Primitives;
 
 using OpenSilverPdfViewer.Utility;
+using OpenSilverPdfViewer.JSInterop;
 
 namespace OpenSilverPdfViewer.Controls
 {
@@ -141,18 +144,19 @@ namespace OpenSilverPdfViewer.Controls
         }
         private async Task RenderCurrentPage()
         {
-            if (PreviewPage > 0)
-            {
-                await renderStrategy.RenderCurrentPage();
-                var displayScale = renderStrategy.GetDisplayScale() * 100d;
-                ZoomValue = Math.Round(displayScale, 0);
-                SetScrollBars();
-                DrawRulers();
-            }
+            if (PreviewPage <= 0) return;
+
+            await renderStrategy.RenderCurrentPage();
+            var displayScale = renderStrategy.GetDisplayScale() * 100d;
+            ZoomValue = Math.Round(displayScale, 0);
+            SetScrollBars();
+            DrawRulers();
+            //var rectList = await GetLayoutRects();
+            //RenderThumbnails(rectList);
         }
         private void DrawRulers()
         {
-            if (PreviewPage == 0 || _rulersOn == false) return;
+            if (PreviewPage <= 0 || _rulersOn == false) return;
 
             const int fontSize = 10;
             const int margin = 10; // from xaml layout
@@ -190,7 +194,7 @@ namespace OpenSilverPdfViewer.Controls
 
             double pxToInches = renderStrategy.GetPixelsToInchesConversion();
             var pagePosition = renderStrategy.GetPagePosition();
-            pagePosition.Offset(offsetX, margin);
+            pagePosition.Offset(offsetX - pageScrollBarHorz.Value, margin - pageScrollBarVert.Value);
 
             // Find the first tick mark we can reasonably draw.
             // Let's say the page image is centered horizontally in the viewport in logical units at 2.125"
@@ -312,6 +316,89 @@ namespace OpenSilverPdfViewer.Controls
                 renderStrategy.ScrollViewport((int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
         }
 
+        private async Task<List<Rect>> GetLayoutRects()
+        {
+            var json = await PdfJsWrapper.Instance.GetPdfPageSizeRunList();
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var pageRunList = JsonSerializer.Deserialize<List<PageRun>>(json, options);
+            //var pageRunList = PageRun.CreateTestList();
+
+            const double toPts = 25400d / 72d;
+            const double thumbScale = 0.2;
+            const int gap = 10;
+            var layoutHeight = 0d;
+            var nextX = 0d;
+            var nextY = 0d;
+            var rowHeight = 0d;
+            var layoutWidth = pageImageCanvas.ActualWidth;// renderStrategy.GetViewportSize().Width;
+            var layoutRectList = new List<Rect>();
+            var rectList = new List<Rect>();
+            var rowList = new List<List<Rect>>();
+
+            foreach (var pageRun in pageRunList)
+            {
+                var thumbWidth = pageRun.Width / toPts * thumbScale;
+                var thumbHeight = pageRun.Height / toPts * thumbScale;
+
+                for (int i = 0; i < pageRun.Count; i++)
+                {
+                    if (thumbWidth + nextX < layoutWidth)
+                    {
+                        var rect = new Rect(nextX, nextY, thumbWidth, thumbHeight);
+                        rectList.Add(rect);
+                        rowHeight = Math.Max(rowHeight, thumbHeight);
+                    }
+                    else // start a new row
+                    {
+                        rowList.Add(rectList);
+                        rectList = new List<Rect>();
+                        layoutHeight += rowHeight + gap;
+                        nextX = 0; nextY = layoutHeight;
+
+                        rectList.Add(new Rect(nextX, nextY, thumbWidth, thumbHeight));
+                        rowHeight = thumbHeight;
+                    }
+                    nextX += thumbWidth + gap;
+                }
+            }
+            layoutHeight += rowHeight;
+            rowList.Add(rectList);
+
+            // Center all rects within their respective rows            
+            foreach (var row in rowList)
+            {
+                rowHeight = row.Max(rect => rect.Height);
+                for (int i = 0; i < row.Count; i++)
+                {
+                    var rect = row[i];
+                    rect.Y += (rowHeight - rect.Height) / 2;
+                    row[i] = rect;
+                }
+            }
+            
+            // Flatten the row list into a list of rects
+            layoutRectList = rowList.SelectMany(row => row).ToList();
+
+            return layoutRectList;
+        }
+        public void RenderThumbnails(List<Rect> layoutRects)
+        {
+            pageImageCanvas.Children.Clear();
+            foreach (var rect in layoutRects)
+            {
+                var canvasRect = new Rectangle
+                {
+                    Width = rect.Width,
+                    Height = rect.Height,
+                    Fill = new SolidColorBrush(Color.FromArgb(0xFF, 0xF9, 0xF9, 0xF9)),
+                    Stroke = new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00))
+                };
+                canvasRect.SetValue(Canvas.LeftProperty, rect.Left);
+                canvasRect.SetValue (Canvas.TopProperty, rect.Top);
+                pageImageCanvas.Children.Add(canvasRect);
+            }
+        }
+
         #endregion Implementation
         #region Event Handlers
 
@@ -320,7 +407,6 @@ namespace OpenSilverPdfViewer.Controls
             renderStrategy.ScrollViewport((int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
             DrawRulers(); 
         }
-
         private async void Preview_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             await RenderCurrentPage();

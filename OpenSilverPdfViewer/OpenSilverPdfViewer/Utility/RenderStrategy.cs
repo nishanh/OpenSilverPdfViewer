@@ -184,7 +184,7 @@ public sealed class OSRenderStrategy : RenderStrategyBase
     }
     public override void InvalidatePageCache()
     {
-        renderCanvas.Children.Clear();
+        ClearViewport();
         _pageImageCache.Clear();
     }
 }
@@ -196,29 +196,6 @@ public sealed class HTMLCanvasStrategy : RenderStrategyBase
     public HTMLCanvasStrategy(HtmlCanvas canvas)
     {
         renderCanvas = canvas;
-    }
-    public override void ClearViewport()
-    {
-        renderCanvas.Children.Clear();
-    }
-    public override Size GetPageImageSize()
-    {
-        if (_pageImageCache.TryGetValue(RenderPageNumber, out BlobElement image) == false)
-            throw new Exception($"GetPageImageSize: No image found in cache for page {RenderPageNumber}");
-
-        return new Size(image.Width, image.Height);
-    }
-    public override Size GetViewportSize()
-    {
-        return new Size(renderCanvas.ActualWidth, renderCanvas.ActualHeight);
-    }
-    public override void InvalidatePageCache()
-    {
-        renderCanvas.Children.Clear();
-
-        foreach (var page in _pageImageCache.Values)
-            page.InvalidateImage();
-        _pageImageCache.Clear();        
     }
     public override async Task<int> RenderCurrentPage()
     {
@@ -246,5 +223,29 @@ public sealed class HTMLCanvasStrategy : RenderStrategyBase
         image.X = -scrollX; 
         image.Y = -scrollY;
         renderCanvas.Draw();
+    }
+    public override Size GetPageImageSize()
+    {
+        if (_pageImageCache.TryGetValue(RenderPageNumber, out BlobElement image) == false)
+            throw new Exception($"GetPageImageSize: No image found in cache for page {RenderPageNumber}");
+
+        return new Size(image.Width, image.Height);
+    }
+    public override Size GetViewportSize()
+    {
+        return new Size(renderCanvas.ActualWidth, renderCanvas.ActualHeight);
+    }
+    public override void ClearViewport()
+    {
+        renderCanvas.Children.Clear();
+        renderCanvas.Draw();
+    }
+    public override void InvalidatePageCache()
+    {
+        ClearViewport();
+
+        foreach (var page in _pageImageCache.Values)
+            page.InvalidateImage();
+        _pageImageCache.Clear();
     }
 }

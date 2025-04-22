@@ -12,6 +12,9 @@ using System.Runtime.CompilerServices;
 
 using OpenSilverPdfViewer.Utility;
 using OpenSilverPdfViewer.JSInterop;
+using System.Text.Json;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace OpenSilverPdfViewer.ViewModels
 {

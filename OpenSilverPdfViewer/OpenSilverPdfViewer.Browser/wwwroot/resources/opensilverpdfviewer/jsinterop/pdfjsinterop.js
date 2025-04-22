@@ -145,6 +145,13 @@ function renderPageToImage(pageNumber, thumbScale, callback) {
         promise.then((result) => callback(result));
     }
 }
+function getPageSizeRunList(callback) {
+    console.log("getPageSizeRunList() begin");
+    var promise = (async () => await getPageSizeRunListAsync())();
+    if (callback != undefined) {
+        promise.then((result) => callback(result));
+    }
+}
 
 // Redraws the page image to the target canvas at the specified scale and offsets to simulate viewport scrolling
 function scrollViewportImage(pageNumber, canvasId, zoomLevel, scrollX, scrollY) {
@@ -243,6 +250,52 @@ async function getPageSizeAsync(pageNumber) {
     const page = await this.pdfDocument.getPage(pageNumber);
     const viewport = page.getViewport({ scale: 1.0 });
     return { width: viewport.width, height: viewport.height };
+}
+
+// Get a run-length encoded list of page sizes
+async function getPageSizeRunListAsync() {
+    if (!this.pdfDocument) {
+        console.error('No PDF loaded. Call loadPdfFile first.');
+        return -1; // Indicate an error
+    }
+
+    var i = 0;
+    var runIndex = 0;
+    var pageSizeList = [];
+    var pageCount = this.pdfDocument.numPages;
+
+    do {
+        var page = await this.pdfDocument.getPage(i+1);
+        var viewport = page.getViewport({ scale: 1.0 });
+
+        // convert page size to thousandths of millimeter rounded for equality checks
+        // and to prevent creeping round-off issues when converting between metric and imperial units for UI presentation
+        const toTMM = 25400 / 72.0
+        var width = Math.round(viewport.width * toTMM);
+        var height = Math.round(viewport.height * toTMM);
+
+        var pageSizeRun = {
+            width: width,
+            height: height,
+            count: 1
+        };
+
+        if (pageSizeList.length == 0) {
+            pageSizeList.push(pageSizeRun);
+        }
+        else {
+            var prevRun = pageSizeList[runIndex]
+            if (width == prevRun.width && height == prevRun.height) {
+                prevRun.count++;
+            }
+            else {
+                pageSizeList.push(pageSizeRun);
+                runIndex++;
+            }
+        }
+    } while (++i < pageCount)
+
+    return JSON.stringify(pageSizeList)
 }
 
 // Load a PDF file from a URL

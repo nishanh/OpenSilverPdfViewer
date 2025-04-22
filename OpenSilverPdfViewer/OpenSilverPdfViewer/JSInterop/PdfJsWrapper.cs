@@ -108,6 +108,11 @@ namespace OpenSilverPdfViewer.JSInterop
 
             return element;
         }
+        public async Task<string> GetPdfPageSizeRunList()
+        {
+            await InitAsync();
+            return await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getPageSizeRunList");
+        }
 
         #endregion Asynchronous Tasks
         #region Synchronous Tasks

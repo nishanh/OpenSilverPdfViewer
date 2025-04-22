@@ -42,7 +42,6 @@ namespace OpenSilverPdfViewer.Utility
         {
             _jsImage = OpenSilver.Interop.ExecuteJavaScript("document.createElement('img')");
         }
-
         public override ElementStyle Draw(ElementStyle currentDrawingStyle, object jsContext2d, double xParent = 0, double yParent = 0)
         {
             if (this.Visibility == Visibility.Visible)
@@ -62,22 +61,19 @@ namespace OpenSilverPdfViewer.Utility
             }
             return currentDrawingStyle;
         }
-
+        public override bool IsPointed(double x, double y)
+        {
+            return x >= this.X && x < this.X + this.Width && y >= this.Y && y < this.Y + this.Height;
+        }
         public async Task<bool> LoadBlob()
         {
             _isValid = await JSAsyncTaskRunner.RunJavaScriptAsync<bool>("loadBlobImageAsync", _jsImage, Source);
             return _isValid;
         }
-
         public void InvalidateImage()
         {
             OpenSilver.Interop.ExecuteJavaScript("URL.revokeObjectURL($0)", Source);
             _isValid = false;
-        }
-
-        public override bool IsPointed(double x, double y)
-        {
-            return x >= this.X && x < this.X + this.Width && y >= this.Y && y < this.Y + this.Height;
         }
     }
 }
