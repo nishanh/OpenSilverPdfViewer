@@ -10,6 +10,7 @@
 
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/BrushStyles.xaml"/>
+        <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/ScrollViewerStyles.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <ControlTemplate x:Key="CMSDecrementButton" TargetType="RepeatButton">
@@ -240,6 +241,28 @@
                Margin="0,1"
                Background="{TemplateBinding Background}"/>
             <ScrollViewer 
+               Style="{StaticResource CMSScrollViewerStyle}"
+               Margin="0,0,2,0"
+               VerticalAlignment="Center"
+               HorizontalContentAlignment="Right"
+               VerticalContentAlignment="Center"
+               x:Name="PART_ContentHost" />
+        </Grid>
+    </ControlTemplate>
+    <ControlTemplate x:Key="CMSBorderlessTextBox" TargetType="TextBox">
+        <Grid 
+           x:Name="LayoutRoot"
+           Background="{TemplateBinding Background}">
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="Disabled"/>
+                    <VisualState x:Name="ReadOnly"/>
+                    <VisualState x:Name="MouseOver" />
+                </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+            <ScrollViewer 
+               Style="{StaticResource CMSScrollViewerStyle}"
                Margin="0,0,2,0"
                VerticalAlignment="Center"
                HorizontalContentAlignment="Right"

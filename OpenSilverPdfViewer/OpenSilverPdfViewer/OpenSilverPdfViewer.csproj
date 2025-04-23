@@ -69,6 +69,7 @@
     <Compile Include="Utility\DelegateCommand.cs" />
     <Compile Include="Utility\Enumerations.cs" />
     <Compile Include="Utility\ExtMethods.cs" />
+    <Compile Include="Utility\Layout.cs" />
     <Compile Include="Utility\Matrix2d.cs" />
     <Compile Include="Utility\RenderStrategy.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />

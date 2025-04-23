@@ -12,9 +12,6 @@ using System.Runtime.CompilerServices;
 
 using OpenSilverPdfViewer.Utility;
 using OpenSilverPdfViewer.JSInterop;
-using System.Text.Json;
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
 
 namespace OpenSilverPdfViewer.ViewModels
 {
@@ -182,22 +179,20 @@ namespace OpenSilverPdfViewer.ViewModels
             
             if (sourceOption == "file")
             {
-                (string filename, int pages) = await LoadPdfFile();
+                (string filename, int pages) = await LoadPdfFileStream();
                 Filename = filename;
                 pageCount = pages;
             }
             else
             {
-                Filename = sourceOption == "sample1" ? "POH_Calidus_4.0_EN.pdf" : "compressed.tracemonkey-pldi-09.pdf";
-                pageCount = await PdfJs.LoadPdfFileAsync($@"Data\{Filename}");
+                var filename = sourceOption == "sample1" ? "POH_Calidus_4.0_EN.pdf" : "compressed.tracemonkey-pldi-09.pdf";
+                pageCount = await PdfJs.LoadPdfFileAsync($@"Data\{filename}");
+                Filename = filename; // setting this property triggers the pageviewer, so set it *after* the document is loaded
             }
-            CurrentPage = 0; // invalidate current page on new document
-
             StatusText = $"PDF - {Filename} loaded with {pageCount} pages";
             PageCount = pageCount;
-            CurrentPage = 1;
         }
-        public async Task<(string, int)> LoadPdfFile()
+        public async Task<(string, int)> LoadPdfFileStream()
         {
             string filename = string.Empty;
             int pageCount = 0;

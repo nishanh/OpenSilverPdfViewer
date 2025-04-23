@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Windows.Input;
 
 #pragma warning disable CS0067 // The event 'CanExecuteChanged' is never used
@@ -32,48 +31,5 @@ namespace OpenSilverPdfViewer.Utility
             _method(parameter);
         }
         public event EventHandler CanExecuteChanged;
-    }
-    public class PageRun
-    {
-        public int Width { get; set; }
-        public int Height { get; set; }
-        public int Count { get; set; }
-
-        public static List<PageRun> CreateTestList()
-        {
-            return new List<PageRun>()
-            {
-                new PageRun
-                {
-                    Width = 215900,
-                    Height = 279400,
-                    Count = 5
-                },
-                new PageRun
-                {
-                    Width = 279400,
-                    Height = 431800,
-                    Count = 1
-                },
-                new PageRun
-                {
-                    Width = 215900,
-                    Height = 279400,
-                    Count = 3
-                },
-                new PageRun
-                {
-                    Width = 215900,
-                    Height = 355600,
-                    Count = 2
-                },
-                new PageRun
-                {
-                    Width = 215900,
-                    Height = 279400,
-                    Count = 4
-                }
-            };
-        }
     }
 }

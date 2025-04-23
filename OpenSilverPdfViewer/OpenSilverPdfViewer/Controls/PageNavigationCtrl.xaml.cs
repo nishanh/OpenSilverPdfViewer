@@ -214,89 +214,43 @@ namespace OpenSilverPdfViewer.Controls
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
+
+        private string pageNumberText = "";
+
         private void PageNavTextBox_PreviewKeyUp(object sender, KeyEventArgs e)
         {
-            if (!(sender is TextBox textBox)) return;
+            if (!(sender is TextBox textBox))
+                return;
 
-            //if (e.Key == Key.LeftShift || e.Key == Key.RightShift)
+
+            if (e.Key == Key.Enter || e.Key == Key.Tab)
             {
-                ShiftDown = false;
-                e.Handled = false;
-            }
-        }
-        /// <summary>
-        /// This event handler sets the navigation page to the current textbox value when
-        /// 'enter' or 'tab' keys are pressed
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void PageNavTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            if (!(sender is TextBox textBox)) return;
-
-            // Setting handled to true prevents further processing by other chained event-handlers.
-            // In this case, 'handled = true' means to reject the key-press. We'll assume that by default.
-            var handled = true;
-
-            // Accept the shift-keys, but keep track of their state. We don't want the symbols above the number keys
-            if (e.Key == Key.Shift)
-            {
-                ShiftDown = true;
-                e.Handled = false;
-            }
-
-            // If the shift-key is not being held down...
-            else if (!ShiftDown)
-            {
-                // Accept all numeric key presses
-                if (e.Key == Key.D0 || e.Key == Key.NumPad0 ||
-                    e.Key == Key.D1 || e.Key == Key.NumPad1 ||
-                    e.Key == Key.D2 || e.Key == Key.NumPad2 ||
-                    e.Key == Key.D3 || e.Key == Key.NumPad3 ||
-                    e.Key == Key.D4 || e.Key == Key.NumPad4 ||
-                    e.Key == Key.D5 || e.Key == Key.NumPad5 ||
-                    e.Key == Key.D6 || e.Key == Key.NumPad6 ||
-                    e.Key == Key.D7 || e.Key == Key.NumPad7 ||
-                    e.Key == Key.D8 || e.Key == Key.NumPad8 ||
-                    e.Key == Key.D9 || e.Key == Key.NumPad9)
+                // Get the entered text
+                var text = textBox.Text;
                 {
-                    handled = false;
-                }
+                    // Parse the entered text to an integer
+                    var parsed = int.TryParse(text, out int pageNum);// int.Parse(text);
 
-                // Accept these control-key presses
-                else if (e.Key == Key.Home || e.Key == Key.End)
-                {
-                    handled = false;
-                }
-
-                // Prevent deletion of single digit
-                else if (e.Key == Key.Back || e.Key == Key.Delete)
-                {
-                    handled = textBox.Text.Length <= 1;
-                }
-
-                else if (e.Key == Key.Enter || e.Key == Key.Tab)
-                {
-                    // Get the entered text
-                    var text = textBox.Text;
+                    if (parsed)
                     {
-                        // Parse the entered text to an integer
-                        var pageNumber = int.Parse(text);
-
+                        pageNumberText = text;
                         // Constrain the value to the min/max zoom range
-                        pageNumber = ExtensionMethods.BoundedValue(pageNumber, 1, PageCount);
+                        pageNum = ExtensionMethods.BoundedValue(pageNum, 1, PageCount);
 
                         // Make that value the current zoom level
-                        NavigationPage = pageNumber;
+                        NavigationPage = pageNum;
 
                         SetTextBoxEditState(false);
 
                         // Accept the key press
                         e.Handled = false;
                     }
+                    else
+                    {
+                        textBox.Text = pageNumberText;
+                    }
                 }
             }
-            e.Handled = handled;
         }
         /// <summary>
         /// This method sets or clears the page navigation textbox editing state

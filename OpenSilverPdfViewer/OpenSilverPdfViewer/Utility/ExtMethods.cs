@@ -21,5 +21,9 @@ namespace OpenSilverPdfViewer.Utility
 
             return bounded;
         }
+        public static int AsTMM(this double value)
+        {
+            return (int)Math.Truncate(value * 25400d);
+        }
     }
 }

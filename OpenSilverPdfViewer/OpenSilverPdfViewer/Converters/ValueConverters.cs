@@ -27,23 +27,27 @@ namespace OpenSilverPdfViewer.Converters
         {
             if (value is bool boolValue)
             {
-                return boolValue ? Visibility.Visible : Visibility.Collapsed;
+
+                var condition = parameter == null || bool.Parse(parameter as string);
+                //var trueCond = Visibility.Visible;
+                //var falseCond = Visibility.Collapsed;
+                return (boolValue == condition) ? Visibility.Visible : Visibility.Collapsed;
             }
             return base.Convert(value, targetType, parameter, culture);
         }
     }
-    public class BoolToEnabledConverterInvert : ValueConverterBase<bool>
+    public class BoolToEnabledConverter : ValueConverterBase<bool>
     {
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is bool boolValue)
             {
-                return boolValue ? false : true;
+                var condition = parameter == null ? true : (bool)parameter;
+                return boolValue == condition;
             }
             return base.Convert(value, targetType, parameter, culture);
         }
     }
-    
     public class RenderModeToBoolConverter : ValueConverterBase<RenderModeType>
     {
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)

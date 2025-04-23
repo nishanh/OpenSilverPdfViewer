@@ -146,11 +146,12 @@
             <Grid VerticalAlignment="Center">
                 <local:ZoomViewCtrl 
                     Width="175"
-                    IsEnabled="{Binding CurrentPage, Converter={StaticResource IntToEnabledConverter}}"
+                    IsEnabled="{Binding CanZoom, ElementName=pvCtrlInternal}"
                     ZoomLevel="{Binding PageZoomValue, Mode=TwoWay}"
                     ZoomSelection="{Binding PageZoomLevel, Mode=TwoWay}"
                     HorizontalAlignment="Left"/>
                 <local:PageNavigationCtrl 
+                    HorizontalAlignment="Center"
                     NavigationPage="{Binding CurrentPage, Mode=TwoWay}"
                     PageCount="{Binding PageCount}"/>
                 <StackPanel
@@ -167,8 +168,8 @@
                     <local:ToolBarToggleButton
                         Name="pageViewBtn"
                         Click="ViewModeBtn_Click"
-                        IsChecked="{Binding ViewMode, ElementName=pvCtrlInternal, Converter={StaticResource ViewModeToCheckedConverter}, ConverterParameter={x:Static app:ViewModeType.PageView}}"
                         IsEnabled="{Binding CurrentPage, Converter={StaticResource IntToEnabledConverter}}"
+                        IsChecked="{Binding ViewMode, ElementName=pvCtrlInternal, Converter={StaticResource ViewModeToCheckedConverter}, ConverterParameter={x:Static app:ViewModeType.PageView}}"
                         CornerRadius="3,0,0,3">
                         <Image
                             Width="20"
@@ -177,8 +178,8 @@
                     <local:ToolBarToggleButton
                         Name="thumbViewBtn"
                         Click="ViewModeBtn_Click"
-                        IsChecked="{Binding ViewMode, ElementName=pvCtrlInternal, Converter={StaticResource ViewModeToCheckedConverter}, ConverterParameter={x:Static app:ViewModeType.ThumbnailView}}"
                         IsEnabled="{Binding CurrentPage, Converter={StaticResource IntToEnabledConverter}}"
+                        IsChecked="{Binding ViewMode, ElementName=pvCtrlInternal, Converter={StaticResource ViewModeToCheckedConverter}, ConverterParameter={x:Static app:ViewModeType.ThumbnailView}}"
                         CornerRadius="0,3,3,0">
                         <Image
                             Width="20"

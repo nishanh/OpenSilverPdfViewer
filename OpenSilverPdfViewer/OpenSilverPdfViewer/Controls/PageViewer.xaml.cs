@@ -4,21 +4,15 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
-using System.Linq;
 using System.Windows;
-using System.Text.Json;
 using System.Globalization;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows.Controls;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls.Primitives;
-
-using OpenSilverPdfViewer.Utility;
-using OpenSilverPdfViewer.JSInterop;
 
 namespace OpenSilverPdfViewer.Controls
 {
@@ -34,15 +28,24 @@ namespace OpenSilverPdfViewer.Controls
 
         private IRenderStrategy renderStrategy;
 
-        private ViewModeType _viewMode = ViewModeType.Unknown;
+        private ViewModeType _viewMode = ViewModeType.PageView;
         public ViewModeType ViewMode
         {
             get { return _viewMode; }
             set 
-            { 
-                _viewMode = value;
-                OnPropertyChanged();
+            {
+                if (_viewMode != value)
+                {
+                    _viewMode = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(CanZoom));
+                }
             }
+        }
+
+        public bool CanZoom
+        {
+            get { return PreviewPage > 0 && ViewMode == ViewModeType.PageView; }
         }
 
         #endregion Fields / Properties
@@ -92,26 +95,28 @@ namespace OpenSilverPdfViewer.Controls
         #endregion Dependency Properties
         #region Dependency Property Event Handlers
 
-        private static void OnFilenameChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
+        private static async void OnFilenameChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
             ctrl.renderStrategy.InvalidatePageCache();
+            await ctrl.renderStrategy.SetPageSizeRunList();
+
+            // HACK: Find a better way to force this binding to update when a new document loads
+            if (ctrl.PreviewPage == 1) ctrl.PreviewPage = 0;
+            ctrl.PreviewPage = 1;
         }
         private static async void OnPreviewPageChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
-
-            if ((int)e.NewValue > 0 && ctrl.ViewMode == ViewModeType.Unknown) 
-                ctrl.ViewMode = ViewModeType.PageView;
-
             ctrl.renderStrategy.RenderPageNumber = (int)e.NewValue;
-            await ctrl.RenderCurrentPage();
+            ctrl.OnPropertyChanged(nameof(CanZoom));
+            await ctrl.RenderView();
         }
         private static async void OnZoomLevelChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
             ctrl.renderStrategy.RenderZoomLevel = (int)e.NewValue;
-            await ctrl.RenderCurrentPage();
+            await ctrl.RenderView();
         }
         private static void OnZoomValueChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
@@ -131,7 +136,7 @@ namespace OpenSilverPdfViewer.Controls
             ctrl.renderStrategy = RenderStrategyFactory.Create(renderMode, canvasElement);
             ctrl.renderStrategy.RenderPageNumber = ctrl.PreviewPage;
             ctrl.renderStrategy.RenderZoomLevel = ctrl.ZoomLevel;
-            await ctrl.RenderCurrentPage();
+            await ctrl.RenderView();
         }
 
         #endregion Dependency Property Event Handlers
@@ -141,18 +146,17 @@ namespace OpenSilverPdfViewer.Controls
         {
             InitializeComponent();
             renderStrategy = RenderStrategyFactory.Create(RenderMode, pageImageCanvas);
+            PropertyChanged += OnAsyncPropertyChanged;
         }
-        private async Task RenderCurrentPage()
+        private async Task RenderView()
         {
-            if (PreviewPage <= 0) return;
+            if (PreviewPage <= 0) return;// && ViewMode != ViewModeType.ThumbnailView) return;
 
-            await renderStrategy.RenderCurrentPage();
+            await renderStrategy.Render(ViewMode);
             var displayScale = renderStrategy.GetDisplayScale() * 100d;
             ZoomValue = Math.Round(displayScale, 0);
             SetScrollBars();
             DrawRulers();
-            //var rectList = await GetLayoutRects();
-            //RenderThumbnails(rectList);
         }
         private void DrawRulers()
         {
@@ -170,14 +174,14 @@ namespace OpenSilverPdfViewer.Controls
             const int quarterTick = wholeTickLength / 3 + 2;
             const int halfTick = wholeTickLength / 2 + 2;
 
-            var displayScale = renderStrategy.GetDisplayScale();
+            var pxToInches = renderStrategy.GetPixelsToInchesConversion();
 
             // Dynamically adjust the ruler resolution based on display scale.
             // This is to avoid tightly-packed tick marks at small scale values
-            var resRuler = displayScale < 0.35 ? 0.25 : 0.125;
-            resRuler = displayScale < 0.2 ? 0.5 : resRuler;
-            resRuler = displayScale < 0.15 ? 1.0 : resRuler;
-            resRuler = displayScale > 0.9 ? 0.0625 : resRuler;
+            var resRuler = pxToInches > .05 ? 1d : 0.5;
+            resRuler = pxToInches < .025 ? 0.25 : resRuler;
+            resRuler = pxToInches < .0125 ? 0.125 : resRuler;
+            resRuler = pxToInches < .00625 ? 0.0625 : resRuler;
             var wholeUnitInterval = (int)(1d / resRuler);
 
             // Erase previous ruler ticks and text
@@ -192,7 +196,6 @@ namespace OpenSilverPdfViewer.Controls
             horzRuler.Children.Add(new Line { X1 = vertRuler.ActualWidth, Y1 = horzRuler.ActualHeight - 1, X2 = horzRuler.ActualWidth, Y2 = horzRuler.ActualHeight - 1, Stroke = _rulerBorderBrush });
             vertRuler.Children.Add(new Line { X1 = vertRuler.ActualWidth - 1, Y1 = 0, X2 = vertRuler.ActualWidth - 1, Y2 = vertRuler.ActualHeight, Stroke = _rulerBorderBrush });
 
-            double pxToInches = renderStrategy.GetPixelsToInchesConversion();
             var pagePosition = renderStrategy.GetPagePosition();
             pagePosition.Offset(offsetX - pageScrollBarHorz.Value, margin - pageScrollBarVert.Value);
 
@@ -296,107 +299,22 @@ namespace OpenSilverPdfViewer.Controls
         {
             var displayScale = renderStrategy.GetDisplayScale();
             var viewportSize = renderStrategy.GetViewportSize();
-            var pageSize = renderStrategy.GetPageImageSize();
+            var layoutSize = renderStrategy.GetLayoutSize();
 
-            var scaledPageSize = new Size(pageSize.Width * displayScale, pageSize.Height * displayScale);
-            var scrollViewWidth = Math.Max(scaledPageSize.Width, viewportSize.Width);
-            var scrollViewHeight = Math.Max(scaledPageSize.Height, viewportSize.Height);
-            var scrollExtentX = Math.Max(0, scaledPageSize.Width - viewportSize.Width);
-            var scrollExtentY = Math.Max(0, scaledPageSize.Height - viewportSize.Height);
+            var scaledLayoutSize = new Size(layoutSize.Width * displayScale, layoutSize.Height * displayScale);
+            var scrollExtentX = Math.Max(0, scaledLayoutSize.Width - viewportSize.Width);
+            var scrollExtentY = Math.Max(0, scaledLayoutSize.Height - viewportSize.Height);
 
             pageScrollBarHorz.Value *= displayScale;
             pageScrollBarHorz.Maximum = scrollExtentX;
-            pageScrollBarHorz.ViewportSize = scrollViewWidth;
+            pageScrollBarHorz.ViewportSize = viewportSize.Width;
 
             pageScrollBarVert.Value *= displayScale;
             pageScrollBarVert.Maximum = scrollExtentY;
-            pageScrollBarVert.ViewportSize = scrollViewHeight;
+            pageScrollBarVert.ViewportSize = viewportSize.Height;
 
             if (ZoomLevel != 0)
                 renderStrategy.ScrollViewport((int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
-        }
-
-        private async Task<List<Rect>> GetLayoutRects()
-        {
-            var json = await PdfJsWrapper.Instance.GetPdfPageSizeRunList();
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var pageRunList = JsonSerializer.Deserialize<List<PageRun>>(json, options);
-            //var pageRunList = PageRun.CreateTestList();
-
-            const double toPts = 25400d / 72d;
-            const double thumbScale = 0.2;
-            const int gap = 10;
-            var layoutHeight = 0d;
-            var nextX = 0d;
-            var nextY = 0d;
-            var rowHeight = 0d;
-            var layoutWidth = pageImageCanvas.ActualWidth;// renderStrategy.GetViewportSize().Width;
-            var layoutRectList = new List<Rect>();
-            var rectList = new List<Rect>();
-            var rowList = new List<List<Rect>>();
-
-            foreach (var pageRun in pageRunList)
-            {
-                var thumbWidth = pageRun.Width / toPts * thumbScale;
-                var thumbHeight = pageRun.Height / toPts * thumbScale;
-
-                for (int i = 0; i < pageRun.Count; i++)
-                {
-                    if (thumbWidth + nextX < layoutWidth)
-                    {
-                        var rect = new Rect(nextX, nextY, thumbWidth, thumbHeight);
-                        rectList.Add(rect);
-                        rowHeight = Math.Max(rowHeight, thumbHeight);
-                    }
-                    else // start a new row
-                    {
-                        rowList.Add(rectList);
-                        rectList = new List<Rect>();
-                        layoutHeight += rowHeight + gap;
-                        nextX = 0; nextY = layoutHeight;
-
-                        rectList.Add(new Rect(nextX, nextY, thumbWidth, thumbHeight));
-                        rowHeight = thumbHeight;
-                    }
-                    nextX += thumbWidth + gap;
-                }
-            }
-            layoutHeight += rowHeight;
-            rowList.Add(rectList);
-
-            // Center all rects within their respective rows            
-            foreach (var row in rowList)
-            {
-                rowHeight = row.Max(rect => rect.Height);
-                for (int i = 0; i < row.Count; i++)
-                {
-                    var rect = row[i];
-                    rect.Y += (rowHeight - rect.Height) / 2;
-                    row[i] = rect;
-                }
-            }
-            
-            // Flatten the row list into a list of rects
-            layoutRectList = rowList.SelectMany(row => row).ToList();
-
-            return layoutRectList;
-        }
-        public void RenderThumbnails(List<Rect> layoutRects)
-        {
-            pageImageCanvas.Children.Clear();
-            foreach (var rect in layoutRects)
-            {
-                var canvasRect = new Rectangle
-                {
-                    Width = rect.Width,
-                    Height = rect.Height,
-                    Fill = new SolidColorBrush(Color.FromArgb(0xFF, 0xF9, 0xF9, 0xF9)),
-                    Stroke = new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00))
-                };
-                canvasRect.SetValue(Canvas.LeftProperty, rect.Left);
-                canvasRect.SetValue (Canvas.TopProperty, rect.Top);
-                pageImageCanvas.Children.Add(canvasRect);
-            }
         }
 
         #endregion Implementation
@@ -409,7 +327,7 @@ namespace OpenSilverPdfViewer.Controls
         }
         private async void Preview_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            await RenderCurrentPage();
+            await RenderView();
         }
         private void RulerOnStoryboard_Completed(object sender, EventArgs e)
         {
@@ -436,6 +354,15 @@ namespace OpenSilverPdfViewer.Controls
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        private async void OnAsyncPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ViewMode))
+            {
+                renderStrategy.RenderPageNumber = PreviewPage;
+                renderStrategy.InvalidatePageCache();
+                await RenderView();
+            }
         }
         public event PropertyChangedEventHandler PropertyChanged;
 

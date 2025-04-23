@@ -33,12 +33,19 @@ namespace OpenSilverPdfViewer.JSInterop
         }
         public static Size ParseJsonSize(this string json)
         {
-            var dimensions = json.Trim('{').Trim('}').Split(',');
-            var widthStr = dimensions[0].Substring(dimensions[0].IndexOf(':') + 1);
-            var width = double.Parse(widthStr);
-            var heightStr = dimensions[1].Substring(dimensions[1].IndexOf(':') + 1);
-            var height = double.Parse(heightStr);
-            return new Size(width, height);
+            try
+            {
+                var dimensions = json.Trim('{').Trim('}').Split(',');
+                var widthStr = dimensions[0].Substring(dimensions[0].IndexOf(':') + 1);
+                var width = double.Parse(widthStr);
+                var heightStr = dimensions[1].Substring(dimensions[1].IndexOf(':') + 1);
+                var height = double.Parse(heightStr);
+                return new Size(width, height);
+            }
+            catch (Exception)
+            {
+                throw new InvalidOperationException($"Invalid JSON size: {json}");
+            }
         }
     }
 }

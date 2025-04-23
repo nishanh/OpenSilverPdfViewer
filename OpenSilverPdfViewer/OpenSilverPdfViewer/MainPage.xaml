@@ -29,7 +29,6 @@
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/GridSplitterStyles.xaml"/>
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/PanelCtrlStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <conv:BoolToEnabledConverterInvert x:Key="BoolToEnabledConverterInvert"/>
             <conv:RenderModeToBoolConverter x:Key="RenderModeToBoolConverter"/>
         </ResourceDictionary>
     </Page.Resources>
@@ -124,7 +123,7 @@
                         <ctrls:PageViewer 
                             Filename="{Binding Filename}"
                             RenderMode="{Binding RenderMode}"
-                            PreviewPage="{Binding CurrentPage}"
+                            PreviewPage="{Binding CurrentPage, Mode=TwoWay}"
                             ZoomValue="{Binding PageZoomValue, Mode=TwoWay}"
                             ZoomLevel="{Binding PageZoomLevel}"/>
                     </Grid>
