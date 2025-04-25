@@ -8,7 +8,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Globalization;
 
-namespace OpenSilverPdfViewer.Converters
+namespace OpenSilverPdfViewer.Utility
 {
     public class ValueConverterBase<T> : IValueConverter
     {
@@ -27,11 +27,8 @@ namespace OpenSilverPdfViewer.Converters
         {
             if (value is bool boolValue)
             {
-
                 var condition = parameter == null || bool.Parse(parameter as string);
-                //var trueCond = Visibility.Visible;
-                //var falseCond = Visibility.Collapsed;
-                return (boolValue == condition) ? Visibility.Visible : Visibility.Collapsed;
+                return boolValue == condition ? Visibility.Visible : Visibility.Collapsed;
             }
             return base.Convert(value, targetType, parameter, culture);
         }
@@ -42,7 +39,7 @@ namespace OpenSilverPdfViewer.Converters
         {
             if (value is bool boolValue)
             {
-                var condition = parameter == null ? true : (bool)parameter;
+                var condition = parameter == null || bool.Parse(parameter as string);
                 return boolValue == condition;
             }
             return base.Convert(value, targetType, parameter, culture);

@@ -14,6 +14,9 @@
     <Compile Update="Controls\ToolBarButton.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Renderer\RenderStrategyBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Controls\PageNavigationCtrl.xaml">

@@ -60,18 +60,22 @@
     <Compile Include="Controls\PanelCtrl.cs" />
     <Compile Include="Controls\ToolBarButton.cs" />
     <Compile Include="Controls\ZoomViewCtrl.cs" />
-    <Compile Include="Converters\ValueConverters.cs" />
+    <Compile Include="Renderer\RenderWorker.cs" />
+    <Compile Include="Utility\ValueConverters.cs" />
     <Compile Include="JSInterop\ExtMethods.cs" />
     <Compile Include="JSInterop\JSAsyncTaskRunner.cs" />
     <Compile Include="JSInterop\PdfJsWrapper.cs" />
     <Compile Include="MainPage.xaml.cs" />
+    <Compile Include="Renderer\DomCanvasRenderer.cs" />
+    <Compile Include="Renderer\HTMLCanvasRenderer.cs" />
+    <Compile Include="Renderer\OSCanvasRenderer.cs" />
+    <Compile Include="Renderer\RenderStrategyBase.cs" />
     <Compile Include="Utility\BlobElement.cs" />
     <Compile Include="Utility\DelegateCommand.cs" />
     <Compile Include="Utility\Enumerations.cs" />
     <Compile Include="Utility\ExtMethods.cs" />
-    <Compile Include="Utility\Layout.cs" />
+    <Compile Include="Renderer\Layout.cs" />
     <Compile Include="Utility\Matrix2d.cs" />
-    <Compile Include="Utility\RenderStrategy.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
   </ItemGroup>
 

@@ -20,7 +20,7 @@
                             <DoubleAnimation 
                                 Storyboard.TargetProperty="Opacity" 
                                 Storyboard.TargetName="ThumbVisual"
-                                To="1" 
+                                To=".6" 
                                 Duration="0:0:0.1"/>
                         </Storyboard>
                     </VisualState>
@@ -29,7 +29,7 @@
                             <DoubleAnimation 
                                 Storyboard.TargetProperty="Opacity" 
                                 Storyboard.TargetName="ThumbVisual"
-                                To=".75" 
+                                To="1" 
                                 Duration="0:0:0.1"/>
                         </Storyboard>
                     </VisualState>
@@ -48,8 +48,8 @@
                     RadiusX="3" 
                     StrokeThickness="1" 
                     Opacity="1"
-                    Fill="#FF505050"
-                    Stroke="#FF505050"/>
+                    Fill="#FF808080"
+                    Stroke="#FF808080"/>
             </Grid>
         </Grid>
     </ControlTemplate>
@@ -62,7 +62,7 @@
                             <DoubleAnimation 
                                 Storyboard.TargetProperty="Opacity" 
                                 Storyboard.TargetName="ThumbVisual"
-                                To="1" 
+                                To=".6" 
                                 Duration="0:0:0.1"/>
                         </Storyboard>
                     </VisualState>
@@ -71,7 +71,7 @@
                             <DoubleAnimation 
                                 Storyboard.TargetProperty="Opacity" 
                                 Storyboard.TargetName="ThumbVisual"
-                                To=".75" 
+                                To="1" 
                                 Duration="0:0:0.1"/>
                         </Storyboard>
                     </VisualState>
@@ -90,8 +90,8 @@
                     RadiusX="3" 
                     StrokeThickness="1" 
                     Opacity="1"
-                    Fill="#FF505050"
-                    Stroke="#FF505050"/>
+                    Fill="#FF808080"
+                    Stroke="#FF808080"/>
             </Grid>
         </Grid>
     </ControlTemplate>

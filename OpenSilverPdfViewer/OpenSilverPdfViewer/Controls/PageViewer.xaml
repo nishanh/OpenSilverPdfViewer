@@ -9,9 +9,10 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:native="clr-namespace:CSHTML5.Native.Html.Controls;assembly=OpenSilver"    
-    xmlns:conv="clr-namespace:OpenSilverPdfViewer.Converters"
+    xmlns:conv="clr-namespace:OpenSilverPdfViewer.Utility"
     xmlns:app="clr-namespace:OpenSilverPdfViewer"
-    xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls">
+    xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls"
+    MouseWheel="PageView_MouseWheel">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -153,6 +154,7 @@
                 <local:PageNavigationCtrl 
                     HorizontalAlignment="Center"
                     NavigationPage="{Binding CurrentPage, Mode=TwoWay}"
+                    NavigationMode="{Binding ViewMode, ElementName=pvCtrlInternal}"
                     PageCount="{Binding PageCount}"/>
                 <StackPanel
                     HorizontalAlignment="Right"

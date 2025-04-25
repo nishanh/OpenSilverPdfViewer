@@ -6,7 +6,7 @@
 using System.Windows;
 using System.Collections.Generic;
 
-namespace OpenSilverPdfViewer.Layout
+namespace OpenSilverPdfViewer.Renderer
 {
     public class LayoutRect
     {

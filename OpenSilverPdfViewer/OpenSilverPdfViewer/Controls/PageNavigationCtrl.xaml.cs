@@ -16,6 +16,8 @@ namespace OpenSilverPdfViewer.Controls
 {
     public partial class PageNavigationCtrl : INotifyPropertyChanged
     {
+        private string _validNumericText = "";
+
         #region Dependency Properties
 
         /// <summary>
@@ -111,6 +113,9 @@ namespace OpenSilverPdfViewer.Controls
                 if (PageCount == 0)
                     return "No Pages";
                 
+                if (NavigationMode == ViewModeType.ThumbnailView)
+                    return "Multi Page";
+
                 var format = "Page {0} of {1}";
                 return string.Format(format, NavigationPage, PageCount);
             }
@@ -118,12 +123,12 @@ namespace OpenSilverPdfViewer.Controls
         /// <summary>
         /// Property that control the enable-state of the first page / previous page navigation buttons
         /// </summary>
-        public bool IsNotFirstPage => NavigationPage > 0 && NavigationPage > 1;
+        public bool IsNotFirstPage => NavigationMode == ViewModeType.PageView && NavigationPage > 0 && NavigationPage > 1;
 
         /// <summary>
         /// Property that control the enable-state of the last page / next page navigation buttons
         /// </summary>
-        public bool IsNotLastPage => NavigationPage > 0 && NavigationPage < PageCount;
+        public bool IsNotLastPage => NavigationMode == ViewModeType.PageView && NavigationPage > 0 && NavigationPage < PageCount;
 
         /// <summary>
         /// Property that keeps track of the shift-button keyboard state while editable portion
@@ -197,7 +202,8 @@ namespace OpenSilverPdfViewer.Controls
         /// </summary>
         private void PageNavTextBlock_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            SetTextBoxEditState(true);
+            if (NavigationMode == ViewModeType.PageView)
+                SetTextBoxEditState(true);
         }
         /// <summary>
         /// This consumes the value entered into the page navigation textbox and then clears the editing state
@@ -214,41 +220,35 @@ namespace OpenSilverPdfViewer.Controls
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-
-        private string pageNumberText = "";
-
         private void PageNavTextBox_PreviewKeyUp(object sender, KeyEventArgs e)
         {
             if (!(sender is TextBox textBox))
                 return;
 
-
             if (e.Key == Key.Enter || e.Key == Key.Tab)
             {
                 // Get the entered text
                 var text = textBox.Text;
+
+                // Attempt to parse the entered text to an integer
+                if (int.TryParse(text, out int pageNum))
                 {
-                    // Parse the entered text to an integer
-                    var parsed = int.TryParse(text, out int pageNum);// int.Parse(text);
+                    _validNumericText = text;
+                    
+                    // Constrain the value to the page count range
+                    pageNum = ExtensionMethods.BoundedValue(pageNum, 1, PageCount);
 
-                    if (parsed)
-                    {
-                        pageNumberText = text;
-                        // Constrain the value to the min/max zoom range
-                        pageNum = ExtensionMethods.BoundedValue(pageNum, 1, PageCount);
+                    // Make that value the current zoom level
+                    NavigationPage = pageNum;
 
-                        // Make that value the current zoom level
-                        NavigationPage = pageNum;
+                    SetTextBoxEditState(false);
 
-                        SetTextBoxEditState(false);
-
-                        // Accept the key press
-                        e.Handled = false;
-                    }
-                    else
-                    {
-                        textBox.Text = pageNumberText;
-                    }
+                    // Accept the key press
+                    e.Handled = false;
+                }
+                else
+                {
+                    textBox.Text = _validNumericText;
                 }
             }
         }

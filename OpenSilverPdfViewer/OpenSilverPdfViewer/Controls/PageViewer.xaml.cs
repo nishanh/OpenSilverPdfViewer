@@ -5,14 +5,17 @@
 
 using System;
 using System.Windows;
-using System.Globalization;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Globalization;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls.Primitives;
+
+using OpenSilverPdfViewer.Renderer;
 
 namespace OpenSilverPdfViewer.Controls
 {
@@ -176,13 +179,13 @@ namespace OpenSilverPdfViewer.Controls
 
             var pxToInches = renderStrategy.GetPixelsToInchesConversion();
 
-            // Dynamically adjust the ruler resolution based on display scale.
-            // This is to avoid tightly-packed tick marks at small scale values
+            // Dynamically adjust the ruler resolution based on device-to-logical scale.
+            // This is to avoid tightly-packed tick marks at high scale values
             var resRuler = pxToInches > .05 ? 1d : 0.5;
             resRuler = pxToInches < .025 ? 0.25 : resRuler;
             resRuler = pxToInches < .0125 ? 0.125 : resRuler;
             resRuler = pxToInches < .00625 ? 0.0625 : resRuler;
-            var wholeUnitInterval = (int)(1d / resRuler);
+            var wholeUnitInterval = (int)(1 / resRuler);
 
             // Erase previous ruler ticks and text
             horzRuler.Children.Clear();
@@ -201,8 +204,8 @@ namespace OpenSilverPdfViewer.Controls
 
             // Find the first tick mark we can reasonably draw.
             // Let's say the page image is centered horizontally in the viewport in logical units at 2.125"
-            // Therefore, the first tick mark that can be drawn is the fractional value .125"
-            // Convert that result back to device units (pixels) to get the first X or Y value to draw at 
+            // Therefore, the first tick mark that can be drawn is the fractional scrollPos .125"
+            // Convert that result back to device units (pixels) to get the first X or Y scrollPos to draw at 
             var originX = pagePosition.X * pxToInches;
             var startX = originX % 1; // get fractional part
             var i = -(int)(startX / resRuler);
@@ -231,7 +234,7 @@ namespace OpenSilverPdfViewer.Controls
                     StrokeThickness = 1
                 });
 
-                // Draw the unit-value text
+                // Draw the unit-scrollPos text
                 if (i % wholeUnitInterval == 0)
                 {
                     var unitVal = (i / wholeUnitInterval) - (int)originX;
@@ -277,7 +280,7 @@ namespace OpenSilverPdfViewer.Controls
                     StrokeThickness = 1
                 });
 
-                // Draw the unit-value text
+                // Draw the unit-scrollPos text
                 if (i % wholeUnitInterval == 0)
                 {
                     var unitVal = (i / wholeUnitInterval) - (int)originY;
@@ -305,15 +308,18 @@ namespace OpenSilverPdfViewer.Controls
             var scrollExtentX = Math.Max(0, scaledLayoutSize.Width - viewportSize.Width);
             var scrollExtentY = Math.Max(0, scaledLayoutSize.Height - viewportSize.Height);
 
-            pageScrollBarHorz.Value *= displayScale;
+            pageScrollBarHorz.Value *= ViewMode == ViewModeType.ThumbnailView ? 1d : displayScale;
             pageScrollBarHorz.Maximum = scrollExtentX;
             pageScrollBarHorz.ViewportSize = viewportSize.Width;
 
-            pageScrollBarVert.Value *= displayScale;
+            pageScrollBarVert.Value *= ViewMode == ViewModeType.ThumbnailView ? 1d : displayScale;
             pageScrollBarVert.Maximum = scrollExtentY;
             pageScrollBarVert.ViewportSize = viewportSize.Height;
 
-            if (ZoomLevel != 0)
+            var reposition = (ZoomLevel != 0 || ViewMode == ViewModeType.ThumbnailView) && 
+                (pageScrollBarVert.Value > 0 || pageScrollBarHorz.Value > 0);
+
+            if (reposition)
                 renderStrategy.ScrollViewport((int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
         }
 
@@ -324,6 +330,13 @@ namespace OpenSilverPdfViewer.Controls
         {
             renderStrategy.ScrollViewport((int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
             DrawRulers(); 
+        }
+        private void PageView_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            var delta = e.Delta / 2;
+            var scrollPos = Math.Min(Math.Max(0, pageScrollBarVert.Value - delta), pageScrollBarVert.Maximum);
+            pageScrollBarVert.Value = scrollPos;
+            PageScrollBars_Scroll(pageScrollBarVert, new ScrollEventArgs(scrollPos, delta < 0 ? ScrollEventType.SmallIncrement : ScrollEventType.SmallDecrement));
         }
         private async void Preview_SizeChanged(object sender, SizeChangedEventArgs e)
         {

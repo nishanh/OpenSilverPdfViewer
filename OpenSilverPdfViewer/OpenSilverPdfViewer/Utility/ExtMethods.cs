@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Windows.Controls;
 
 namespace OpenSilverPdfViewer.Utility
 {
@@ -24,6 +25,11 @@ namespace OpenSilverPdfViewer.Utility
         public static int AsTMM(this double value)
         {
             return (int)Math.Truncate(value * 25400d);
+        }
+        public static void Disconnect(this Image image)
+        {
+            if (image.Parent != null)
+                ((Border)image.Parent).Child = null;
         }
     }
 }

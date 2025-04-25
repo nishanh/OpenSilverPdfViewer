@@ -10,7 +10,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:OpenSilverPdfViewer"
     xmlns:viewModel="clr-namespace:OpenSilverPdfViewer.ViewModels"
-    xmlns:conv="clr-namespace:OpenSilverPdfViewer.Converters"
+    xmlns:conv="clr-namespace:OpenSilverPdfViewer.Utility"
     xmlns:ctrls="clr-namespace:OpenSilverPdfViewer.Controls"
     xmlns:native="clr-namespace:CSHTML5.Native.Html.Controls;assembly=OpenSilver"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -79,7 +79,7 @@
                 <GridSplitter 
                     Style="{StaticResource CMSHorizontalGridSplitterStyle}" 
                     Grid.Row="1" 
-                    Height="7"/>
+                    Height="6"/>
                 <ctrls:PanelCtrl 
                     Grid.Row="2"
                     Margin="3,0,0,0" 
@@ -94,7 +94,7 @@
                             Command="{Binding SetRenderModeCommand}"
                             CommandParameter="{x:Static local:RenderModeType.Dom}"
                             IsChecked="{Binding RenderMode, Converter={StaticResource RenderModeToBoolConverter}, ConverterParameter={x:Static local:RenderModeType.Dom}}"
-                            Content="Direct DOM Renderer"/>
+                            Content="DOM Canvas Renderer"/>
                         <RadioButton 
                             Name="osRender"
                             Margin="0,0,0,5"
@@ -114,7 +114,7 @@
             <GridSplitter 
                 Style="{StaticResource CMSVericalGridSplitterStyle}" 
                 Grid.Column="1" 
-                Width="7"/>
+                Width="6"/>
             <Grid Grid.Column="2">
                 <ctrls:PanelCtrl 
                     Margin="0,3,3,0"
