@@ -153,6 +153,7 @@
                         <ctrls:PageViewer 
                             Filename="{Binding Filename}"
                             RenderMode="{Binding RenderMode}"
+                            RulerUnits="{Binding RulerUnits}"
                             PreviewPage="{Binding CurrentPage, Mode=TwoWay}"
                             ZoomValue="{Binding PageZoomValue, Mode=TwoWay}"
                             ZoomLevel="{Binding PageZoomLevel}"/>

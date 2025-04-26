@@ -77,10 +77,13 @@
                     <ColumnDefinition/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
+                <Rectangle 
+                    Fill="{StaticResource RulerBrush}" />
                 <Border 
                     x:Name="horzRulerBorder"
                     Grid.Row="0" 
-                    Grid.ColumnSpan="3" 
+                    Grid.Column="1"
+                    Grid.ColumnSpan="2" 
                     Background="{StaticResource RulerBrush}"
                     BorderBrush="{StaticResource CMSDarkBorderBrush}"
                     Height="0">

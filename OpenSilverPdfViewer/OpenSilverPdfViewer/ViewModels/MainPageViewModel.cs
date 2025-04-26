@@ -155,6 +155,7 @@ namespace OpenSilverPdfViewer.ViewModels
                 {
                     _rulerUnits = value;
                     OnPropertyChanged();
+                    ShowPageSize();
                 }
             }
         }
@@ -244,8 +245,13 @@ namespace OpenSilverPdfViewer.ViewModels
             if (CurrentPage < 1 || CurrentPage > PageCount)
                 return;
 
+            var unitConvert = RulerUnits == RulerUnits.Metric ? 25.4 : 1d;
+            var unitSuffix = RulerUnits == RulerUnits.Metric ? "mm" : "in";
             var size = await PdfJs.GetPdfPageSizeAsync(CurrentPage);
-            PageSizeText = $"Page size: {Math.Round(size.Width / 72d, 2)} x {Math.Round(size.Height / 72d, 2)} in";
+            var logWidth = Math.Round((size.Width / 72d) * unitConvert, 2);
+            var logHeight = Math.Round((size.Height / 72d) * unitConvert, 2);
+
+            PageSizeText = $"Page size: {logWidth} x {logHeight} {unitSuffix}";
         }
         public void SetRenderMode(object param)
         {
