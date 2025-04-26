@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace OpenSilverPdfViewer.Renderer
 {
-    public class LayoutRect
+    public sealed class LayoutRect
     {
         public int Id { get; set; }
         public double X { get; set; }
@@ -35,7 +35,7 @@ namespace OpenSilverPdfViewer.Renderer
             return new Rect { X = layoutRect.X, Y = layoutRect.Y, Width = layoutRect.Width, Height = layoutRect.Height };
         }
     }
-    public class PageRun
+    public sealed class PageRun
     {
         public int Width { get; set; }
         public int Height { get; set; }

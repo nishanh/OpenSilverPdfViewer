@@ -30,6 +30,7 @@
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/PanelCtrlStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <conv:RenderModeToBoolConverter x:Key="RenderModeToBoolConverter"/>
+            <conv:RulerUnitsToBoolConverter x:Key="RulerUnitsToBoolConverter"/>
         </ResourceDictionary>
     </Page.Resources>
     <Grid 
@@ -46,6 +47,8 @@
             </Grid.ColumnDefinitions>
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="200" MinHeight="200"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="200" MinHeight="200"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition MinHeight="200"/>
@@ -92,22 +95,49 @@
                             Name="domRender"
                             Margin="0,0,0,5"
                             Command="{Binding SetRenderModeCommand}"
-                            CommandParameter="{x:Static local:RenderModeType.Dom}"
-                            IsChecked="{Binding RenderMode, Converter={StaticResource RenderModeToBoolConverter}, ConverterParameter={x:Static local:RenderModeType.Dom}}"
+                            CommandParameter="{x:Static conv:RenderModeType.Dom}"
+                            IsChecked="{Binding RenderMode, Converter={StaticResource RenderModeToBoolConverter}, ConverterParameter={x:Static conv:RenderModeType.Dom}}"
                             Content="DOM Canvas Renderer"/>
                         <RadioButton 
                             Name="osRender"
                             Margin="0,0,0,5"
                             Command="{Binding SetRenderModeCommand}"
-                            CommandParameter="{x:Static local:RenderModeType.OpenSilver}"
-                            IsChecked="{Binding RenderMode, Converter={StaticResource RenderModeToBoolConverter}, ConverterParameter={x:Static local:RenderModeType.OpenSilver}}"
+                            CommandParameter="{x:Static conv:RenderModeType.OpenSilver}"
+                            IsChecked="{Binding RenderMode, Converter={StaticResource RenderModeToBoolConverter}, ConverterParameter={x:Static conv:RenderModeType.OpenSilver}}"
                             Content="OpenSilver Canvas Renderer"/>
                         <RadioButton 
                             Name="canvasRender"
                             Command="{Binding SetRenderModeCommand}"
-                            CommandParameter="{x:Static local:RenderModeType.HTMLCanvas}"
-                            IsChecked="{Binding RenderMode, Converter={StaticResource RenderModeToBoolConverter}, ConverterParameter={x:Static local:RenderModeType.HTMLCanvas}}"
+                            CommandParameter="{x:Static conv:RenderModeType.HTMLCanvas}"
+                            IsChecked="{Binding RenderMode, Converter={StaticResource RenderModeToBoolConverter}, ConverterParameter={x:Static conv:RenderModeType.HTMLCanvas}}"
                             Content="OpenSilver HTMLCanvas Renderer"/>
+                    </StackPanel>
+                </ctrls:PanelCtrl>
+                <GridSplitter 
+                    Style="{StaticResource CMSHorizontalGridSplitterStyle}" 
+                    Grid.Row="3" 
+                    Height="6"/>
+                <ctrls:PanelCtrl 
+                    Grid.Row="4"                    
+                    Margin="3,0,0,0"
+                    Title="UI Options">
+                    <StackPanel                         
+                        Margin="20,10,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top">
+                        <RadioButton
+                            Name="rulerMetric"
+                            Margin="0,0,0,5"
+                            Command="{Binding SetRulerUnitsCommand}"
+                            CommandParameter="{x:Static conv:RulerUnits.Metric}"
+                            IsChecked="{Binding RulerUnits, Converter={StaticResource RulerUnitsToBoolConverter}, ConverterParameter={x:Static conv:RulerUnits.Metric}}"
+                            Content="Metric Ruler Units"/>
+                        <RadioButton
+                            Name="rulerImperial"
+                            Command="{Binding SetRulerUnitsCommand}"
+                            CommandParameter="{x:Static conv:RulerUnits.Imperial}"
+                            IsChecked="{Binding RulerUnits, Converter={StaticResource RulerUnitsToBoolConverter}, ConverterParameter={x:Static conv:RulerUnits.Imperial}}"
+                            Content="Imperial Ruler Units"/>
                     </StackPanel>
                 </ctrls:PanelCtrl>
             </Grid>

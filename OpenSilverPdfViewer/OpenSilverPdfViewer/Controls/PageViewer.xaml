@@ -10,7 +10,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:native="clr-namespace:CSHTML5.Native.Html.Controls;assembly=OpenSilver"    
     xmlns:conv="clr-namespace:OpenSilverPdfViewer.Utility"
-    xmlns:app="clr-namespace:OpenSilverPdfViewer"
     xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls"
     MouseWheel="PageView_MouseWheel">
 
@@ -171,7 +170,7 @@
                         Name="pageViewBtn"
                         Click="ViewModeBtn_Click"
                         IsEnabled="{Binding CurrentPage, Converter={StaticResource IntToEnabledConverter}}"
-                        IsChecked="{Binding ViewMode, ElementName=pvCtrlInternal, Converter={StaticResource ViewModeToCheckedConverter}, ConverterParameter={x:Static app:ViewModeType.PageView}}"
+                        IsChecked="{Binding ViewMode, ElementName=pvCtrlInternal, Converter={StaticResource ViewModeToCheckedConverter}, ConverterParameter={x:Static conv:ViewModeType.PageView}}"
                         CornerRadius="3,0,0,3">
                         <Image
                             Width="20"
@@ -181,7 +180,7 @@
                         Name="thumbViewBtn"
                         Click="ViewModeBtn_Click"
                         IsEnabled="{Binding CurrentPage, Converter={StaticResource IntToEnabledConverter}}"
-                        IsChecked="{Binding ViewMode, ElementName=pvCtrlInternal, Converter={StaticResource ViewModeToCheckedConverter}, ConverterParameter={x:Static app:ViewModeType.ThumbnailView}}"
+                        IsChecked="{Binding ViewMode, ElementName=pvCtrlInternal, Converter={StaticResource ViewModeToCheckedConverter}, ConverterParameter={x:Static conv:ViewModeType.ThumbnailView}}"
                         CornerRadius="0,3,3,0">
                         <Image
                             Width="20"

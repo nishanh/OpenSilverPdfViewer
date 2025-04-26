@@ -21,7 +21,7 @@ namespace OpenSilverPdfViewer.Utility
             return value;
         }
     }
-    public class BoolToVisibilityConverter : ValueConverterBase<bool>
+    public sealed class BoolToVisibilityConverter : ValueConverterBase<bool>
     {
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -33,7 +33,7 @@ namespace OpenSilverPdfViewer.Utility
             return base.Convert(value, targetType, parameter, culture);
         }
     }
-    public class BoolToEnabledConverter : ValueConverterBase<bool>
+    public sealed class BoolToEnabledConverter : ValueConverterBase<bool>
     {
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -45,7 +45,7 @@ namespace OpenSilverPdfViewer.Utility
             return base.Convert(value, targetType, parameter, culture);
         }
     }
-    public class RenderModeToBoolConverter : ValueConverterBase<RenderModeType>
+    public sealed class RenderModeToBoolConverter : ValueConverterBase<RenderModeType>
     {
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -56,7 +56,18 @@ namespace OpenSilverPdfViewer.Utility
             return false;
         }
     }
-    public class IntToEnabledConverter : ValueConverterBase<int>
+    public sealed class RulerUnitsToBoolConverter : ValueConverterBase<RulerUnits>
+    {
+        public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is RulerUnits rulerUnits)
+            {
+                return rulerUnits == (RulerUnits)parameter;
+            }
+            return false;
+        }
+    }
+    public sealed class IntToEnabledConverter : ValueConverterBase<int>
     {
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -67,7 +78,7 @@ namespace OpenSilverPdfViewer.Utility
             return false;
         }
     }
-    public class ViewModeToCheckedConverter : ValueConverterBase<ViewModeType>
+    public sealed class ViewModeToCheckedConverter : ValueConverterBase<ViewModeType>
     {
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

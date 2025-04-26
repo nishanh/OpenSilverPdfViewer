@@ -6,6 +6,7 @@
 using System;
 using System.IO;
 using System.Windows;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
@@ -20,7 +21,6 @@ namespace OpenSilverPdfViewer.JSInterop
         private const string scriptResourceName = "/OpenSilverPdfViewer;component/JSInterop/pdfJsInterop.js";
         private static PdfJsWrapper _instance;
         public static PdfJsWrapper Instance => _instance ?? (_instance = new PdfJsWrapper());
-
         public string Version { get; private set; }
 
         private PdfJsWrapper() { }
@@ -141,6 +141,14 @@ namespace OpenSilverPdfViewer.JSInterop
         public void ClearViewport(string canvasId)
         {
             OpenSilver.Interop.ExecuteJavaScript("clearViewport($0)", canvasId);
+        }
+        public TextMetrics GetTextMetrics(string text, string font)
+        {
+            var result = OpenSilver.Interop.ExecuteJavaScript("getTextMetrics($0,$1)", text, font);
+            var json = (string)Convert.ChangeType(result, typeof(string));
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var textMetrics = JsonSerializer.Deserialize<TextMetrics>(json, options);
+            return textMetrics;
         }
 
         #endregion Synchronous Tasks

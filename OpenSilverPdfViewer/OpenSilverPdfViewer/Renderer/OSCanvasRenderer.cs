@@ -15,13 +15,12 @@ using OpenSilverPdfViewer.Utility;
 
 namespace OpenSilverPdfViewer.Renderer
 {
-    internal class OSCanvasRenderer : RenderStrategyBase
+    internal sealed class OSCanvasRenderer : RenderStrategyBase
     {
         #region Fields / Properties
 
         private readonly Dictionary<int, Image> _pageImageCache = new Dictionary<int, Image>();
         private readonly Canvas renderCanvas;
-        private Point _scrollPoint = new Point(0, 0);
         private RenderQueue<Image> RenderQueue { get; set; }
         public bool ViewportItemsChanged
         {
@@ -40,16 +39,6 @@ namespace OpenSilverPdfViewer.Renderer
 
                 // Things need to be added and/or removed from the viewport if the checksums differ
                 return renderedChecksum != intersectChecksum;
-            }
-        }
-        public Rect ViewportScrollRect
-        {
-            get
-            {
-                // Inflate the viewport intersection a bit so that the page image pop-in isn't so obvious
-                var viewportScrollRect = new Rect(_scrollPoint, GetViewportSize());
-                viewportScrollRect.Inflate(0, _scrollBufferZone);
-                return viewportScrollRect;
             }
         }
 
@@ -88,10 +77,6 @@ namespace OpenSilverPdfViewer.Renderer
         }
         protected override void RenderThumbnails()
         {
-            var pageFont = new FontFamily("Verdana");
-            var fontBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF));
-            var fillBrush = renderCanvas.FindResource("CMSCtrlDisabledBodyBrush") as Brush;
-
             var scrollRect = ViewportScrollRect;
             var intersectList = LayoutRectList.Where(rect => rect.Intersects(scrollRect)).ToList();
 
@@ -192,8 +177,8 @@ namespace OpenSilverPdfViewer.Renderer
         {
             if (image != null && renderCanvas.Children.FirstOrDefault(elem => elem is Grid grid && (int)grid.Tag == pageNumber) is Grid pageThumbnail)
             {
-                // This *should* always be false here since CreateThumbnail shouldn't be queueing render
-                // items if they've been previously cached
+                // The cache shouldn't ever contain the image here as CreateThumbnail
+                // shouldn't be queueing items if they've been previously cached
                 if (!_pageImageCache.ContainsKey(pageNumber))
                     _pageImageCache.Add(pageNumber, image);
 
@@ -217,8 +202,10 @@ namespace OpenSilverPdfViewer.Renderer
                 if (ViewportItemsChanged)
                     RenderThumbnails();
 
-                var thumbnailElements = renderCanvas.Children.Where(child => child is Grid).ToList();
-                thumbnailElements.ForEach(grid => grid.RenderTransform = translate);
+                renderCanvas.Children
+                    .Where(child => child is Grid)
+                    .ToList()
+                    .ForEach(grid => grid.RenderTransform = translate);
             }
             else
             {
@@ -226,8 +213,8 @@ namespace OpenSilverPdfViewer.Renderer
                     throw new Exception($"ScrollViewport: No image found in cache for page {RenderPageNumber}");
 
                 translate = (image.RenderTransform as TransformGroup).Children[1] as TranslateTransform;
-                translate.X = -scrollX;
-                translate.Y = -scrollY;
+                translate.X = -_scrollPoint.X;
+                translate.Y = -_scrollPoint.Y;
             }
         }
         public override Size GetViewportSize()

@@ -63,6 +63,7 @@ namespace OpenSilverPdfViewer.Renderer
         protected const double _nativePdfDpi = 72d;
         protected const double _thumbnailScale = 0.25;
         protected const int _scrollBufferZone = 100;
+        protected Point _scrollPoint = new Point(0, 0);
 
         public int RenderPageNumber { get; set; }
         public int RenderZoomLevel { get; set; }
@@ -71,6 +72,16 @@ namespace OpenSilverPdfViewer.Renderer
         protected PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Instance;
         protected ViewModeType ViewMode { get; private set; }
         protected List<PageRun> PageSizeRunList { get; private set; }
+        protected Rect ViewportScrollRect
+        {
+            get
+            {
+                // Inflate the viewport intersection a bit so that the page image pop-in isn't so obvious
+                var viewportScrollRect = new Rect(_scrollPoint, GetViewportSize());
+                viewportScrollRect.Inflate(0, _scrollBufferZone);
+                return viewportScrollRect;
+            }
+        }
 
         #endregion Fields / Properties
         #region Interface Members

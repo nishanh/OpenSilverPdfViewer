@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace OpenSilverPdfViewer.Renderer
 {
-    internal class DomCanvasRenderer : RenderStrategyBase
+    internal sealed class DomCanvasRenderer : RenderStrategyBase
     {
         private const string viewCanvasId = "pageViewCanvas";
 

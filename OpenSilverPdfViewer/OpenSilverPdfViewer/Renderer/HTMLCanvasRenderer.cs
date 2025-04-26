@@ -4,7 +4,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -13,15 +15,45 @@ using CSHTML5.Native.Html.Controls;
 
 namespace OpenSilverPdfViewer.Renderer
 {
-    internal class HTMLCanvasRenderer : RenderStrategyBase
+    internal sealed class HTMLCanvasRenderer : RenderStrategyBase
     {
-        private Dictionary<int, BlobElement> _pageImageCache = new Dictionary<int, BlobElement>();
+        #region Fields / Properties
+
+        private readonly Dictionary<int, BlobElement> _pageImageCache = new Dictionary<int, BlobElement>();
         private readonly HtmlCanvas renderCanvas;
+        private RenderQueue<BlobElement> RenderQueue { get; set; }
+        public bool ViewportItemsChanged
+        {
+            get
+            {
+                var scrollRect = ViewportScrollRect;
+                var intersectList = LayoutRectList.Where(rect => rect.Intersects(scrollRect));
+                var intersectChecksum = intersectList
+                    .Select(rect => rect.Id)
+                    .Sum();
+
+                var renderedChecksum = renderCanvas.Children
+                    .Where(child => child is ContainerElement)
+                    .Select(elem => int.Parse(elem.Name))
+                    .Sum();
+
+                // Things need to be added and/or removed from the viewport if the checksums differ
+                return renderedChecksum != intersectChecksum;
+            }
+        }
+
+        #endregion Fields / Properties
+        #region Initialization
 
         public HTMLCanvasRenderer(HtmlCanvas canvas) 
         {
             renderCanvas = canvas;
+            RenderQueue = new RenderQueue<BlobElement>(RenderWorkerCallback);
         }
+
+        #endregion Initialization
+        #region Methods
+
         protected override async Task<int> RenderCurrentPage()
         {
             if (_pageImageCache.TryGetValue(RenderPageNumber, out BlobElement image) == false)
@@ -42,27 +74,169 @@ namespace OpenSilverPdfViewer.Renderer
         }
         protected override void RenderThumbnails()
         {
-            throw new NotImplementedException();
+            var scrollRect = ViewportScrollRect;
+            var intersectList = LayoutRectList.Where(rect => rect.Intersects(scrollRect)).ToList();
+            
+            // Re-position any existing items in the viewport if the layout has changed
+            intersectList.ForEach(rect =>
+            {
+                var thumbnail = renderCanvas.Children.FirstOrDefault(child => child is ContainerElement grid && int.Parse(grid.Name) == rect.Id);
+                if (thumbnail != null)
+                {
+                    thumbnail.X = rect.X;
+                    thumbnail.Y = rect.Y;
+                }
+            });
+            renderCanvas.Draw();
+
+            // Get a list of page image ids that are currently rendered in the viewport
+            var renderedIds = renderCanvas.Children
+                .Where(child => child is ContainerElement)
+                .Cast<ContainerElement>()
+                .Select(pageElem => int.Parse(pageElem.Name));
+
+            // Remove all page image elements that do not exist in the current intersection list from the viewport
+            renderedIds
+                .Except(intersectList.Select(rect => rect.Id))
+                .ToList()
+                .ForEach(id => {
+                    RenderQueue.DequeueItem(id);
+                    renderCanvas.Children.Remove(renderCanvas.Children.FirstOrDefault(child => child is ContainerElement grid && int.Parse(grid.Name) == id));
+                });
+
+            // Get a list of ids from the intersection list that are NOT currently rendered in the viewport
+            var addIds = intersectList
+                .Select(rect => rect.Id)
+                .Except(renderedIds).ToList();
+
+            // Return if there's nothing new to render
+            if (addIds.Count == 0) return;
+
+            // Add those page image elements that now need to be rendered
+            var addList = addIds
+                .Select(id => intersectList.FirstOrDefault(item => item.Id == id))
+                .Where(rect => rect != null)
+                .ToList();
+
+            // Render the new additions
+            foreach (var rect in addList)
+            {
+                renderCanvas.Children.Add(CreateThumbnail(rect));
+                renderCanvas.Draw();
+            }
         }
+        private ContainerElement CreateThumbnail(LayoutRect rect)
+        {
+            var fontSize = 10;
+            var fontFamily = "Verdana";
+
+            var pageRect = new ContainerElement
+            {
+                Width = rect.Width,
+                Height = rect.Height,
+                FillColor = Color.FromArgb(0xFF, 0x4A, 0x43, 0x3B),
+                StrokeColor = Color.FromArgb(0xFF, 0x00, 0x00, 0x00),
+                Name = rect.Id.ToString()
+            };
+            
+            if (_pageImageCache.TryGetValue(rect.Id, out var image))
+                pageRect.Children.Add(image);
+            
+            else
+            {
+                var text = "Rendering Page";
+                var metrics = PdfJs.GetTextMetrics(text, $"bold {fontSize}px {fontFamily}");
+                var pageNumberText = new TextElement
+                {
+                    FillColor = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF),
+                    Font = fontFamily,
+                    FontWeight = FontWeights.Bold,
+                    FontHeight = fontSize,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    X = (rect.Width - metrics.BoundingBoxRight) / 2,
+                    Y = (rect.Height - fontSize) / 2,
+                    Text = text
+                };
+                pageRect.Children.Add(pageNumberText);
+                RenderQueue.QueueItem(rect.Id, _thumbnailScale);
+            }
+            pageRect.X = rect.X;
+            pageRect.Y = rect.Y;
+
+            return pageRect;
+        }
+        private void RenderWorkerCallback(int pageNumber, BlobElement image, bool _)
+        {
+            if (image != null && renderCanvas.Children.FirstOrDefault(elem => elem is ContainerElement container && int.Parse(container.Name) == pageNumber) is ContainerElement pageThumbnail)
+            {
+                // The cache shouldn't ever contain the image here as CreateThumbnail
+                // shouldn't be queueing items if they've been previously cached
+                if (!_pageImageCache.ContainsKey(pageNumber))
+                    _pageImageCache.Add(pageNumber, image);
+
+                // Replace the text placeholder with the rendered page image
+                if (pageThumbnail.Children.FirstOrDefault() is TextElement textPlaceholder)
+                {
+                    pageThumbnail.Children.Remove(textPlaceholder);
+                    pageThumbnail.Children.Add(image);
+                    renderCanvas.Draw();
+                }
+            }
+        }
+
+        #endregion Methods
+        #region Interface Implementation
+
         public override void ScrollViewport(int scrollX, int scrollY)
         {
-            if (_pageImageCache.TryGetValue(RenderPageNumber, out BlobElement image) == false)
-                throw new Exception($"ScrollViewport: No image found in cache for page {RenderPageNumber}");
+            _scrollPoint.X = scrollX;
+            _scrollPoint.Y = scrollY;
 
-            image.X = -scrollX;
-            image.Y = -scrollY;
+            if (ViewMode == ViewModeType.ThumbnailView)
+            {
+                if (ViewportItemsChanged)
+                    RenderThumbnails();
+
+                renderCanvas.Children
+                    .Where(child => child is ContainerElement)
+                    .ToList()
+                    .ForEach(container =>
+                    {
+                        var layoutRect = LayoutRectList.FirstOrDefault(rect => rect.Id == int.Parse(container.Name));
+                        if (layoutRect != null)
+                        {
+                            container.X = layoutRect.X - _scrollPoint.X;
+                            container.Y = layoutRect.Y - _scrollPoint.Y;
+                        }
+                    });
+            }
+            else
+            {
+                if (_pageImageCache.TryGetValue(RenderPageNumber, out BlobElement image) == false)
+                    throw new Exception($"ScrollViewport: No image found in cache for page {RenderPageNumber}");
+
+                image.X = -_scrollPoint.X;
+                image.Y = -_scrollPoint.Y;
+            }
             renderCanvas.Draw();
-        }
-        public override Size GetLayoutSize()
-        {
-            if (_pageImageCache.TryGetValue(RenderPageNumber, out BlobElement image) == false)
-                throw new Exception($"GetPageImageSize: No image found in cache for page {RenderPageNumber}");
-
-            return new Size(image.Width, image.Height);
         }
         public override Size GetViewportSize()
         {
             return new Size(renderCanvas.ActualWidth, renderCanvas.ActualHeight);
+        }
+        public override Size GetLayoutSize()
+        {
+            if (ViewMode == ViewModeType.ThumbnailView)
+            {
+                var unscaledWidth = LayoutRect.Width / _thumbnailScale;
+                var unscaledHeight = LayoutRect.Height / _thumbnailScale;
+                return new Size(unscaledWidth, unscaledHeight);
+            }
+            if (_pageImageCache.TryGetValue(RenderPageNumber, out BlobElement image) == false)
+                throw new Exception($"GetPageImageSize: No image found in cache for page {RenderPageNumber}");
+
+            return new Size(image.Width, image.Height);
         }
         public override void ClearViewport()
         {
@@ -77,5 +251,7 @@ namespace OpenSilverPdfViewer.Renderer
                 page.InvalidateImage();
             _pageImageCache.Clear();
         }
+
+        #endregion Interface Implementation
     }
 }

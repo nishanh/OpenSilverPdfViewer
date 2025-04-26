@@ -133,6 +133,7 @@ function renderPageThumbnail(pageNumber, thumbScale, callback) {
 
 function renderPageToBlob(pageNumber, thumbScale, callback) {
     console.log("renderPageToBlob() begin: ", pageNumber);
+    console.log("pixel ratio: ", window.devicePixelRatio);
     var promise = (async () => await renderPageToBlobAsync(pageNumber, thumbScale))();
     if (callback != undefined) {
         promise.then((result) => callback(result));
@@ -197,6 +198,25 @@ function clearViewport(canvasId) {
 function invalidatePageCache() {
     console.log("invalidatePageCache() begin");
     pageCache.clear(); // Clear the cache
+}
+
+function getTextMetrics(text, font) {
+    var canvas = new OffscreenCanvas(300, 100);
+    var ctx = canvas.getContext('2d');
+    ctx.font = font;
+    var metrics = ctx.measureText(text);
+    var textMetrics = {
+        actualAscent: metrics.actualBoundingBoxAscent,
+        actualDescent: metrics.actualBoundingBoxDescent,
+        boundingBoxLeft: metrics.actualBoundingBoxLeft,
+        boundingBoxRight: metrics.actualBoundingBoxRight,
+        fontAscent: metrics.fontBoundingBoxAscent,
+        fontDescent: metrics.fontBoundingBoxDescent,
+        hangingBaseline: metrics.hangingBaseline,
+        ideographicBaseline: metrics.ideographicBaseline,
+        width: metrics.width
+    };
+    return JSON.stringify(textMetrics);
 }
 
 function logToConsole(msg) {

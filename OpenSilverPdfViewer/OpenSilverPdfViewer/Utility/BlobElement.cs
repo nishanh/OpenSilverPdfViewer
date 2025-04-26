@@ -12,7 +12,7 @@ using OpenSilverPdfViewer.JSInterop;
 
 namespace OpenSilverPdfViewer.Utility
 {
-    public class BlobElement : HtmlCanvasElement
+    public sealed class BlobElement : HtmlCanvasElement
     {
         private object _jsImage;
         private string _sourceCache;

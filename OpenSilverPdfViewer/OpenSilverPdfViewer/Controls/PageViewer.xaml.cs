@@ -15,6 +15,7 @@ using System.Windows.Controls;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls.Primitives;
 
+using OpenSilverPdfViewer.Utility;
 using OpenSilverPdfViewer.Renderer;
 
 namespace OpenSilverPdfViewer.Controls

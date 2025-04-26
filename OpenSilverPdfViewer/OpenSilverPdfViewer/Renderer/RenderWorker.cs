@@ -25,6 +25,9 @@ namespace OpenSilverPdfViewer.Renderer
 
         public RenderQueue(WorkerCompleteDelegate<T> workerCompleteDelegate)
         {
+            if (!(typeof(T) == typeof(Image) || typeof(T) == typeof(BlobElement)))
+                throw new Exception($"Invalid type: {typeof(T)}. RenderQueue can only be used with Image or BlobElement types");
+
             DebounceRenderTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1000) };
             DebounceRenderTimer.Tick += DebounceRenderTimer_Expired;
             RenderCompleteCallback = workerCompleteDelegate;
@@ -68,7 +71,7 @@ namespace OpenSilverPdfViewer.Renderer
                 _workers.Remove(renderWorker);
 
             if (!cancelled)
-                RenderCompleteCallback(pageNumber, result, cancelled);
+                RenderCompleteCallback(pageNumber, result, false);
         }
     }
     internal sealed class RenderWorker<T>
@@ -81,9 +84,9 @@ namespace OpenSilverPdfViewer.Renderer
 
         public RenderWorker(int pageNumber, double scaleFactor, WorkerCompleteDelegate<T> callback) 
         {
+            ItemComplete = callback;
             PageNumber = pageNumber;
             _scaleFactor = scaleFactor;
-            ItemComplete = callback;
             _worker.WorkerSupportsCancellation = true;
             _worker.DoWork += Worker_DoWork;
             _worker.RunWorkerCompleted += Worker_RunWorkerCompleted;

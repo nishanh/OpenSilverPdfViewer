@@ -3,7 +3,7 @@
 // Free to use, modify, and distribute under the terms of the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace OpenSilverPdfViewer
+namespace OpenSilverPdfViewer.Utility
 {
     public enum RenderModeType
     {
@@ -16,5 +16,10 @@ namespace OpenSilverPdfViewer
         Unknown,
         PageView,
         ThumbnailView
+    }
+    public enum RulerUnits
+    {
+        Metric,
+        Imperial
     }
 }

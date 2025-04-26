@@ -145,6 +145,20 @@ namespace OpenSilverPdfViewer.ViewModels
             }
         }
 
+        private RulerUnits _rulerUnits = RulerUnits.Imperial;
+        public RulerUnits RulerUnits
+        {
+            get => _rulerUnits;
+            set
+            {
+                if (_rulerUnits != value)
+                {
+                    _rulerUnits = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         #endregion Properties
         #region Commands
 
@@ -163,6 +177,15 @@ namespace OpenSilverPdfViewer.ViewModels
             get
             {
                 return _setRenderModeCommand ?? (_setRenderModeCommand = new DelegateCommand((param) => SetRenderMode(param), (param) => true));
+            }
+        }
+
+        private ICommand _setRulerUnitsCommand;
+        public ICommand SetRulerUnitsCommand
+        {
+            get
+            {
+                return _setRulerUnitsCommand ?? (_setRulerUnitsCommand = new DelegateCommand((param) => SetRulerUnits(param), (param) => true));
             }
         }
 
@@ -227,6 +250,10 @@ namespace OpenSilverPdfViewer.ViewModels
         public void SetRenderMode(object param)
         {
             RenderMode = (RenderModeType)param;
+        }
+        public void SetRulerUnits(object param)
+        {
+            RulerUnits = (RulerUnits)param;
         }
 
         #endregion Methods
