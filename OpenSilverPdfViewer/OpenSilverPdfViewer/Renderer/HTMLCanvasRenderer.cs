@@ -12,12 +12,17 @@ using System.Collections.Generic;
 
 using OpenSilverPdfViewer.Utility;
 using CSHTML5.Native.Html.Controls;
+using System.Windows.Threading;
 
 namespace OpenSilverPdfViewer.Renderer
 {
     internal sealed class HTMLCanvasRenderer : RenderStrategyBase
     {
         #region Fields / Properties
+
+        private Color _thumbnailFillColor;
+        private Color _thumbnailStrokeColor;
+        private Color _thumbnailFontColor;
 
         private readonly Dictionary<int, BlobElement> _pageImageCache = new Dictionary<int, BlobElement>();
         private readonly HtmlCanvas renderCanvas;
@@ -49,6 +54,10 @@ namespace OpenSilverPdfViewer.Renderer
         {
             renderCanvas = canvas;
             RenderQueue = new RenderQueue<BlobElement>(RenderWorkerCallback);
+
+            _thumbnailFillColor = (Color)renderCanvas.FindResource("CMSCtrlNormalStartColor");
+            _thumbnailStrokeColor = (Color)renderCanvas.FindResource("CMSForegroundColor");
+            _thumbnailFontColor = (Color)renderCanvas.FindResource("CMSForegroundColor");
         }
 
         #endregion Initialization
@@ -87,7 +96,6 @@ namespace OpenSilverPdfViewer.Renderer
                     thumbnail.Y = rect.Y;
                 }
             });
-            renderCanvas.Draw();
 
             // Get a list of page image ids that are currently rendered in the viewport
             var renderedIds = renderCanvas.Children
@@ -109,53 +117,48 @@ namespace OpenSilverPdfViewer.Renderer
                 .Select(rect => rect.Id)
                 .Except(renderedIds).ToList();
 
-            // Return if there's nothing new to render
-            if (addIds.Count == 0) return;
-
-            // Add those page image elements that now need to be rendered
-            var addList = addIds
-                .Select(id => intersectList.FirstOrDefault(item => item.Id == id))
-                .Where(rect => rect != null)
-                .ToList();
-
-            // Render the new additions
-            foreach (var rect in addList)
+            if (addIds.Count > 0)
             {
-                renderCanvas.Children.Add(CreateThumbnail(rect));
-                renderCanvas.Draw();
+                // Add those page image elements that now need to be rendered
+                var addList = addIds
+                    .Select(id => intersectList.FirstOrDefault(item => item.Id == id))
+                    .Where(rect => rect != null)
+                    .ToList();
+
+                // Render the new additions
+                foreach (var rect in addList)
+                    renderCanvas.Children.Add(CreateThumbnail(rect));
             }
+            renderCanvas.Draw();
         }
         private ContainerElement CreateThumbnail(LayoutRect rect)
         {
-            var fontSize = 10;
-            var fontFamily = "Verdana";
-
             var pageRect = new ContainerElement
             {
                 Width = rect.Width,
                 Height = rect.Height,
-                FillColor = Color.FromArgb(0xFF, 0x4A, 0x43, 0x3B),
-                StrokeColor = Color.FromArgb(0xFF, 0x00, 0x00, 0x00),
+                FillColor = _thumbnailFillColor,
+                StrokeColor = _thumbnailStrokeColor,
+                StrokeThickness = 1d,
                 Name = rect.Id.ToString()
             };
             
+            // Render cached thumbnnail image
             if (_pageImageCache.TryGetValue(rect.Id, out var image))
                 pageRect.Children.Add(image);
             
-            else
+            else // Or draw a placeholder and queue the item for image rendering
             {
-                var text = "Rendering Page";
-                var metrics = PdfJs.GetTextMetrics(text, $"bold {fontSize}px {fontFamily}");
+                var text = $"Page {rect.Id}";
+                var metrics = PdfJs.GetTextMetrics(text, $"bold {_thumbnailFontSize}px {_thumbnailFont}");
                 var pageNumberText = new TextElement
                 {
-                    FillColor = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF),
-                    Font = fontFamily,
+                    FillColor = _thumbnailFontColor,
+                    Font = _thumbnailFont,
                     FontWeight = FontWeights.Bold,
-                    FontHeight = fontSize,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    HorizontalAlignment = HorizontalAlignment.Center,
+                    FontHeight = _thumbnailFontSize,
                     X = (rect.Width - metrics.BoundingBoxRight) / 2,
-                    Y = (rect.Height - fontSize) / 2,
+                    Y = (rect.Height - _thumbnailFontSize) / 2,
                     Text = text
                 };
                 pageRect.Children.Add(pageNumberText);
@@ -166,13 +169,15 @@ namespace OpenSilverPdfViewer.Renderer
 
             return pageRect;
         }
+
+        // The RenderQueue invokes this when an image thumbnail completes rendering
         private void RenderWorkerCallback(int pageNumber, BlobElement image, bool _)
         {
             if (image != null && renderCanvas.Children.FirstOrDefault(elem => elem is ContainerElement container && int.Parse(container.Name) == pageNumber) is ContainerElement pageThumbnail)
             {
-                // The cache shouldn't ever contain the image here as CreateThumbnail
-                // shouldn't be queueing items if they've been previously cached
-                if (!_pageImageCache.ContainsKey(pageNumber))
+                // This test should always pass since the cache shouldn't ever contain the image here
+                // as CreateThumbnail shouldn't be queueing items if they've been previously cached
+                if (_pageImageCache.ContainsKey(pageNumber) == false)
                     _pageImageCache.Add(pageNumber, image);
 
                 // Replace the text placeholder with the rendered page image
@@ -190,8 +195,8 @@ namespace OpenSilverPdfViewer.Renderer
 
         public override void ScrollViewport(int scrollX, int scrollY)
         {
-            _scrollPoint.X = scrollX;
-            _scrollPoint.Y = scrollY;
+            _scrollPosition.X = scrollX;
+            _scrollPosition.Y = scrollY;
 
             if (ViewMode == ViewModeType.ThumbnailView)
             {
@@ -206,8 +211,8 @@ namespace OpenSilverPdfViewer.Renderer
                         var layoutRect = LayoutRectList.FirstOrDefault(rect => rect.Id == int.Parse(container.Name));
                         if (layoutRect != null)
                         {
-                            container.X = layoutRect.X - _scrollPoint.X;
-                            container.Y = layoutRect.Y - _scrollPoint.Y;
+                            container.X = layoutRect.X - _scrollPosition.X;
+                            container.Y = layoutRect.Y - _scrollPosition.Y;
                         }
                     });
             }
@@ -216,8 +221,8 @@ namespace OpenSilverPdfViewer.Renderer
                 if (_pageImageCache.TryGetValue(RenderPageNumber, out BlobElement image) == false)
                     throw new Exception($"ScrollViewport: No image found in cache for page {RenderPageNumber}");
 
-                image.X = -_scrollPoint.X;
-                image.Y = -_scrollPoint.Y;
+                image.X = -_scrollPosition.X;
+                image.Y = -_scrollPosition.Y;
             }
             renderCanvas.Draw();
         }
@@ -245,17 +250,12 @@ namespace OpenSilverPdfViewer.Renderer
         }
         public override void Reset()
         {
-            InvalidatePageCache();
-            renderCanvas.Children.Clear();
-            renderCanvas.Draw();
-        }
-        public override void InvalidatePageCache()
-        {
             ClearViewport();
-
             foreach (var pageImage in _pageImageCache.Values)
                 pageImage.InvalidateImage();
             _pageImageCache.Clear();
+            renderCanvas.Children.Clear();
+            renderCanvas.Draw();
         }
 
         #endregion Interface Implementation

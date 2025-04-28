@@ -30,7 +30,6 @@ namespace OpenSilverPdfViewer.Renderer
         Point GetPagePosition();
         void ClearViewport();
         void Reset();
-        void InvalidatePageCache();
         Task SetPageSizeRunList();
     }
     public static class RenderStrategyFactory
@@ -44,27 +43,18 @@ namespace OpenSilverPdfViewer.Renderer
             else
                 return new HTMLCanvasRenderer(osCanvas as HtmlCanvas);
         }
-        public static RenderModeType GetRenderModeType(IRenderStrategy strategy)
-        {
-            var modeType = RenderModeType.Dom;
-
-            if (strategy is OSCanvasRenderer)
-                modeType = RenderModeType.OpenSilver;
-            else if (strategy is HTMLCanvasRenderer)
-                modeType = RenderModeType.HTMLCanvas;
-            
-            return modeType;
-        }
     }
     public abstract class RenderStrategyBase : IRenderStrategy
     {
         #region Fields / Properties
 
-        protected const double _renderDPI = 144d;
-        protected const double _nativePdfDpi = 72d;
+        protected const string _thumbnailFont = "Verdana";
+        protected const int _thumbnailFontSize = 12;
+        protected const double _renderDPI = 144d; // Larger values produce better image quality at the cost of performance
+        protected const double _nativePdfDpi = 72d; // Don't change this. The PDF spec expresses all unit-measured values in points
         protected const double _thumbnailScale = 0.25;
-        protected const int _scrollBufferZone = 100;
-        protected Point _scrollPoint = new Point(0, 0);
+        protected const int _scrollBufferZone = 100; // Viewport top/bottom expansion in pixels applied when calculating thumbnail intersections
+        protected Point _scrollPosition = new Point(0, 0);
 
         public int RenderPageNumber { get; set; }
         public int RenderZoomLevel { get; set; }
@@ -72,13 +62,13 @@ namespace OpenSilverPdfViewer.Renderer
         public List<LayoutRect> LayoutRectList { get; private set; }
         protected PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Instance;
         protected ViewModeType ViewMode { get; private set; }
-        protected List<PageRun> PageSizeRunList { get; private set; }
+        protected List<PageSizeRun> PageSizeRunList { get; private set; }
         protected Rect ViewportScrollRect
         {
             get
             {
                 // Inflate the viewport intersection a bit so that the page image pop-in isn't so obvious
-                var viewportScrollRect = new Rect(_scrollPoint, GetViewportSize());
+                var viewportScrollRect = new Rect(_scrollPosition, GetViewportSize());
                 viewportScrollRect.Inflate(0, _scrollBufferZone);
                 return viewportScrollRect;
             }
@@ -98,38 +88,31 @@ namespace OpenSilverPdfViewer.Renderer
                 RenderThumbnails();
             }
         }
-        public abstract void ScrollViewport(int scrollX, int scrollY);
         public double GetDisplayScale()
         {
-            var pageSize = GetLayoutSize();
-            var viewportSize = GetViewportSize();
+            double zoomValue;
 
             if (ViewMode == ViewModeType.ThumbnailView)
+                zoomValue = _thumbnailScale;
+
+            // Compute "fit to view" scale value
+            else if (RenderZoomLevel == 0)
             {
-                // var pxToLog = 1 / (_nativePdfDpi * _thumbScale);
-                return _thumbnailScale;
+                var pageSize = GetLayoutSize();
+                var viewportSize = GetViewportSize();
+                zoomValue = Math.Min(viewportSize.Width / pageSize.Width, viewportSize.Height / pageSize.Height);
             }
-            var zoomValue = RenderZoomLevel == 0 ?
-                Math.Min(viewportSize.Width / pageSize.Width, viewportSize.Height / pageSize.Height) :
-                RenderZoomLevel / 100d;
+            else
+                zoomValue = RenderZoomLevel / 100d;
 
             return zoomValue;
         }
         public double GetPixelsToInchesConversion()
         {
-            var displayScale = GetDisplayScale();
-            var sourcePageSize = GetLayoutSize();
-
-            var dpiScale = ViewMode == ViewModeType.PageView ? _renderDPI / _nativePdfDpi : 1d;
-            var ptWidth = sourcePageSize.Width / dpiScale;
-            var pxWidth = sourcePageSize.Width * displayScale;
-            var logScale = pxWidth / ptWidth * _nativePdfDpi;
-
             // Scale to convert from pixels to inches at the current zoom level
-            return 1d / logScale;
+            var displayDpi = ViewMode == ViewModeType.PageView ? _renderDPI : _nativePdfDpi;
+            return 1d / (displayDpi * GetDisplayScale());
         }
-        public abstract Size GetViewportSize();
-        public abstract Size GetLayoutSize();
         public Point GetPagePosition()
         {
             var posX = 0d;
@@ -147,15 +130,17 @@ namespace OpenSilverPdfViewer.Renderer
             }
             return new Point(posX, posY);
         }
-        public abstract void ClearViewport();
-        public abstract void Reset();
-        public abstract void InvalidatePageCache();
         public async Task SetPageSizeRunList()
         {
             var json = await PdfJsWrapper.Instance.GetPdfPageSizeRunList();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            PageSizeRunList = JsonSerializer.Deserialize<List<PageRun>>(json, options);
+            PageSizeRunList = JsonSerializer.Deserialize<List<PageSizeRun>>(json, options);
         }
+        public abstract void ScrollViewport(int scrollX, int scrollY);
+        public abstract Size GetViewportSize();
+        public abstract Size GetLayoutSize();
+        public abstract void ClearViewport();
+        public abstract void Reset();
 
         #endregion Interface Members
         #region Methods

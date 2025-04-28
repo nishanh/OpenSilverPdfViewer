@@ -29,7 +29,12 @@ namespace OpenSilverPdfViewer.Utility
         public static void Disconnect(this Image image)
         {
             if (image.Parent != null)
-                ((Border)image.Parent).Child = null;
+            {
+                if (image.Parent is Border border)
+                    border.Child = null;
+                else if (image.Parent is Canvas canvas)
+                    canvas.Children.Remove(image);
+            }
         }
     }
 }

@@ -3,7 +3,6 @@
 // Free to use, modify, and distribute under the terms of the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Linq;
 using System.Windows;
 using System.Threading.Tasks;
@@ -17,7 +16,7 @@ namespace OpenSilverPdfViewer.Renderer
     {
         #region Fields / Properties
 
-        private const string viewCanvasId = "pageViewCanvas";
+        private const string viewCanvasId = "pageViewCanvas"; // from xaml
         private readonly Dictionary<int, JSImageReference> _pageImageCache = new Dictionary<int, JSImageReference>();
         private List<int> _renderedIdList = new List<int>();
         private RenderQueue<JSImageReference> RenderQueue { get; set; }
@@ -73,7 +72,7 @@ namespace OpenSilverPdfViewer.Renderer
 
             updatedRenderIdList.AddRange(addIds);
 
-            // If the Id sums are the same, then there's no change to the layout
+            // If the Id sums are the same, then there's no change to what is being shown in the viewport
             if (updatedRenderIdList.Sum() == _renderedIdList.Sum())
                 return;
 
@@ -87,29 +86,32 @@ namespace OpenSilverPdfViewer.Renderer
 
             foreach (var rect in renderRectList)
             {
-                PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPoint.X, rect.Y - _scrollPoint.Y, rect.Width, rect.Height, viewCanvasId);
+                // This will render a placeholder or the actual page image thumbnail if cached
+                PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPosition.X, rect.Y - _scrollPosition.Y, rect.Width, rect.Height, viewCanvasId);
 
-                _pageImageCache.TryGetValue(rect.Id, out var image);
-                if (image == null)
+                // Queue the item for rendering if not previously cached
+                if (_pageImageCache.ContainsKey(rect.Id) == false)
                     RenderQueue.QueueItem(rect.Id, _thumbnailScale);
             }
         }
+
+        // The RenderQueue invokes this when an image thumbnail completes rendering
         private void RenderWorkerCallback(int pageNumber, JSImageReference image, bool _)
         {
             if (image.Status != CacheStatus.None)
             {
                 if (_renderedIdList.Contains(pageNumber))
                 {
-                    // The cache shouldn't ever contain the image here as CreateThumbnail
-                    // shouldn't be queueing items if they've been previously cached
-                    if (!_pageImageCache.ContainsKey(pageNumber))
+                    // This test should always pass since the cache shouldn't ever contain the image here
+                    // as CreateThumbnail shouldn't be queueing items if they've been previously cached
+                    if (_pageImageCache.ContainsKey(pageNumber) == false)
                         _pageImageCache.Add(pageNumber, image);
 
                     if (image.Status != CacheStatus.Exists)
                     {
                         // Replace the text placeholder with the rendered page image
                         var rect = LayoutRectList.Single(rc => rc.Id == pageNumber);
-                        PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPoint.X, rect.Y - _scrollPoint.Y, rect.Width, rect.Height, viewCanvasId);
+                        PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPosition.X, rect.Y - _scrollPosition.Y, rect.Width, rect.Height, viewCanvasId);
                     }
                 }
             }
@@ -120,10 +122,10 @@ namespace OpenSilverPdfViewer.Renderer
 
         public override void ScrollViewport(int scrollX, int scrollY)
         {
-            if (_scrollPoint.X == scrollX && _scrollPoint.Y == scrollY) return;
+            if (_scrollPosition.X == scrollX && _scrollPosition.Y == scrollY) return;
 
-            _scrollPoint.X = scrollX;
-            _scrollPoint.Y = scrollY;
+            _scrollPosition.X = scrollX;
+            _scrollPosition.Y = scrollY;
 
             if (ViewMode == ViewModeType.ThumbnailView)
             {
@@ -135,12 +137,12 @@ namespace OpenSilverPdfViewer.Renderer
                     var renderRectList = LayoutRectList.Where(rect => _renderedIdList.Contains(rect.Id)).ToList();
                     ClearViewport();
                     foreach (var rect in renderRectList)
-                        PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPoint.X, rect.Y - _scrollPoint.Y, rect.Width, rect.Height, viewCanvasId);
+                        PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPosition.X, rect.Y - _scrollPosition.Y, rect.Width, rect.Height, viewCanvasId);
                 }
             }
             else
             {
-                PdfJs.ScrollViewportImage(RenderPageNumber, viewCanvasId, RenderZoomLevel, (int)_scrollPoint.X, (int)_scrollPoint.Y);
+                PdfJs.ScrollViewportImage(RenderPageNumber, viewCanvasId, RenderZoomLevel, (int)_scrollPosition.X, (int)_scrollPosition.Y);
             }
         }
         public override Size GetViewportSize()
@@ -163,15 +165,11 @@ namespace OpenSilverPdfViewer.Renderer
         }
         public override void Reset()
         {
+            ClearViewport();
+            PdfJs.InvalidatePageCache();
             PdfJs.InvalidateThumbnailCache();
             _pageImageCache.Clear();
             _renderedIdList.Clear();
-        }
-        public override void InvalidatePageCache()
-        {
-            ClearViewport();
-            PdfJs.InvalidateThumbnailCache();
-            _pageImageCache.Clear();
         }
 
         #endregion Interface Implementation

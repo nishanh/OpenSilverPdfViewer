@@ -168,7 +168,7 @@ namespace OpenSilverPdfViewer.ViewModels
         { 
             get
             {
-                return _loadPdfCommand ?? (_loadPdfCommand = new DelegateCommand((param) => LoadPdf(param), (param) => true));
+                return _loadPdfCommand ?? (_loadPdfCommand = new DelegateCommand(param => LoadPdf(param), (param) => true));
             }
         }
 
@@ -177,7 +177,7 @@ namespace OpenSilverPdfViewer.ViewModels
         {
             get
             {
-                return _setRenderModeCommand ?? (_setRenderModeCommand = new DelegateCommand((param) => SetRenderMode(param), (param) => true));
+                return _setRenderModeCommand ?? (_setRenderModeCommand = new DelegateCommand(param => { RenderMode = (RenderModeType)param; }, (param) => true));
             }
         }
 
@@ -186,7 +186,7 @@ namespace OpenSilverPdfViewer.ViewModels
         {
             get
             {
-                return _setRulerUnitsCommand ?? (_setRulerUnitsCommand = new DelegateCommand((param) => SetRulerUnits(param), (param) => true));
+                return _setRulerUnitsCommand ?? (_setRulerUnitsCommand = new DelegateCommand(param => { RulerUnits = (UnitMeasure)param; }, (param) => true));
             }
         }
 
@@ -248,18 +248,10 @@ namespace OpenSilverPdfViewer.ViewModels
             var unitConvert = RulerUnits == UnitMeasure.Metric ? 25.4 : 1d;
             var unitSuffix = RulerUnits == UnitMeasure.Metric ? "mm" : "in";
             var size = await PdfJs.GetPdfPageSizeAsync(CurrentPage);
-            var logWidth = Math.Round((size.Width / 72d) * unitConvert, 2);
-            var logHeight = Math.Round((size.Height / 72d) * unitConvert, 2);
+            var logicalWidth = Math.Round((size.Width / 72d) * unitConvert, 2);
+            var logicalHeight = Math.Round((size.Height / 72d) * unitConvert, 2);
 
-            PageSizeText = $"Page size: {logWidth} x {logHeight} {unitSuffix}";
-        }
-        public void SetRenderMode(object param)
-        {
-            RenderMode = (RenderModeType)param;
-        }
-        public void SetRulerUnits(object param)
-        {
-            RulerUnits = (UnitMeasure)param;
+            PageSizeText = $"Page size: {logicalWidth} x {logicalHeight} {unitSuffix}";
         }
 
         #endregion Methods

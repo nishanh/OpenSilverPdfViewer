@@ -130,7 +130,6 @@ namespace OpenSilverPdfViewer.JSInterop
             var json = (string)Convert.ChangeType(result, typeof(string));
             return json.ParseJsonSize();
         }
-
         public Size GetViewportSize(string canvasId)
         {
             var result = OpenSilver.Interop.ExecuteJavaScript("getViewportSize($0)", canvasId);
@@ -147,10 +146,6 @@ namespace OpenSilverPdfViewer.JSInterop
         {
             OpenSilver.Interop.ExecuteJavaScript("scrollViewportImage($0,$1,$2,$3,$4)", 
                 pageNumber, canvasId, zoomLevel, scrollX, scrollY);
-        }
-        public void TransformViewport(string canvasId, double m11, double m12, double m21, double m22, double dx, double dy)
-        {
-            OpenSilver.Interop.ExecuteJavaScript("transformViewport($0,$1,$2,$3,$4,$5,$6)", canvasId, m11, m12, m21, m22, dx, dy);
         }
         public void InvalidatePageCache()
         {

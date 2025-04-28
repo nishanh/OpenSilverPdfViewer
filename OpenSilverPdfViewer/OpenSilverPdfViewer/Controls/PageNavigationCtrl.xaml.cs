@@ -30,7 +30,7 @@ namespace OpenSilverPdfViewer.Controls
         /// This property reflects the current navigation mode (page, side, sheet, etc)
         /// </summary>
         public static readonly DependencyProperty NavigationModeProperty = DependencyProperty.Register("NavigationMode", typeof(ViewModeType), typeof(PageNavigationCtrl),
-            new PropertyMetadata(ViewModeType.Unknown, OnNavigationModeChanged));
+            new PropertyMetadata(ViewModeType.PageView, OnNavigationModeChanged));
 
         /// <summary>
         /// This property reflects the total number of pages (aka "sheet sides") in the document

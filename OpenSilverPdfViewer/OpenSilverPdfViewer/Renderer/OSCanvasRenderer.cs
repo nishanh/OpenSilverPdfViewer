@@ -19,6 +19,11 @@ namespace OpenSilverPdfViewer.Renderer
     {
         #region Fields / Properties
 
+        private Brush _thumbnailFillBrush;
+        private Brush _thumbnailStrokeBrush;
+        private Brush _thumbnailFontBrush;
+        private FontFamily _thumbnailFontFamily = new FontFamily(_thumbnailFont);
+
         private readonly Dictionary<int, Image> _pageImageCache = new Dictionary<int, Image>();
         private readonly Canvas renderCanvas;
         private RenderQueue<Image> RenderQueue { get; set; }
@@ -49,6 +54,10 @@ namespace OpenSilverPdfViewer.Renderer
         {
             renderCanvas = canvas;
             RenderQueue = new RenderQueue<Image>(RenderWorkerCallback);
+
+            _thumbnailFontBrush = renderCanvas.FindResource("CMSForegroundBrush") as Brush;
+            _thumbnailFillBrush = renderCanvas.FindResource("CMSPopupBorderBrush") as Brush;
+            _thumbnailStrokeBrush = renderCanvas.FindResource("CMSForegroundBrush") as Brush;
         }
 
         #endregion Initialization
@@ -126,64 +135,65 @@ namespace OpenSilverPdfViewer.Renderer
         }
         private Grid CreateThumbnail(LayoutRect rect)
         {
-            var pageFont = new FontFamily("Verdana");
-            var fontBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF));
-            var fillBrush = renderCanvas.FindResource("CMSCtrlDisabledBodyBrush") as Brush;
-
             var pageRect = new Grid
             {
                 Width = rect.Width,
                 Height = rect.Height,
                 Tag = rect.Id
             };
-            var borderRect = new Border
-            {
-                Width = rect.Width,
-                Height = rect.Height,
-                Background = fillBrush,
-                BorderBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00))
-            };
 
+            // Use the actual cached thumbnail image
             if (_pageImageCache.TryGetValue(rect.Id, out var image))
             {
                 image.Disconnect();
-                borderRect.Child = image;
+                pageRect.Children.Add(image);
             }
-            else
+
+            else // Or create a placeholder and queue the item for rendering
             {
+                var borderRect = new Border
+                {
+                    Width = rect.Width,
+                    Height = rect.Height,
+                    Background = _thumbnailFillBrush,
+                    BorderBrush = _thumbnailStrokeBrush,
+                    BorderThickness = new Thickness(1d)
+                };
                 var pageNumberText = new TextBlock
                 {
-                    Foreground = fontBrush,
-                    FontFamily = pageFont,
+                    Foreground = _thumbnailFontBrush,
+                    FontFamily = _thumbnailFontFamily,
                     FontWeight = FontWeights.Bold,
-                    FontSize = 12,
+                    FontSize = _thumbnailFontSize,
                     VerticalAlignment = VerticalAlignment.Center,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     TextWrapping = TextWrapping.Wrap,
                     TextAlignment = TextAlignment.Center,
-                    Text = $"Rendering Page {rect.Id.ToString(CultureInfo.InvariantCulture)}"
+                    Text = $"Page {rect.Id.ToString(CultureInfo.InvariantCulture)}"
                 };
                 borderRect.Child = pageNumberText;
+                pageRect.Children.Add(borderRect);
                 RenderQueue.QueueItem(rect.Id, _thumbnailScale);
             }
-
             pageRect.SetValue(Canvas.LeftProperty, rect.X);
             pageRect.SetValue(Canvas.TopProperty, rect.Y);
-            pageRect.Children.Add(borderRect);
             
             return pageRect;
         }
+
+        // The RenderQueue invokes this when an image thumbnail completes rendering
         private void RenderWorkerCallback(int pageNumber, Image image, bool _)
         {
             if (image != null && renderCanvas.Children.FirstOrDefault(elem => elem is Grid grid && (int)grid.Tag == pageNumber) is Grid pageThumbnail)
             {
-                // The cache shouldn't ever contain the image here as CreateThumbnail
-                // shouldn't be queueing items if they've been previously cached
-                if (!_pageImageCache.ContainsKey(pageNumber))
+                // This test should always pass since the cache shouldn't ever contain the image here
+                // as CreateThumbnail shouldn't be queueing items if they've been previously cached
+                if (_pageImageCache.ContainsKey(pageNumber) == false)
                     _pageImageCache.Add(pageNumber, image);
 
-                if (pageThumbnail.Children.FirstOrDefault() is Border border)
-                    border.Child = image;
+                // Replace the placeholder with the actual page image thumbnail
+                pageThumbnail.Children.Clear();
+                pageThumbnail.Children.Add(image);
             }
         }
 
@@ -192,10 +202,10 @@ namespace OpenSilverPdfViewer.Renderer
 
         public override void ScrollViewport(int scrollX, int scrollY)
         {
-            _scrollPoint.X = scrollX;
-            _scrollPoint.Y = scrollY;
+            _scrollPosition.X = scrollX;
+            _scrollPosition.Y = scrollY;
 
-            TranslateTransform translate = new TranslateTransform { X = -_scrollPoint.X, Y = -_scrollPoint.Y };
+            TranslateTransform translate = new TranslateTransform { X = -_scrollPosition.X, Y = -_scrollPosition.Y };
 
             if (ViewMode == ViewModeType.ThumbnailView)
             {
@@ -213,8 +223,8 @@ namespace OpenSilverPdfViewer.Renderer
                     throw new Exception($"ScrollViewport: No image found in cache for page {RenderPageNumber}");
 
                 translate = (image.RenderTransform as TransformGroup).Children[1] as TranslateTransform;
-                translate.X = -_scrollPoint.X;
-                translate.Y = -_scrollPoint.Y;
+                translate.X = -_scrollPosition.X;
+                translate.Y = -_scrollPosition.Y;
             }
         }
         public override Size GetViewportSize()
@@ -239,11 +249,6 @@ namespace OpenSilverPdfViewer.Renderer
             renderCanvas.Children.Clear();
         }
         public override void Reset()
-        {
-            InvalidatePageCache();
-            renderCanvas.Children.Clear();
-        }
-        public override void InvalidatePageCache()
         {
             ClearViewport();
             _pageImageCache.Clear();

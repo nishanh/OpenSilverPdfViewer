@@ -171,10 +171,10 @@ namespace OpenSilverPdfViewer.Controls
         private static async void OnFilenameChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
-            ctrl.renderStrategy.InvalidatePageCache();
+            ctrl.renderStrategy.Reset();
             await ctrl.renderStrategy.SetPageSizeRunList();
 
-            // HACK: Find a better way to force this binding to update when a new document loads
+            // HACK: Find a better way to force this binding to update when a new document loads when on page 1
             if (ctrl.PreviewPage == 1) ctrl.PreviewPage = 0;
             ctrl.PreviewPage = 1;
         }
@@ -200,7 +200,7 @@ namespace OpenSilverPdfViewer.Controls
             var ctrl = depObj as PageViewer;
             var renderMode = (RenderModeType)e.NewValue;
 
-            ctrl.renderStrategy.InvalidatePageCache();
+            ctrl.renderStrategy.Reset();
 
             var canvasElement = renderMode == RenderModeType.OpenSilver ? 
                 (FrameworkElement)ctrl.pageImageCanvas :
@@ -232,7 +232,7 @@ namespace OpenSilverPdfViewer.Controls
         }
         private async Task RenderView()
         {
-            if (PreviewPage <= 0) return;// && ViewMode != ViewModeType.ThumbnailView) return;
+            if (PreviewPage <= 0) return;
 
             await renderStrategy.Render(ViewMode);
             var displayScale = renderStrategy.GetDisplayScale() * 100d;
@@ -242,14 +242,14 @@ namespace OpenSilverPdfViewer.Controls
         }
         private void SetRulers()
         {
-            if (PreviewPage <= 0 || _rulersOn == false) return;
+            if (PreviewPage <= 0 || _rulersOn == false) 
+                return;
 
-            const int margin = 10; // from xaml layout
             var pagePosition = renderStrategy.GetPagePosition();
 
             PixelsToInches = renderStrategy.GetPixelsToInchesConversion();
-            PagePositionX = pagePosition.X + margin;
-            PagePositionY = pagePosition.Y + margin;
+            PagePositionX = pagePosition.X + previewGrid.Margin.Left;
+            PagePositionY = pagePosition.Y + previewGrid.Margin.Top;
             ScrollPosX = pageScrollBarHorz.Value;
             ScrollPosY = pageScrollBarVert.Value;
         }
@@ -262,14 +262,17 @@ namespace OpenSilverPdfViewer.Controls
             var scaledLayoutSize = new Size(layoutSize.Width * displayScale, layoutSize.Height * displayScale);
             var scrollExtentX = Math.Max(0, scaledLayoutSize.Width - viewportSize.Width);
             var scrollExtentY = Math.Max(0, scaledLayoutSize.Height - viewportSize.Height);
+            var valueScale = ViewMode == ViewModeType.ThumbnailView ? 1d : displayScale;
 
-            pageScrollBarHorz.Value *= ViewMode == ViewModeType.ThumbnailView ? 1d : displayScale;
             pageScrollBarHorz.Maximum = scrollExtentX;
             pageScrollBarHorz.ViewportSize = viewportSize.Width;
+            pageScrollBarHorz.LargeChange = scrollExtentX / 10;
+            pageScrollBarHorz.Value *= valueScale;
 
-            pageScrollBarVert.Value *= ViewMode == ViewModeType.ThumbnailView ? 1d : displayScale;
             pageScrollBarVert.Maximum = scrollExtentY;
             pageScrollBarVert.ViewportSize = viewportSize.Height;
+            pageScrollBarVert.LargeChange = scrollExtentY / 10;
+            pageScrollBarVert.Value *= valueScale;
 
             var reposition = (ZoomLevel != 0 || ViewMode == ViewModeType.ThumbnailView) && 
                 (pageScrollBarVert.Value > 0 || pageScrollBarHorz.Value > 0);
@@ -319,9 +322,10 @@ namespace OpenSilverPdfViewer.Controls
         {
             if (e.PropertyName == nameof(ViewMode))
             {
-                renderStrategy.RenderPageNumber = PreviewPage;
                 renderStrategy.Reset();
+                renderStrategy.RenderPageNumber = PreviewPage;
                 await RenderView();
+                SetRulers();
             }
         }
         public event PropertyChangedEventHandler PropertyChanged;

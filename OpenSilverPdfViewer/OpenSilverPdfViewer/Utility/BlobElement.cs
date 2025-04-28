@@ -14,7 +14,7 @@ namespace OpenSilverPdfViewer.Utility
 {
     public sealed class BlobElement : HtmlCanvasElement
     {
-        private object _jsImage;
+        private readonly object _jsImage;
         private string _sourceCache;
         private string _source;
         private bool _isValid;

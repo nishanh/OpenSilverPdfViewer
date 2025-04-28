@@ -4,11 +4,12 @@
 // See the LICENSE file in the project root for full license information.
 -->
 <UserControl
+    x:Name="rulerCtrlInternal" 
     x:Class="OpenSilverPdfViewer.Controls.RulerCtrl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls"
-    x:Name="rulerCtrlInternal">
+    SizeChanged="Ruler_SizeChangd">
     
     <Grid>
         <Border 

@@ -78,6 +78,7 @@
                     PageOffset="{Binding PagePositionY, ElementName=pvCtrlInternal}"
                     ScrollPosition="{Binding ScrollPosY, ElementName=pvCtrlInternal}"/>
                 <Grid 
+                    x:Name="previewGrid"
                     Grid.Row="1" 
                     Grid.Column="1" 
                     SizeChanged="Preview_SizeChanged"

@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Windows;
-using System.Collections.Generic;
 
 namespace OpenSilverPdfViewer.Renderer
 {
@@ -35,47 +34,10 @@ namespace OpenSilverPdfViewer.Renderer
             return new Rect { X = layoutRect.X, Y = layoutRect.Y, Width = layoutRect.Width, Height = layoutRect.Height };
         }
     }
-    public sealed class PageRun
+    public sealed class PageSizeRun
     {
         public int Width { get; set; }
         public int Height { get; set; }
         public int Count { get; set; }
-
-        public static List<PageRun> CreateTestList()
-        {
-            return new List<PageRun>()
-            {
-                new PageRun
-                {
-                    Width = 215900,
-                    Height = 279400,
-                    Count = 5
-                },
-                new PageRun
-                {
-                    Width = 279400,
-                    Height = 431800,
-                    Count = 1
-                },
-                new PageRun
-                {
-                    Width = 215900,
-                    Height = 279400,
-                    Count = 3
-                },
-                new PageRun
-                {
-                    Width = 215900,
-                    Height = 355600,
-                    Count = 2
-                },
-                new PageRun
-                {
-                    Width = 215900,
-                    Height = 279400,
-                    Count = 4
-                }
-            };
-        }
     }
 }

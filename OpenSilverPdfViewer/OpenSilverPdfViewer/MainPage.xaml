@@ -97,7 +97,7 @@
                             Command="{Binding SetRenderModeCommand}"
                             CommandParameter="{x:Static conv:RenderModeType.Dom}"
                             IsChecked="{Binding RenderMode, Converter={StaticResource RenderModeToBoolConverter}, ConverterParameter={x:Static conv:RenderModeType.Dom}}"
-                            Content="DOM Canvas Renderer"/>
+                            Content="HTMLPresenter Canvas Renderer"/>
                         <RadioButton 
                             Name="osRender"
                             Margin="0,0,0,5"
@@ -110,7 +110,7 @@
                             Command="{Binding SetRenderModeCommand}"
                             CommandParameter="{x:Static conv:RenderModeType.HTMLCanvas}"
                             IsChecked="{Binding RenderMode, Converter={StaticResource RenderModeToBoolConverter}, ConverterParameter={x:Static conv:RenderModeType.HTMLCanvas}}"
-                            Content="OpenSilver HTMLCanvas Renderer"/>
+                            Content="HTMLCanvas Renderer"/>
                     </StackPanel>
                 </ctrls:PanelCtrl>
                 <GridSplitter 

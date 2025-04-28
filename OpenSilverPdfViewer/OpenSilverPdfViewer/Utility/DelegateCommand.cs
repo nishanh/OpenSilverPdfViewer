@@ -12,8 +12,8 @@ namespace OpenSilverPdfViewer.Utility
 {
     public sealed class DelegateCommand : ICommand
     {
-        private Predicate<object> _canExecute;
-        private Action<object> _method;
+        private readonly Predicate<object> _canExecute;
+        private readonly Action<object> _method;
 
         public DelegateCommand(Action<object> method, Predicate<object> canExecute)
         {

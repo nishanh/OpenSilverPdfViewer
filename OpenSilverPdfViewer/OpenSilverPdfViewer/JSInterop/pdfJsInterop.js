@@ -189,23 +189,25 @@ function renderThumbnailToViewport(pageNumber, posX, posY, width, height, canvas
     try {
         var imageCanvas = thumbCache.get(pageNumber);
         if (imageCanvas == null) {
-            //console.log(`renderThumbnailToViewport: rendering placeholder for page ${pageNumber}`);
             // Render a placeholder
             imageCanvas = new OffscreenCanvas(width, height);
-            var ctx1 = imageCanvas.getContext('2d');
-            ctx1.fillStyle = "#808080";
-            ctx1.fillRect(0, 0, width, height);
-            ctx1.font = "bold 10px Verdana";
-            var metrics = ctx1.measureText("Rendering Page");
+            var imgCtx = imageCanvas.getContext('2d');
+
+            imgCtx.fillStyle = "#585858";
+            imgCtx.strokeStyle = "#DDDDDD";
+            imgCtx.lineWidth = 2;
+            imgCtx.fillRect(0, 0, width, height);
+            imgCtx.strokeRect(0, 0, width - 1, height - 1);
+
+            imgCtx.font = "bold 12px Verdana";
+            var thumbText = `Page ${pageNumber}`;
+            var metrics = imgCtx.measureText(thumbText);
             var textHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
             var textPosX = (width - metrics.actualBoundingBoxRight) / 2;
-            var textPosY = (height - textHeight) / 2;
-            ctx1.fillStyle = "#FFFFFF";
-            ctx1.fillText("Rendering Page", textPosX, textPosY);
-        }
-        else {
-            // Render the cached canvas thumbnail
-            //console.log(`renderThumbnailToViewport: rendering image for page ${pageNumber}`);
+            var textPosY = metrics.actualBoundingBoxAscent + ((height - textHeight) / 2);
+
+            imgCtx.fillStyle = "#DDDDDD";
+            imgCtx.fillText(thumbText, textPosX, textPosY);
         }
 
         var viewportCanvas = document.getElementById(canvasId);
@@ -262,16 +264,6 @@ function scrollViewportImage(pageNumber, canvasId, zoomLevel, scrollX, scrollY) 
         scaledHeight - scrollY);
 
     console.log(`Scroll offset: X: ${scrollX}, Y: ${scrollY}`);
-}
-
-function transformViewport(canvasId, m11, m12, m21, m22, dx, dy) {
-    var viewportCanvas = document.getElementById(canvasId);
-    var ctx = viewportCanvas.getContext('2d', { willReadFrequently: true });
-    console.log("transformViewport ", canvasId, m11, m12, m21, m22, dx, dy);
-    var imageData = ctx.getImageData(0, 0, viewportCanvas.width, viewportCanvas.height);
-    ctx.clearRect(0, 0, viewportCanvas.width, viewportCanvas.height);
-    //ctx.transform(m11, m12, m21, m22, dx, dy);
-    ctx.putImageData(imageData, dx, dy);
 }
 
 function clearViewport(canvasId) {
