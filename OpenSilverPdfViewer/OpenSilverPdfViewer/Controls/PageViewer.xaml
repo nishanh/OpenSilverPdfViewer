@@ -103,6 +103,9 @@
                     Grid.Column="1" 
                     SizeChanged="Preview_SizeChanged"
                     Margin="10,10,10,3">
+                    <native:HtmlPresenter>
+                        <canvas id="pageViewCanvas"/>
+                    </native:HtmlPresenter>
                     <Canvas 
                         x:Name="pageImageCanvas" 
                         ClipToBounds="True"
@@ -111,9 +114,6 @@
                     <native:HtmlCanvas 
                         x:Name="pageElementCanvas" 
                         ClipToBounds="True"/>
-                    <native:HtmlPresenter>
-                        <canvas id="pageViewCanvas"/>
-                    </native:HtmlPresenter>
                 </Grid>
                 <ScrollBar 
                     x:Name="pageScrollBarHorz"
@@ -145,7 +145,7 @@
             Padding="10"
             BorderBrush="{StaticResource CMSSolidBorderBrush}"
             BorderThickness="0,1,0,0"
-            Background="{StaticResource ToolbarBackgroundBrush}">
+            Background="{StaticResource CMSToolbarBackgroundBrush}">
             <Grid VerticalAlignment="Center">
                 <local:ZoomViewCtrl 
                     Width="175"

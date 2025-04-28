@@ -7,6 +7,9 @@ let pdfjsLib;
 let libVersion;
 let pdfDocument;
 let pageCache = new Map(); // Cache for PDF pages
+let thumbCache = new Map();
+let vpContext;
+let vpRect;
 
 // All OpenSilver asynchronous interop calls must include a C# callback function as the last parameter.
 // This is because OpenSilver does not support the consumption of JS promises.
@@ -106,11 +109,29 @@ function getViewportSize(canvasId) {
         return null;
     }
 
+    // Reset the default target canvas element size
+    var htmlPresenter = canvas.parentNode.parentNode;
+    var parentRect = htmlPresenter.getBoundingClientRect();
+    if (canvas.width != parentRect.width || canvas.height != parentRect.height) {
+        var ctx = canvas.getContext('2d');
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        canvas.width = parentRect.width;
+        canvas.height = parentRect.height;
+        ctx.putImageData(imageData, 0, 0);
+        vpContext = ctx;
+
+    }
+
     var rect = canvas.getBoundingClientRect();
     var viewportSize = {
         width: rect.width,
         height: rect.height
     };
+    vpRect = {
+        width: rect.width,
+        height: rect.height
+    };
+
     console.log("getViewportSize(): ", viewportSize.width, viewportSize.height);
     return JSON.stringify(viewportSize);
 }
@@ -120,6 +141,16 @@ function renderPageToViewport(pageNumber, dpi, zoomLevel, canvasId, callback) {
     var promise = (async () => await renderPageToViewportAsync(pageNumber, dpi, zoomLevel, canvasId))();
     if (callback != undefined) {
         promise.then((result) => callback(result));
+    }
+}
+function renderThumbnailToCache(pageNumber, scale, callback) {
+    //console.log("renderThumbnailToCanvas() begin: ", pageNumber);
+    var promise = (async () => await renderThumbnailToCacheAsync(pageNumber, scale))();
+    if (callback != undefined) {
+        promise.then((result) => {
+            //console.log("renderThumbnailToCanvas() end: ", pageNumber, result);
+            callback(result);
+        });
     }
 }
 
@@ -151,6 +182,51 @@ function getPageSizeRunList(callback) {
     var promise = (async () => await getPageSizeRunListAsync())();
     if (callback != undefined) {
         promise.then((result) => callback(result));
+    }
+}
+
+function renderThumbnailToViewport(pageNumber, posX, posY, width, height, canvasId) {
+    try {
+        var imageCanvas = thumbCache.get(pageNumber);
+        if (imageCanvas == null) {
+            //console.log(`renderThumbnailToViewport: rendering placeholder for page ${pageNumber}`);
+            // Render a placeholder
+            imageCanvas = new OffscreenCanvas(width, height);
+            var ctx1 = imageCanvas.getContext('2d');
+            ctx1.fillStyle = "#808080";
+            ctx1.fillRect(0, 0, width, height);
+            ctx1.font = "bold 10px Verdana";
+            var metrics = ctx1.measureText("Rendering Page");
+            var textHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
+            var textPosX = (width - metrics.actualBoundingBoxRight) / 2;
+            var textPosY = (height - textHeight) / 2;
+            ctx1.fillStyle = "#FFFFFF";
+            ctx1.fillText("Rendering Page", textPosX, textPosY);
+        }
+        else {
+            // Render the cached canvas thumbnail
+            //console.log(`renderThumbnailToViewport: rendering image for page ${pageNumber}`);
+        }
+
+        var viewportCanvas = document.getElementById(canvasId);
+        var htmlPresenter = viewportCanvas.parentNode.parentNode;
+        htmlPresenter.style.overflow = "hidden"; // Hide browser default. I do my own styled scrollbars in XAML
+
+        // Reset the default target canvas element size
+        var parentRect = htmlPresenter.getBoundingClientRect();
+        if (viewportCanvas.width != parentRect.width || viewportCanvas.height != parentRect.height) {
+            viewportCanvas.width = parentRect.width;
+            viewportCanvas.height = parentRect.height;
+        }
+
+        var ctx = viewportCanvas.getContext('2d');
+        ctx.drawImage(imageCanvas, posX, posY, imageCanvas.width, imageCanvas.height);
+
+        return pageNumber;
+    }
+    catch (error) {
+        console.error(`Error rendering page ${pageNumber}:`, error);
+        return -1; // Indicate an error
     }
 }
 
@@ -188,7 +264,41 @@ function scrollViewportImage(pageNumber, canvasId, zoomLevel, scrollX, scrollY) 
     console.log(`Scroll offset: X: ${scrollX}, Y: ${scrollY}`);
 }
 
+function transformViewport(canvasId, m11, m12, m21, m22, dx, dy) {
+    var viewportCanvas = document.getElementById(canvasId);
+    var ctx = viewportCanvas.getContext('2d', { willReadFrequently: true });
+    console.log("transformViewport ", canvasId, m11, m12, m21, m22, dx, dy);
+    var imageData = ctx.getImageData(0, 0, viewportCanvas.width, viewportCanvas.height);
+    ctx.clearRect(0, 0, viewportCanvas.width, viewportCanvas.height);
+    //ctx.transform(m11, m12, m21, m22, dx, dy);
+    ctx.putImageData(imageData, dx, dy);
+}
+
 function clearViewport(canvasId) {
+    if (vpContext == undefined) {
+        var viewportCanvas = document.getElementById(canvasId);
+        var htmlPresenter = viewportCanvas.parentNode.parentNode;
+        htmlPresenter.style.overflow = "hidden"; // Hide browser default. I do my own styled scrollbars in XAML
+
+        // Reset the default target canvas element size
+        var parentRect = htmlPresenter.getBoundingClientRect();
+        if (viewportCanvas.width != parentRect.width || viewportCanvas.height != parentRect.height) {
+            viewportCanvas.width = parentRect.width;
+            viewportCanvas.height = parentRect.height;
+        }
+        vpRect = {
+            width: viewportCanvas.width,
+            height: viewportCanvas.height
+        };
+        vpContext = viewportCanvas.getContext('2d');
+    }
+    else {
+        console.log("clearViewport using cached context");
+    }
+    console.log("clearViewport :", canvasId, vpRect.width, vpRect.height);
+    vpContext.clearRect(0, 0, vpRect.width, vpRect.height);
+}
+function clearViewport2(canvasId) {
     var viewportCanvas = document.getElementById(canvasId);
     var viewportRect = viewportCanvas.getBoundingClientRect();
     var ctx = viewportCanvas.getContext('2d');
@@ -198,6 +308,11 @@ function clearViewport(canvasId) {
 function invalidatePageCache() {
     console.log("invalidatePageCache() begin");
     pageCache.clear(); // Clear the cache
+}
+
+function invalidateThumbnailCache() {
+    console.log("invalidatePageCache() begin");
+    thumbCache.clear();
 }
 
 function getTextMetrics(text, font) {
@@ -393,8 +508,10 @@ async function renderPageToViewportAsync(pageNumber, dpi, zoomLevel, canvasId) {
 
         // Reset the default target canvas element size
         var parentRect = htmlPresenter.getBoundingClientRect();
-        viewportCanvas.width = parentRect.width;
-        viewportCanvas.height = parentRect.height;
+        if (viewportCanvas.width != parentRect.width || viewportCanvas.height != parentRect.height) {
+            viewportCanvas.width = parentRect.width;
+            viewportCanvas.height = parentRect.height;
+        }
 
         var scale = zoomLevel == 0 ? // zoomLevel == 0 means fit to viewport
             Math.min(viewportCanvas.width / canvas.width, viewportCanvas.height / canvas.height) :
@@ -421,6 +538,40 @@ async function renderPageToViewportAsync(pageNumber, dpi, zoomLevel, canvasId) {
     catch (error) {
         console.error(`Error rendering page ${pageNumber}:`, error);
         return -1; // Indicate an error
+    }
+}
+
+async function renderThumbnailToCacheAsync(pageNumber, scale) {
+    //console.log('renderThumbnailToCanvasAsync begin');
+    if (!this.pdfDocument) {
+        console.error('No PDF loaded. Call loadPdfFile first.');
+        return 0; // Indicate an error
+    }
+    try {
+        var canvas = thumbCache.get(pageNumber)
+        if (canvas == undefined) {
+            const page = await this.pdfDocument.getPage(pageNumber);
+            var contentView = page.getViewport({ scale });
+
+            // Create an unattached canvas element to render the PDF page onto
+            const canvas = new OffscreenCanvas(contentView.width, contentView.height);
+            const context = canvas.getContext('2d');
+
+            const renderContext = {
+                canvasContext: context,
+                viewport: contentView
+            };
+            await page.render(renderContext).promise;
+            thumbCache.set(pageNumber, canvas);
+            //console.log('renderThumbnailToCanvasAsync end');
+            return 1;
+        }
+        else
+            return 2;
+    }
+    catch (error) {
+        console.error(`Error rendering page ${pageNumber}:`, error);
+        return 0; // Indicate an error
     }
 }
 
@@ -505,6 +656,7 @@ async function renderPageToBlobAsync(pageNumber, thumbScale) {
     }
 }
 
+// Same as renderPageToBlobAsync, but doesn't use async/await pattern
 async function renderPageToImageAsync(pageNumber, thumbScale) {
     if (!this.pdfDocument) {
         console.error('No PDF loaded. Call loadPdfFile first.');
@@ -536,7 +688,6 @@ async function renderPageToImageAsync(pageNumber, thumbScale) {
                 imgElement.onload = () => resolve(imgElement);
             })
         });
-
         return image;
     }
     catch (error) {
@@ -546,9 +697,9 @@ async function renderPageToImageAsync(pageNumber, thumbScale) {
 }
 function loadBlobImageAsync(imgElement, blobUri, callback) {
     new Promise((resolve, reject) => {
-        imgElement.src = blobUri;
         imgElement.onload = () => resolve(true);
         imgElement.onerror = () => resolve(false);
+        imgElement.src = blobUri;
     }).then(result => callback(result))
 }
 

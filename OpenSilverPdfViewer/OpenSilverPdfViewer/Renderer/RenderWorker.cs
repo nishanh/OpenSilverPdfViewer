@@ -19,19 +19,28 @@ namespace OpenSilverPdfViewer.Renderer
 
     public sealed class RenderQueue<T>
     {
+        #region Fields / Properties
+
         private readonly List<RenderWorker<T>> _workers = new List<RenderWorker<T>>();
         private WorkerCompleteDelegate<T> RenderCompleteCallback { get; set; }
         private DispatcherTimer DebounceRenderTimer { get; set; }
 
+        #endregion Fields / Properties
+        #region Initialization
+
         public RenderQueue(WorkerCompleteDelegate<T> workerCompleteDelegate)
         {
-            if (!(typeof(T) == typeof(Image) || typeof(T) == typeof(BlobElement)))
-                throw new Exception($"Invalid type: {typeof(T)}. RenderQueue can only be used with Image or BlobElement types");
+            if (!(typeof(T) == typeof(Image) || typeof(T) == typeof(BlobElement) || typeof(T) == typeof(JSImageReference)))
+                throw new Exception($"Invalid type: {typeof(T).Name}. RenderQueue can only be used with Image, BlobElement or JSImageReference types");
 
             DebounceRenderTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1000) };
             DebounceRenderTimer.Tick += DebounceRenderTimer_Expired;
             RenderCompleteCallback = workerCompleteDelegate;
         }
+
+        #endregion Initialization
+        #region Implementation
+
         public void QueueItem(int pageNumber, double scaleFactor)
         {
             var renderWorker = _workers.FirstOrDefault(worker => worker.PageNumber == pageNumber);
@@ -58,6 +67,10 @@ namespace OpenSilverPdfViewer.Renderer
             DebounceRenderTimer.Interval = TimeSpan.FromMilliseconds(500);
             DebounceRenderTimer.Start();
         }
+
+        #endregion Implementation
+        #region Event Handlers
+
         private void DebounceRenderTimer_Expired(object sender, EventArgs e)
         {
             // Defer rendering until the viewport scroll position has settled for a bit
@@ -73,14 +86,21 @@ namespace OpenSilverPdfViewer.Renderer
             if (!cancelled)
                 RenderCompleteCallback(pageNumber, result, false);
         }
+
+        #endregion Event Handlers
     }
     internal sealed class RenderWorker<T>
     {
+        #region Fields / Properties
+
         private PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Instance;
         private readonly BackgroundWorker _worker = new BackgroundWorker();
         public int PageNumber { get; private set; }
         private readonly double _scaleFactor;
         private WorkerCompleteDelegate<T> ItemComplete { get; set; }
+
+        #endregion Fields / Properties
+        #region Initialization
 
         public RenderWorker(int pageNumber, double scaleFactor, WorkerCompleteDelegate<T> callback) 
         {
@@ -91,6 +111,10 @@ namespace OpenSilverPdfViewer.Renderer
             _worker.DoWork += Worker_DoWork;
             _worker.RunWorkerCompleted += Worker_RunWorkerCompleted;
         }
+
+        #endregion Initialization
+        #region Implementation
+
         private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             T result = e.Cancelled ? default : (T)e.Result;
@@ -114,6 +138,12 @@ namespace OpenSilverPdfViewer.Renderer
                     task?.Wait();
                     e.Result = task.Result;
                 }
+                else if (typeof(T) == typeof(JSImageReference))
+                {
+                    var task = PdfJs.RenderThumbnailToCacheAsync(PageNumber, _scaleFactor);
+                    task?.Wait();
+                    e.Result = new JSImageReference(PageNumber, (CacheStatus)task.Result);
+                }
 
                 if (worker.CancellationPending)
                 {
@@ -127,12 +157,15 @@ namespace OpenSilverPdfViewer.Renderer
         }
         internal void Start() 
         {
-            _worker.RunWorkerAsync();
+            if (!_worker.IsBusy)
+                _worker.RunWorkerAsync();
         }
         internal void Cancel()
         {
             if (_worker.IsBusy)
                 _worker.CancelAsync();
         }
+
+        #endregion Implementation
     }
 }

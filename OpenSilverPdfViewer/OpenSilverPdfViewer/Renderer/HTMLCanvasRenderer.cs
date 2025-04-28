@@ -234,7 +234,7 @@ namespace OpenSilverPdfViewer.Renderer
                 return new Size(unscaledWidth, unscaledHeight);
             }
             if (_pageImageCache.TryGetValue(RenderPageNumber, out BlobElement image) == false)
-                throw new Exception($"GetPageImageSize: No image found in cache for page {RenderPageNumber}");
+                throw new Exception($"GetLayoutSize: No image found in cache for page {RenderPageNumber}");
 
             return new Size(image.Width, image.Height);
         }
@@ -243,12 +243,18 @@ namespace OpenSilverPdfViewer.Renderer
             renderCanvas.Children.Clear();
             renderCanvas.Draw();
         }
+        public override void Reset()
+        {
+            InvalidatePageCache();
+            renderCanvas.Children.Clear();
+            renderCanvas.Draw();
+        }
         public override void InvalidatePageCache()
         {
             ClearViewport();
 
-            foreach (var page in _pageImageCache.Values)
-                page.InvalidateImage();
+            foreach (var pageImage in _pageImageCache.Values)
+                pageImage.InvalidateImage();
             _pageImageCache.Clear();
         }
 

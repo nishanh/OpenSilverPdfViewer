@@ -478,7 +478,7 @@ namespace OpenSilverPdfViewer.Controls
             }
             else
             {
-                var bodyBrush = FindResource("CtrlNormalBrush") as Brush;
+                var bodyBrush = FindResource("CMSCtrlNormalBrush") as Brush;
                 var selectionBrush = new SolidColorBrush(Colors.Transparent);
                 ZoomTextBox.Visibility = Visibility.Collapsed;
                 ZoomTextBox.Background = bodyBrush;

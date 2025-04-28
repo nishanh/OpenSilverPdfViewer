@@ -29,6 +29,7 @@ namespace OpenSilverPdfViewer.Renderer
         Size GetLayoutSize();
         Point GetPagePosition();
         void ClearViewport();
+        void Reset();
         void InvalidatePageCache();
         Task SetPageSizeRunList();
     }
@@ -147,6 +148,7 @@ namespace OpenSilverPdfViewer.Renderer
             return new Point(posX, posY);
         }
         public abstract void ClearViewport();
+        public abstract void Reset();
         public abstract void InvalidatePageCache();
         public async Task SetPageSizeRunList()
         {

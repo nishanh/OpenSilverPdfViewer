@@ -26,17 +26,17 @@
                             <ColorAnimation 
                                 Storyboard.TargetName="Background" 
                                 Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" 
-                                To="{StaticResource RaisedHighlightColor}" 
+                                To="{StaticResource CMSRaisedHighlightColor}" 
                                 Duration="0:0:0.1" />
                             <ColorAnimation 
                                 Storyboard.TargetName="Background" 
                                 Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[0].(GradientStop.Color)" 
-                                To="{StaticResource CtrlHoverStartColor}" 
+                                To="{StaticResource CMSCtrlHoverStartColor}" 
                                 Duration="0:0:0.1" />
                             <ColorAnimation 
                                 Storyboard.TargetName="Background" 
                                 Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].(GradientStop.Color)" 
-                                To="{StaticResource CtrlNormalEndColor}" 
+                                To="{StaticResource CMSCtrlNormalEndColor}" 
                                 Duration="0:0:0.1" />
                         </Storyboard>
                     </VisualState>
@@ -45,7 +45,7 @@
                             <ColorAnimation
                                 Storyboard.TargetProperty="(Path.Stroke).(SolidColorBrush.Color)"
                                 Storyboard.TargetName="ButtonPath"
-                                To="{StaticResource ControlLightColor}"/>
+                                To="{StaticResource CMSControlLightColor}"/>
                         </Storyboard>
                     </VisualState>
                     <VisualState x:Name="Disabled">
@@ -70,12 +70,12 @@
                 <Border 
                     x:Name="Background" 
                     CornerRadius="3,0,0,3" 
-                    BorderBrush="{StaticResource RaisedHighlightBrush}" 
+                    BorderBrush="{StaticResource CMSRaisedHighlightBrush}" 
                     BorderThickness="0,1,0,0">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                            <GradientStop Offset="0.0" Color="{StaticResource CtrlNormalStartColor}" />
-                            <GradientStop Offset="1.2" Color="{StaticResource CtrlNormalEndColor}" />
+                            <GradientStop Offset="0.0" Color="{StaticResource CMSCtrlNormalStartColor}" />
+                            <GradientStop Offset="1.2" Color="{StaticResource CMSCtrlNormalEndColor}" />
                         </LinearGradientBrush>
                     </Border.Background>
                 </Border>
@@ -84,12 +84,12 @@
                     Opacity="0" 
                     BorderThickness="0,1,0,1" 
                     CornerRadius="3,0,0,3" 
-                    Background="{StaticResource CtrlHighlightBrush}"
-                    BorderBrush="{StaticResource CtrlBorderBrush}" >
+                    Background="{StaticResource CMSCtrlHighlightBrush}"
+                    BorderBrush="{StaticResource CMSCtrlBorderBrush}" >
                 </Border>
                 <Border 
                     x:Name="Shadow" 
-                    BorderBrush="{StaticResource RaisedShadowBrush}" 
+                    BorderBrush="{StaticResource CMSRaisedShadowBrush}" 
                     BorderThickness="0,0,1,1" 
                     CornerRadius="3,0,0,3" />
                 <Path 
@@ -127,17 +127,17 @@
                             <ColorAnimation 
                                 Storyboard.TargetName="Background" 
                                 Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" 
-                                To="{StaticResource RaisedHighlightColor}" 
+                                To="{StaticResource CMSRaisedHighlightColor}" 
                                 Duration="0:0:0.1" />
                             <ColorAnimation 
                                 Storyboard.TargetName="Background" 
                                 Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[0].(GradientStop.Color)" 
-                                To="{StaticResource CtrlHoverStartColor}" 
+                                To="{StaticResource CMSCtrlHoverStartColor}" 
                                 Duration="0:0:0.1" />
                             <ColorAnimation 
                                 Storyboard.TargetName="Background" 
                                 Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].(GradientStop.Color)" 
-                                To="{StaticResource CtrlNormalEndColor}" 
+                                To="{StaticResource CMSCtrlNormalEndColor}" 
                                 Duration="0:0:0.1" />
                         </Storyboard>
                     </VisualState>
@@ -146,7 +146,7 @@
                             <ColorAnimation
                                 Storyboard.TargetProperty="(Path.Stroke).(SolidColorBrush.Color)"
                                 Storyboard.TargetName="ButtonPath"
-                                To="{StaticResource ControlLightColor}"/>
+                                To="{StaticResource CMSControlLightColor}"/>
                         </Storyboard>
                     </VisualState>
                     <VisualState x:Name="Disabled">
@@ -171,12 +171,12 @@
                 <Border 
                     x:Name="Background" 
                     CornerRadius="0,3,3,0" 
-                    BorderBrush="{StaticResource RaisedHighlightBrush}" 
+                    BorderBrush="{StaticResource CMSRaisedHighlightBrush}" 
                     BorderThickness="0,1,0,0">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                            <GradientStop Offset="0.0" Color="{StaticResource CtrlNormalStartColor}" />
-                            <GradientStop Offset="1.2" Color="{StaticResource CtrlNormalEndColor}" />
+                            <GradientStop Offset="0.0" Color="{StaticResource CMSCtrlNormalStartColor}" />
+                            <GradientStop Offset="1.2" Color="{StaticResource CMSCtrlNormalEndColor}" />
                         </LinearGradientBrush>
                     </Border.Background>
                 </Border>
@@ -185,11 +185,11 @@
                     Opacity="0" 
                     BorderThickness="0,1,0,1" 
                     CornerRadius="0,3,3,0" 
-                    Background="{StaticResource CtrlHighlightBrush}"
-                    BorderBrush="{StaticResource CtrlBorderBrush}"/>
+                    Background="{StaticResource CMSCtrlHighlightBrush}"
+                    BorderBrush="{StaticResource CMSCtrlBorderBrush}"/>
                 <Border 
                     x:Name="Shadow" 
-                    BorderBrush="{StaticResource RaisedShadowBrush}" 
+                    BorderBrush="{StaticResource CMSRaisedShadowBrush}" 
                     BorderThickness="1,0,0,1" 
                     CornerRadius="0,3,3,0" />
                 <Path 
@@ -229,13 +229,13 @@
             </VisualStateManager.VisualStateGroups>
             <Border 
                x:Name="Background" 
-               BorderBrush="{StaticResource RaisedHighlightBrush}" 
-               Background="{StaticResource CtrlNormalBrush}"
+               BorderBrush="{StaticResource CMSRaisedHighlightBrush}" 
+               Background="{StaticResource CMSCtrlNormalBrush}"
                BorderThickness="0,1,0,0">
             </Border>
             <Border 
                x:Name="Shadow" 
-               BorderBrush="{StaticResource RaisedShadowBrush}" 
+               BorderBrush="{StaticResource CMSRaisedShadowBrush}" 
                BorderThickness="0,0,0,1"/>
             <Border 
                Margin="0,1"

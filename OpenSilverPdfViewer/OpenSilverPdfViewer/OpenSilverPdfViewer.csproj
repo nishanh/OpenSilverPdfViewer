@@ -61,6 +61,7 @@
     <Compile Include="Controls\ToolBarButton.cs" />
     <Compile Include="Controls\ZoomViewCtrl.cs" />
     <Compile Include="Renderer\RenderWorker.cs" />
+    <Compile Include="Utility\JSImageReference.cs" />
     <Compile Include="Utility\TextMetrics.cs" />
     <Compile Include="Utility\ValueConverters.cs" />
     <Compile Include="JSInterop\ExtMethods.cs" />
@@ -76,7 +77,6 @@
     <Compile Include="Utility\Enumerations.cs" />
     <Compile Include="Utility\ExtMethods.cs" />
     <Compile Include="Renderer\Layout.cs" />
-    <Compile Include="Utility\Matrix2d.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
   </ItemGroup>
 

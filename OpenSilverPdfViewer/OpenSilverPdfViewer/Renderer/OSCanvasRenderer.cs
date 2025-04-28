@@ -238,6 +238,11 @@ namespace OpenSilverPdfViewer.Renderer
         {
             renderCanvas.Children.Clear();
         }
+        public override void Reset()
+        {
+            InvalidatePageCache();
+            renderCanvas.Children.Clear();
+        }
         public override void InvalidatePageCache()
         {
             ClearViewport();

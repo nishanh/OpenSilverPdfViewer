@@ -93,7 +93,7 @@
                             RadiusX="1"/>
                         <UserControl
                             x:Name="ContentPresenterColorizer"
-                            Foreground="{StaticResource ForegroundBrush}">
+                            Foreground="{StaticResource CMSForegroundBrush}">
                             <ContentPresenter 
                                 x:Name="contentPresenter" 
                                 ContentTemplate="{TemplateBinding ContentTemplate}" 
@@ -155,17 +155,17 @@
                                         <ColorAnimation 
                                             Storyboard.TargetName="Background" 
                                             Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" 
-                                            To="{StaticResource RaisedHighlightColor}" 
+                                            To="{StaticResource CMSRaisedHighlightColor}" 
                                             Duration="0:0:0.1" />
                                         <ColorAnimation 
                                             Storyboard.TargetName="Background" 
                                             Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[0].(GradientStop.Color)" 
-                                            To="{StaticResource CtrlHoverStartColor}" 
+                                            To="{StaticResource CMSCtrlHoverStartColor}" 
                                             Duration="0:0:0.1" />
                                         <ColorAnimation 
                                             Storyboard.TargetName="Background" 
                                             Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].(GradientStop.Color)" 
-                                            To="{StaticResource CtrlNormalEndColor}" 
+                                            To="{StaticResource CMSCtrlNormalEndColor}" 
                                             Duration="0:0:0.1" />
                                     </Storyboard>
                                 </VisualState>
@@ -181,12 +181,12 @@
                         <Grid Grid.ColumnSpan="3">
                             <Border 
                                 x:Name="Background" 
-                                BorderBrush="{StaticResource RaisedHighlightBrush}" 
+                                BorderBrush="{StaticResource CMSRaisedHighlightBrush}" 
                                 BorderThickness="0,1,0,0">
                                 <Border.Background>
                                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                        <GradientStop Offset="0.0" Color="{StaticResource CtrlNormalStartColor}" />
-                                        <GradientStop Offset="1.2" Color="{StaticResource CtrlNormalEndColor}" />
+                                        <GradientStop Offset="0.0" Color="{StaticResource CMSCtrlNormalStartColor}" />
+                                        <GradientStop Offset="1.2" Color="{StaticResource CMSCtrlNormalEndColor}" />
                                     </LinearGradientBrush>
                                 </Border.Background>
                             </Border>
@@ -194,12 +194,12 @@
                                 x:Name="Hover" 
                                 Opacity="0" 
                                 BorderThickness="0,1,0,1" 
-                                Background="{StaticResource CtrlHighlightBrush}"
-                                BorderBrush="{StaticResource CtrlBorderBrush}" >
+                                Background="{StaticResource CMSCtrlHighlightBrush}"
+                                BorderBrush="{StaticResource CMSCtrlBorderBrush}" >
                             </Border>
                             <Border 
                                 x:Name="Shadow" 
-                                BorderBrush="{StaticResource RaisedShadowBrush}" 
+                                BorderBrush="{StaticResource CMSRaisedShadowBrush}" 
                                 BorderThickness="0,0,0,1"/>
                             <ContentPresenter
                                 x:Name="Content"
@@ -226,7 +226,7 @@
     <Style x:Key="CMSZoomComboBoxStyle" TargetType="ComboBox">
         <Setter Property="ItemContainerStyle" Value="{StaticResource CMSZoomComboBoxItemStyle}"/>
         <Setter Property="FontSize" Value="12"/>
-        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource CMSForegroundBrush}"/>
         <Setter Property="OverridesDefaultStyle" Value="true" />
         <Setter Property="MaxDropDownHeight" Value="250"/>
         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
@@ -244,7 +244,7 @@
                                             Storyboard.TargetProperty="(ContentControl.Foreground).(SolidColorBrush.Color)"
                                             Storyboard.TargetName="ContentForegroundColorer"
                                             Duration="0:0:0"
-                                            To="{StaticResource ForegroundColor}"/>
+                                            To="{StaticResource CMSForegroundColor}"/>
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
@@ -294,7 +294,7 @@
                             Margin="0,0,22,0"
                             VerticalContentAlignment="Center"
                             HorizontalContentAlignment="Center"
-                            Foreground="{StaticResource ForegroundBrush}">
+                            Foreground="{StaticResource CMSForegroundBrush}">
                             <ContentPresenter 
                                 x:Name="ContentSite"
                                 IsHitTestVisible="False"
@@ -321,7 +321,7 @@
                                     MaxHeight="{TemplateBinding MaxDropDownHeight}">
                                     <Border 
                                         x:Name="DropDownBorder" 
-                                        Background="{StaticResource PopupBorderBrush}" 
+                                        Background="{StaticResource CMSPopupBorderBrush}" 
                                         CornerRadius="4" />
                                     <ScrollViewer 
                                         x:Name="ScrollViewer" 
@@ -373,7 +373,7 @@
                                     Margin="0,0,22,0"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Foreground="{StaticResource ForegroundBrush}"
+                                    Foreground="{StaticResource CMSForegroundBrush}"
                                     IsHitTestVisible="False"
                                     FontSize="12"/>
                                 <Border 
@@ -387,8 +387,8 @@
                                     FontSize="12"
                                     Style="{StaticResource CMSZoomComboBoxTextStyle}"
                                     Cursor="Arrow"
-                                    Background="{StaticResource CtrlNormalBrush}"
-                                    Foreground="{TemplateBinding ForegroundBrush}"
+                                    Background="{StaticResource CMSCtrlNormalBrush}"
+                                    Foreground="{TemplateBinding CMSForegroundBrush}"
                                     HorizontalAlignment="Center"
                                     HorizontalContentAlignment="Center"
                                     MaxLength="3"

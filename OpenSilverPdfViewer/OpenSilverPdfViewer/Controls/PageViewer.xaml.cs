@@ -148,7 +148,12 @@ namespace OpenSilverPdfViewer.Controls
             ctrl.renderStrategy = RenderStrategyFactory.Create(renderMode, canvasElement);
             ctrl.renderStrategy.RenderPageNumber = ctrl.PreviewPage;
             ctrl.renderStrategy.RenderZoomLevel = ctrl.ZoomLevel;
-            await ctrl.RenderView();
+
+            if (!string.IsNullOrEmpty(ctrl.Filename))
+            {
+                await ctrl.renderStrategy.SetPageSizeRunList();
+                await ctrl.RenderView();
+            }
         }
         private static void OnRulerUnitsChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
@@ -378,10 +383,13 @@ namespace OpenSilverPdfViewer.Controls
         }
         private void PageView_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            var delta = e.Delta / 2;
-            var scrollPos = Math.Min(Math.Max(0, pageScrollBarVert.Value - delta), pageScrollBarVert.Maximum);
-            pageScrollBarVert.Value = scrollPos;
-            PageScrollBars_Scroll(pageScrollBarVert, new ScrollEventArgs(scrollPos, delta < 0 ? ScrollEventType.SmallIncrement : ScrollEventType.SmallDecrement));
+            if (ZoomLevel != 0 || ViewMode == ViewModeType.ThumbnailView)
+            {
+                var delta = e.Delta / 2;
+                var scrollPos = Math.Min(Math.Max(0, pageScrollBarVert.Value - delta), pageScrollBarVert.Maximum);
+                pageScrollBarVert.Value = scrollPos;
+                PageScrollBars_Scroll(pageScrollBarVert, new ScrollEventArgs(scrollPos, delta < 0 ? ScrollEventType.SmallIncrement : ScrollEventType.SmallDecrement));
+            }
         }
         private async void Preview_SizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -418,7 +426,7 @@ namespace OpenSilverPdfViewer.Controls
             if (e.PropertyName == nameof(ViewMode))
             {
                 renderStrategy.RenderPageNumber = PreviewPage;
-                renderStrategy.InvalidatePageCache();
+                renderStrategy.Reset();
                 await RenderView();
             }
         }

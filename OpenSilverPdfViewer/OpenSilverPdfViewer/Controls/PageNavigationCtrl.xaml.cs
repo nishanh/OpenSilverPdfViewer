@@ -261,7 +261,7 @@ namespace OpenSilverPdfViewer.Controls
             if (canEdit)
             {
                 tbCurrentPage.Visibility = Visibility.Collapsed;
-                bxCurrentPage.Foreground = FindResource("ForegroundBrush") as Brush;
+                bxCurrentPage.Foreground = FindResource("CMSForegroundBrush") as Brush;
                 bxCurrentPage.SelectionBackground = FindResource("CMSSpinTextSelectionBrush") as Brush;
                 bxCurrentPage.IsReadOnly = false;
                 bxCurrentPage.Focus();

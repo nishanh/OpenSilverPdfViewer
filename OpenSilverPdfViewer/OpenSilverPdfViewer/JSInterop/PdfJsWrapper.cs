@@ -18,12 +18,14 @@ namespace OpenSilverPdfViewer.JSInterop
     // Singleton interop wrapper for PdfJs 
     public sealed class PdfJsWrapper
     {
+        #region Fields / Properties
+
         private const string scriptResourceName = "/OpenSilverPdfViewer;component/JSInterop/pdfJsInterop.js";
         private static PdfJsWrapper _instance;
         public static PdfJsWrapper Instance => _instance ?? (_instance = new PdfJsWrapper());
         public string Version { get; private set; }
 
-        private PdfJsWrapper() { }
+        #endregion Fields / Properties
         #region Asynchronous Tasks
 
         public async Task InitAsync()
@@ -55,6 +57,11 @@ namespace OpenSilverPdfViewer.JSInterop
         {
             await InitAsync();
             return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("renderPageToViewport", pageNumber, dpi, zoomLevel, canvasId);
+        }
+        public async Task<int> RenderThumbnailToCacheAsync(int pageNumber, double scale)
+        {
+            await InitAsync();
+            return await JSAsyncTaskRunner.RunJavaScriptAsync<int>("renderThumbnailToCache", pageNumber, scale);
         }
         public async Task<Size> GetPdfPageSizeAsync(int pageNumber)
         {
@@ -123,20 +130,35 @@ namespace OpenSilverPdfViewer.JSInterop
             var json = (string)Convert.ChangeType(result, typeof(string));
             return json.ParseJsonSize();
         }
+
         public Size GetViewportSize(string canvasId)
         {
             var result = OpenSilver.Interop.ExecuteJavaScript("getViewportSize($0)", canvasId);
             var json = (string)Convert.ChangeType(result, typeof(string));
             return json.ParseJsonSize();
         }
+        public int RenderThumbnailToViewport(int pageNumber, double posX, double posY, double width, double height, string canvasId)
+        {
+            var result = OpenSilver.Interop.ExecuteJavaScript("renderThumbnailToViewport($0,$1,$2,$3,$4,$5)", pageNumber, posX, posY, width, height, canvasId);
+            var page = (int)Convert.ChangeType(result, typeof(int));
+            return page;
+        }
         public void ScrollViewportImage(int pageNumber, string canvasId, int zoomLevel, int scrollX, int scrollY)
         {
             OpenSilver.Interop.ExecuteJavaScript("scrollViewportImage($0,$1,$2,$3,$4)", 
                 pageNumber, canvasId, zoomLevel, scrollX, scrollY);
         }
+        public void TransformViewport(string canvasId, double m11, double m12, double m21, double m22, double dx, double dy)
+        {
+            OpenSilver.Interop.ExecuteJavaScript("transformViewport($0,$1,$2,$3,$4,$5,$6)", canvasId, m11, m12, m21, m22, dx, dy);
+        }
         public void InvalidatePageCache()
         {
             OpenSilver.Interop.ExecuteJavaScript("invalidatePageCache()");
+        }
+        public void InvalidateThumbnailCache()
+        {
+            OpenSilver.Interop.ExecuteJavaScript("invalidateThumbnailCache()");
         }
         public void ClearViewport(string canvasId)
         {

@@ -22,4 +22,10 @@ namespace OpenSilverPdfViewer.Utility
         Metric,
         Imperial
     }
+    public enum CacheStatus
+    {
+        None,
+        Cached,
+        Exists
+    }
 }

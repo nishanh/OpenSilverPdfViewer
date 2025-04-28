@@ -16,7 +16,7 @@
         <Setter Property="MinWidth" Value="30"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        <Setter Property="ContentHighlightColor" Value="{StaticResource ControlLightColor}"/>
+        <Setter Property="ContentHighlightColor" Value="{StaticResource CMSControlLightColor}"/>
         <Setter Property="Foreground" Value="{StaticResource CMSCtrlButtonForegroundBrush}"/>
         <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="Template">
@@ -34,17 +34,17 @@
                                         <ColorAnimation 
                                             Storyboard.TargetName="Background" 
                                             Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" 
-                                            To="{StaticResource RaisedHighlightColor}" 
+                                            To="{StaticResource CMSRaisedHighlightColor}" 
                                             Duration="0:0:0.1" />
                                         <ColorAnimation 
                                             Storyboard.TargetName="Background" 
                                             Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[0].(GradientStop.Color)" 
-                                            To="{StaticResource CtrlHoverStartColor}" 
+                                            To="{StaticResource CMSCtrlHoverStartColor}" 
                                             Duration="0:0:0.1" />
                                         <ColorAnimation 
                                             Storyboard.TargetName="Background" 
                                             Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].(GradientStop.Color)" 
-                                            To="{StaticResource CtrlNormalEndColor}" 
+                                            To="{StaticResource CMSCtrlNormalEndColor}" 
                                             Duration="0:0:0.1" />
                                     </Storyboard>
                                 </VisualState>
@@ -54,7 +54,7 @@
                                             Storyboard.TargetProperty="(Control.Foreground).(SolidColorBrush.Color)"
                                             Storyboard.TargetName="ContentForegroundColorizer"
                                             Duration="0:0:0.1"
-                                            To="{StaticResource ControlLightColor}"/>
+                                            To="{StaticResource CMSControlLightColor}"/>
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
@@ -77,12 +77,12 @@
                         <Border 
                             x:Name="Background" 
                             CornerRadius="{TemplateBinding CornerRadius}" 
-                            BorderBrush="{StaticResource RaisedHighlightBrush}" 
+                            BorderBrush="{StaticResource CMSRaisedHighlightBrush}" 
                             BorderThickness="0,1,0,0">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Offset="0.0" Color="{StaticResource CtrlNormalStartColor}" />
-                                    <GradientStop Offset="1.2" Color="{StaticResource CtrlNormalEndColor}" />
+                                    <GradientStop Offset="0.0" Color="{StaticResource CMSCtrlNormalStartColor}" />
+                                    <GradientStop Offset="1.2" Color="{StaticResource CMSCtrlNormalEndColor}" />
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>
@@ -91,11 +91,11 @@
                             Opacity="0" 
                             BorderThickness="0,1,0,1" 
                             CornerRadius="{TemplateBinding CornerRadius}" 
-                            Background="{StaticResource CtrlHighlightBrush}"
-                            BorderBrush="{StaticResource CtrlBorderBrush}"/>
+                            Background="{StaticResource CMSCtrlHighlightBrush}"
+                            BorderBrush="{StaticResource CMSCtrlBorderBrush}"/>
                         <Border 
                             x:Name="Shadow" 
-                            BorderBrush="{StaticResource RaisedShadowBrush}" 
+                            BorderBrush="{StaticResource CMSRaisedShadowBrush}" 
                             BorderThickness="{TemplateBinding ShadowThickness}" 
                             CornerRadius="{TemplateBinding CornerRadius}" />
                         <ContentControl 
@@ -137,17 +137,17 @@
                                         <ColorAnimation 
                                             Storyboard.TargetName="Background" 
                                             Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" 
-                                            To="{StaticResource RaisedHighlightColor}" 
+                                            To="{StaticResource CMSRaisedHighlightColor}" 
                                             Duration="0:0:0.1" />
                                         <ColorAnimation 
                                             Storyboard.TargetName="Background" 
                                             Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[0].(GradientStop.Color)" 
-                                            To="{StaticResource CtrlHoverStartColor}" 
+                                            To="{StaticResource CMSCtrlHoverStartColor}" 
                                             Duration="0:0:0.1" />
                                         <ColorAnimation 
                                             Storyboard.TargetName="Background" 
                                             Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].(GradientStop.Color)" 
-                                            To="{StaticResource CtrlNormalEndColor}" 
+                                            To="{StaticResource CMSCtrlNormalEndColor}" 
                                             Duration="0:0:0.1" />
                                     </Storyboard>
                                 </VisualState>
@@ -235,12 +235,12 @@
                             x:Name="Background"
                             CornerRadius="{TemplateBinding CornerRadius}" 
                             Opacity="1"
-                            BorderBrush="{StaticResource RaisedHighlightBrush}" 
+                            BorderBrush="{StaticResource CMSRaisedHighlightBrush}" 
                             BorderThickness="0,1,0,0">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Offset="0.0" Color="{StaticResource CtrlNormalStartColor}" />
-                                    <GradientStop Offset="1.2" Color="{StaticResource CtrlNormalEndColor}" />
+                                    <GradientStop Offset="0.0" Color="{StaticResource CMSCtrlNormalStartColor}" />
+                                    <GradientStop Offset="1.2" Color="{StaticResource CMSCtrlNormalEndColor}" />
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>
@@ -249,17 +249,17 @@
                             Opacity="0" 
                             BorderThickness="0,1,0,1" 
                             CornerRadius="{TemplateBinding CornerRadius}" 
-                            BorderBrush="{StaticResource CtrlBorderBrush}">
+                            BorderBrush="{StaticResource CMSCtrlBorderBrush}">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Offset="0.0" Color="{StaticResource CtrlCheckedStartColor}" />
-                                    <GradientStop Offset="1.2" Color="{StaticResource CtrlCheckedEndColor}" />
+                                    <GradientStop Offset="0.0" Color="{StaticResource CMSCtrlCheckedStartColor}" />
+                                    <GradientStop Offset="1.2" Color="{StaticResource CMSCtrlCheckedEndColor}" />
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>
                         <Border 
                             x:Name="Sh" 
-                            BorderBrush="{StaticResource RaisedShadowBrush}" 
+                            BorderBrush="{StaticResource CMSRaisedShadowBrush}" 
                             BorderThickness="1,0,1,1" 
                             CornerRadius="{TemplateBinding CornerRadius}"/>
                         <ContentControl 

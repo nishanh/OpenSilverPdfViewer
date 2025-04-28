@@ -84,7 +84,7 @@
                     Padding="6,0"
                     Text="{Binding PageNavText, ElementName=navCtrlInternal}"
                     MouseLeftButtonDown="PageNavTextBlock_PreviewMouseLeftButtonDown"
-                    Foreground="{StaticResource ForegroundBrush}"
+                    Foreground="{StaticResource CMSForegroundBrush}"
                     TextAlignment="Center"
                     VerticalAlignment="Center"/>
             </Grid>
