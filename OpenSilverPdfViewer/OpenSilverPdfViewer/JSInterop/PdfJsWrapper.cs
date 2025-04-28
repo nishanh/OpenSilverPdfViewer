@@ -35,7 +35,7 @@ namespace OpenSilverPdfViewer.JSInterop
                 try
                 {
                     await OpenSilver.Interop.LoadJavaScriptFile(scriptResourceName);
-                    Version = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getLibraryVersion2");
+                    Version = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getLibraryVersion");
                 }
                 catch (Exception ex)
                 {
@@ -66,7 +66,7 @@ namespace OpenSilverPdfViewer.JSInterop
         public async Task<Size> GetPdfPageSizeAsync(int pageNumber)
         {
             await InitAsync();
-            var json = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getLogicalPageSize", pageNumber);
+            var json = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getLogicalPageSizeAsync", pageNumber);
             return json.ParseJsonSize();
         }
         public async Task<Image> GetPdfPageImageAsync(int pageNumber, double scaleFactor)

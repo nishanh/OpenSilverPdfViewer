@@ -7,7 +7,6 @@ using System;
 using System.Linq;
 using System.ComponentModel;
 using System.Windows.Controls;
-using System.Windows.Threading;
 using System.Collections.Generic;
 
 using OpenSilverPdfViewer.Utility;
@@ -23,7 +22,7 @@ namespace OpenSilverPdfViewer.Renderer
 
         private readonly List<RenderWorker<T>> _workers = new List<RenderWorker<T>>();
         private WorkerCompleteDelegate<T> RenderCompleteCallback { get; set; }
-        private DispatcherTimer DebounceRenderTimer { get; set; }
+        private Debouncer RenderRequestDebouncer { get; set; }
 
         #endregion Fields / Properties
         #region Initialization
@@ -33,9 +32,8 @@ namespace OpenSilverPdfViewer.Renderer
             if (!(typeof(T) == typeof(Image) || typeof(T) == typeof(BlobElement) || typeof(T) == typeof(JSImageReference)))
                 throw new Exception($"Invalid type: {typeof(T).Name}. RenderQueue can only be used with Image, BlobElement or JSImageReference types");
 
-            DebounceRenderTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1000) };
-            DebounceRenderTimer.Tick += DebounceRenderTimer_Expired;
             RenderCompleteCallback = workerCompleteDelegate;
+            RenderRequestDebouncer = new Debouncer(() => _workers.ForEach(worker => worker.Start()));
         }
 
         #endregion Initialization
@@ -48,7 +46,7 @@ namespace OpenSilverPdfViewer.Renderer
             {
                 var worker = new RenderWorker<T>(pageNumber, scaleFactor, WorkerCompleted);
                 _workers.Add(worker);
-                StartDebounceRenderTimer();
+                RenderRequestDebouncer.Reset();
             }
         }
         public void DequeueItem(int pageNumber)
@@ -58,25 +56,13 @@ namespace OpenSilverPdfViewer.Renderer
             {
                 renderWorker.Cancel();
                 _workers.Remove(renderWorker);
-                StartDebounceRenderTimer();
+                RenderRequestDebouncer.Reset();
             }
-        }
-        private void StartDebounceRenderTimer()
-        {
-            DebounceRenderTimer.Stop();
-            DebounceRenderTimer.Interval = TimeSpan.FromMilliseconds(500);
-            DebounceRenderTimer.Start();
         }
 
         #endregion Implementation
         #region Event Handlers
 
-        private void DebounceRenderTimer_Expired(object sender, EventArgs e)
-        {
-            // Defer rendering until the viewport scroll position has settled for a bit
-            DebounceRenderTimer.Stop();
-            _workers.ForEach(worker => worker.Start());
-        }
         private void WorkerCompleted(int pageNumber, T result, bool cancelled)
         {
             var renderWorker = _workers.FirstOrDefault(worker => worker.PageNumber == pageNumber);

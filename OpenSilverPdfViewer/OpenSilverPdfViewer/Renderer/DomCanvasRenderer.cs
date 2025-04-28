@@ -50,7 +50,12 @@ namespace OpenSilverPdfViewer.Renderer
 
         protected override async Task<int> RenderCurrentPage()
         {
-            return await PdfJs.RenderPageToViewportAsync(RenderPageNumber, (int)_renderDPI, RenderZoomLevel, viewCanvasId);
+            var pageNumber =  await PdfJs.RenderPageToViewportAsync(RenderPageNumber, (int)_renderDPI, RenderZoomLevel, viewCanvasId);
+
+            if (!_pageImageCache.ContainsKey(pageNumber))
+                _pageImageCache.Add(pageNumber, new JSImageReference(pageNumber, CacheStatus.Cached));
+
+            return pageNumber;
         }
         protected override void RenderThumbnails()
         {
@@ -170,6 +175,10 @@ namespace OpenSilverPdfViewer.Renderer
             PdfJs.InvalidateThumbnailCache();
             _pageImageCache.Clear();
             _renderedIdList.Clear();
+        }
+        public override bool IsPageloaded(int pageNumber)
+        {
+            return _pageImageCache.ContainsKey(pageNumber);
         }
 
         #endregion Interface Implementation

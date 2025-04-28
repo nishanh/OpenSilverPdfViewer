@@ -6,10 +6,10 @@
 let pdfjsLib;
 let libVersion;
 let pdfDocument;
-let pageCache = new Map(); // Cache for PDF pages
-let thumbCache = new Map();
 let vpContext;
 let vpRect;
+let pageCache = new Map(); // Cache for PDF pages
+let thumbCache = new Map();
 
 // All OpenSilver asynchronous interop calls must include a C# callback function as the last parameter.
 // This is because OpenSilver does not support the consumption of JS promises.
@@ -19,37 +19,9 @@ let vpRect;
 // Before you purists complain, I know this is not the best practice and that I could be using nested 'then's
 // but I think that the IIFE approach that allows async/await syntax is more readable and maintainable.
 
-function loadPdfJs(callback) {
-    if (pdfjsLib == undefined) {
-        var promise = (async () => await loadPdfJsAsync())();
-        if (callback != undefined) {
-            promise.then((result) => callback(result));
-        }
-    }
-    else {
-        console.log("loadPdfJs() already called");
-        callback(pdfjsLib);
-    }
-}
-
 function getLibraryVersion(callback) {
     if (libVersion == undefined) {
-        console.log("getLibraryVersion() begin");
-        var promise = (async () => await getLibraryVersionAsync())();
-        if (callback != undefined) {
-            promise.then((result) => callback(result));
-        }
-    }
-    else {
-        console.log("logLibraryVersion() already called");
-        callback(libVersion);
-    }
-}
-
-function getLibraryVersion2(callback) {
-    if (libVersion == undefined) {
-        console.log("getLibraryVersion2() begin");
-        loadPdfJsAsync2().then((pdfLib) => {
+        loadPdfJsAsync().then((pdfLib) => {
             if (callback != undefined) {
                 pdfjsLib = pdfLib;
                 libVersion = `PDF.js version: ${pdfjsLib.version}`
@@ -58,18 +30,26 @@ function getLibraryVersion2(callback) {
         });
     }
     else {
-        console.log("logLibraryVersion() already called");
+        console.log("getLibraryVersion() already called");
         callback(libVersion);
     }
 }
 
-function getLogicalPageSize(pageNumber, callback) {
-    var promise = (async () => await getPageSizeAsync(pageNumber))();
-    if (callback != undefined) {
-        promise.then((result) => {
-            var pageSizeJson = JSON.stringify(result);
-            callback(pageSizeJson)
+// Returns the size of the page in points (1/72 inch)
+function getLogicalPageSizeAsync(pageNumber, callback) {
+    if (!this.pdfDocument) {
+        console.error('No PDF loaded. Call loadPdfFile first.');
+        return -1;
+    }
+    var promise = new Promise(resolve => {
+        this.pdfDocument.getPage(pageNumber).then(page => {
+            const viewport = page.getViewport({ scale: 1.0 });
+            var pageSize = { width: viewport.width, height: viewport.height };
+            resolve(JSON.stringify(pageSize));
         });
+    });
+    if (callback != undefined) {
+        promise.then(result => callback(result));
     }
 }
 
@@ -77,7 +57,7 @@ function getDevicePageSize(pageNumber) {
     var sourceImagecanvas = pageCache.get(pageNumber);
     if (sourceImagecanvas == undefined) {
         console.error("Page image not found in cache");
-        return;
+        return "";
     }
     var pageSize = {
         width: sourceImagecanvas.width,
@@ -87,18 +67,16 @@ function getDevicePageSize(pageNumber) {
 }
 
 function loadPdfFile(pdfFilename, callback) {
-    console.log("loadPdfFile() begin: ", pdfFilename);
     var promise = (async () => await loadPdfFileAsync(pdfFilename))();
     if (callback != undefined) {
-        promise.then((result) => callback(result));
+        promise.then(result => callback(result));
     }
 }
 
 function loadPdfStream(pdfFileStream, callback) {
-    console.log("loadPdfStream() begin");
     var promise = (async () => await loadPdfStreamAsync(pdfFileStream))();
     if (callback != undefined) {
-        promise.then((result) => callback(result));
+        promise.then(result => callback(result));
     }
 }
 
@@ -121,7 +99,6 @@ function getViewportSize(canvasId) {
         vpContext = ctx;
 
     }
-
     var rect = canvas.getBoundingClientRect();
     var viewportSize = {
         width: rect.width,
@@ -131,57 +108,40 @@ function getViewportSize(canvasId) {
         width: rect.width,
         height: rect.height
     };
-
-    console.log("getViewportSize(): ", viewportSize.width, viewportSize.height);
     return JSON.stringify(viewportSize);
 }
 
 function renderPageToViewport(pageNumber, dpi, zoomLevel, canvasId, callback) {
-    console.log("renderPageToViewport() begin: ", pageNumber, canvasId);
     var promise = (async () => await renderPageToViewportAsync(pageNumber, dpi, zoomLevel, canvasId))();
     if (callback != undefined) {
-        promise.then((result) => callback(result));
+        promise.then(result => callback(result));
     }
 }
 function renderThumbnailToCache(pageNumber, scale, callback) {
-    //console.log("renderThumbnailToCanvas() begin: ", pageNumber);
     var promise = (async () => await renderThumbnailToCacheAsync(pageNumber, scale))();
     if (callback != undefined) {
-        promise.then((result) => {
-            //console.log("renderThumbnailToCanvas() end: ", pageNumber, result);
-            callback(result);
-        });
+        promise.then(result => callback(result));
     }
 }
 
 function renderPageThumbnail(pageNumber, thumbScale, callback) {
-    console.log("renderPageThumbnail() begin: ", pageNumber);
     var promise = (async () => await renderPageThumbnailAsync(pageNumber, thumbScale))();
     if (callback != undefined) {
-        promise.then((result) => callback(result));
+        promise.then(result => callback(result));
     }
 }
 
 function renderPageToBlob(pageNumber, thumbScale, callback) {
-    console.log("renderPageToBlob() begin: ", pageNumber);
-    console.log("pixel ratio: ", window.devicePixelRatio);
     var promise = (async () => await renderPageToBlobAsync(pageNumber, thumbScale))();
     if (callback != undefined) {
-        promise.then((result) => callback(result));
+        promise.then(result => callback(result))
     }
 }
-function renderPageToImage(pageNumber, thumbScale, callback) {
-    console.log("renderPageToImage() begin: ", pageNumber);
-    var promise = (async () => await renderPageToImageAsync(pageNumber, thumbScale))();
-    if (callback != undefined) {
-        promise.then((result) => callback(result));
-    }
-}
+
 function getPageSizeRunList(callback) {
-    console.log("getPageSizeRunList() begin");
     var promise = (async () => await getPageSizeRunListAsync())();
     if (callback != undefined) {
-        promise.then((result) => callback(result));
+        promise.then(result => callback(result));
     }
 }
 
@@ -262,8 +222,6 @@ function scrollViewportImage(pageNumber, canvasId, zoomLevel, scrollX, scrollY) 
         0, 0,
         scaledWidth - scrollX,
         scaledHeight - scrollY);
-
-    console.log(`Scroll offset: X: ${scrollX}, Y: ${scrollY}`);
 }
 
 function clearViewport(canvasId) {
@@ -284,26 +242,14 @@ function clearViewport(canvasId) {
         };
         vpContext = viewportCanvas.getContext('2d');
     }
-    else {
-        console.log("clearViewport using cached context");
-    }
-    console.log("clearViewport :", canvasId, vpRect.width, vpRect.height);
     vpContext.clearRect(0, 0, vpRect.width, vpRect.height);
-}
-function clearViewport2(canvasId) {
-    var viewportCanvas = document.getElementById(canvasId);
-    var viewportRect = viewportCanvas.getBoundingClientRect();
-    var ctx = viewportCanvas.getContext('2d');
-    ctx.clearRect(0, 0, viewportRect.width, viewportRect.height);
 }
 
 function invalidatePageCache() {
-    console.log("invalidatePageCache() begin");
     pageCache.clear(); // Clear the cache
 }
 
 function invalidateThumbnailCache() {
-    console.log("invalidatePageCache() begin");
     thumbCache.clear();
 }
 
@@ -326,24 +272,11 @@ function getTextMetrics(text, font) {
     return JSON.stringify(textMetrics);
 }
 
-function logToConsole(msg) {
-    console.log(msg);
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Internal use only. Do not call these from C# code. It won't work.
+// Internal use only. Do not call these from C# code.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-async function loadPdfJsAsync() {
-    if (pdfjsLib == undefined) {
-        pdfjsLib = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@5.0.375/build/pdf.min.mjs');
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.0.375/build/pdf.worker.min.mjs';
-        console.log("PDF.js library loaded");
-    }
-}
-
-// Happy now?
-function loadPdfJsAsync2() {
+function loadPdfJsAsync() {
     var promise = new Promise(resolve => {
         if (pdfjsLib == undefined) {
             import('https://cdn.jsdelivr.net/npm/pdfjs-dist@5.0.375/build/pdf.min.mjs').then((pdfLib) => {
@@ -357,26 +290,6 @@ function loadPdfJsAsync2() {
         }
     });
     return promise;
-}
-
-async function getLibraryVersionAsync() {
-    await loadPdfJsAsync();
-    const version = pdfjsLib.version
-    var versionFmt = `PDF.js version: ${version}`;
-    console.log(versionFmt);
-    libVersion = versionFmt;
-    return versionFmt;
-}
-
-// Returns the size of the page in points (1/72 inch)
-async function getPageSizeAsync(pageNumber) {
-    if (!this.pdfDocument) {
-        console.error('No PDF loaded. Call loadPdfFile first.');
-        return -1; 
-    }
-    const page = await this.pdfDocument.getPage(pageNumber);
-    const viewport = page.getViewport({ scale: 1.0 });
-    return { width: viewport.width, height: viewport.height };
 }
 
 // Get a run-length encoded list of page sizes
@@ -427,12 +340,9 @@ async function getPageSizeRunListAsync() {
 
 // Load a PDF file from a URL
 async function loadPdfFileAsync(pdfFileName) {
-    await loadPdfJsAsync();
-
     const loadingTask = pdfjsLib.getDocument(pdfFileName);
     try {
         const pdf = await loadingTask.promise;
-        console.log(`PDF loaded with ${pdf.numPages} pages`);
         this.pdfDocument = pdf; // Cache the PDF object
         return pdf.numPages; // Return the number of pages
     }
@@ -444,15 +354,12 @@ async function loadPdfFileAsync(pdfFileName) {
 
 // Load a PDF file from a base64 encoded string
 async function loadPdfStreamAsync(pdfFileStream) {
-    await loadPdfJsAsync();
-
     const binaryString = atob(pdfFileStream);
     const bytes = Uint8Array.from(binaryString, char => char.charCodeAt(0));
     const loadingTask = pdfjsLib.getDocument(bytes);
 
     try {
         const pdf = await loadingTask.promise;
-        console.log(`PDF loaded with ${pdf.numPages} pages`);
         this.pdfDocument = pdf; // Cache the PDF object
         return pdf.numPages; // Return the number of pages
     }
@@ -471,7 +378,6 @@ async function renderPageToViewportAsync(pageNumber, dpi, zoomLevel, canvasId) {
     }
     try {
         // Higher dpi values will result in better quality images, but reduce performance.
-        // Values that are not multiples of 72 may cause interpolation artifacts as it will be misaligned with the native Pdf 72pt grid.
         const sourceScale = dpi / 72.0; // Calculate the scale factor based on the native PDF DPI
 
         var canvas = pageCache.get(pageNumber);
@@ -489,9 +395,6 @@ async function renderPageToViewportAsync(pageNumber, dpi, zoomLevel, canvasId) {
             };
             await page.render(renderContext).promise;
             pageCache.set(pageNumber, canvas); // Cache the rendered page
-        }
-        else {
-            console.log(`Page ${pageNumber} retrieved from cache`);
         }
 
         var viewportCanvas = document.getElementById(canvasId);
@@ -519,12 +422,6 @@ async function renderPageToViewportAsync(pageNumber, dpi, zoomLevel, canvasId) {
         ctx.clearRect(0, 0, viewportCanvas.width, viewportCanvas.height); 
         ctx.drawImage(canvas, posX, posY, scaledWidth, scaledHeight);
 
-        console.log(`Page ${pageNumber} rendered successfully`);
-        console.log("displayScale: ", scale);
-        console.log(`Source size: ${canvas.width} x ${canvas.height}`);
-        console.log(`Viewport size: ${viewportCanvas.width} x ${viewportCanvas.height}`);
-        console.log(`Scaled size: ${scaledWidth} x ${scaledHeight}`);
-
         return pageNumber; // Return the rendered page number
     }
     catch (error) {
@@ -534,7 +431,6 @@ async function renderPageToViewportAsync(pageNumber, dpi, zoomLevel, canvasId) {
 }
 
 async function renderThumbnailToCacheAsync(pageNumber, scale) {
-    //console.log('renderThumbnailToCanvasAsync begin');
     if (!this.pdfDocument) {
         console.error('No PDF loaded. Call loadPdfFile first.');
         return 0; // Indicate an error
@@ -555,7 +451,6 @@ async function renderThumbnailToCacheAsync(pageNumber, scale) {
             };
             await page.render(renderContext).promise;
             thumbCache.set(pageNumber, canvas);
-            //console.log('renderThumbnailToCanvasAsync end');
             return 1;
         }
         else
@@ -593,10 +488,6 @@ async function renderPageThumbnailAsync(pageNumber, thumbScale) {
         await page.render(renderContext).promise;
         var sizeHeader = `${contentView.width}:${contentView.height};`;
         var thumbData = sizeHeader.concat(canvas.toDataURL('image/png', 100));
-
-        console.log(`Page ${pageNumber} thumbnail rendered successfully`);
-        console.log(`Output size: ${contentView.width} x ${contentView.height}`);
-
         return thumbData;
     }
     catch (error) {
@@ -634,11 +525,6 @@ async function renderPageToBlobAsync(pageNumber, thumbScale) {
                 resolve(url);
             })
         });
-
-        console.log("Blob: ", blobUrl);
-        console.log(`Page ${pageNumber} thumbnail rendered successfully`);
-        console.log(`Output size: ${contentView.width} x ${contentView.height}`);
-
         var sizeHeader = `${contentView.width}:${contentView.height};`;
         return sizeHeader.concat(blobUrl);
     }

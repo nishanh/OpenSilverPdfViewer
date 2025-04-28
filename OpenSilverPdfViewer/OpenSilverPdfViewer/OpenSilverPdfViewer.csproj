@@ -65,6 +65,7 @@
     <Compile Include="Controls\ToolBarButton.cs" />
     <Compile Include="Controls\ZoomViewCtrl.cs" />
     <Compile Include="Renderer\RenderWorker.cs" />
+    <Compile Include="Utility\Debouncer.cs" />
     <Compile Include="Utility\JSImageReference.cs" />
     <Compile Include="Utility\TextMetrics.cs" />
     <Compile Include="Utility\ValueConverters.cs" />

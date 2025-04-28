@@ -12,7 +12,6 @@ using System.Collections.Generic;
 
 using OpenSilverPdfViewer.Utility;
 using CSHTML5.Native.Html.Controls;
-using System.Windows.Threading;
 
 namespace OpenSilverPdfViewer.Renderer
 {
@@ -256,6 +255,10 @@ namespace OpenSilverPdfViewer.Renderer
             _pageImageCache.Clear();
             renderCanvas.Children.Clear();
             renderCanvas.Draw();
+        }
+        public override bool IsPageloaded(int pageNumber)
+        {
+            return _pageImageCache.ContainsKey(pageNumber);
         }
 
         #endregion Interface Implementation

@@ -21,6 +21,8 @@ namespace OpenSilverPdfViewer.Controls
         #region Fields / Properties
 
         private bool _rulersOn = false;
+        private int _scrollDelta = 0;
+
         private IRenderStrategy renderStrategy;
 
         private ViewModeType _viewMode = ViewModeType.PageView;
@@ -42,6 +44,7 @@ namespace OpenSilverPdfViewer.Controls
         {
             get { return PreviewPage > 0 && ViewMode == ViewModeType.PageView; }
         }
+        public Debouncer ScrollDebounce { get; set; }
 
         private double _pixelsToInches = 1 / 72d;
         public double PixelsToInches
@@ -119,6 +122,9 @@ namespace OpenSilverPdfViewer.Controls
         public static readonly DependencyProperty FilenameProperty = DependencyProperty.Register("Filename", typeof(string), typeof(PageViewer),
             new PropertyMetadata("", OnFilenameChanged));
 
+        public static readonly DependencyProperty PageCountProperty = DependencyProperty.Register("PageCount", typeof(int), typeof(PageViewer),
+            new PropertyMetadata(0, OnPageCountChanged));
+
         public static readonly DependencyProperty PreviewPageProperty = DependencyProperty.Register("PreviewPage", typeof(int), typeof(PageViewer),
             new PropertyMetadata(0, OnPreviewPageChanged));
 
@@ -138,6 +144,11 @@ namespace OpenSilverPdfViewer.Controls
         {
             get => (string)GetValue(FilenameProperty);
             set => SetValue(FilenameProperty, value);
+        }
+        public int PageCount
+        {
+            get => (int)GetValue(PageCountProperty);
+            set => SetValue(PageCountProperty, value);
         }
         public int PreviewPage
         {
@@ -184,6 +195,10 @@ namespace OpenSilverPdfViewer.Controls
             ctrl.renderStrategy.RenderPageNumber = (int)e.NewValue;
             ctrl.OnPropertyChanged(nameof(CanZoom));
             await ctrl.RenderView();
+        }
+        private static void OnPageCountChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
+        {
+            var ctrl = depObj as PageViewer;
         }
         private static async void OnZoomLevelChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
@@ -297,6 +312,21 @@ namespace OpenSilverPdfViewer.Controls
                 var scrollPos = Math.Min(Math.Max(0, pageScrollBarVert.Value - delta), pageScrollBarVert.Maximum);
                 pageScrollBarVert.Value = scrollPos;
                 PageScrollBars_Scroll(pageScrollBarVert, new ScrollEventArgs(scrollPos, delta < 0 ? ScrollEventType.SmallIncrement : ScrollEventType.SmallDecrement));
+            }
+            else if (ZoomLevel == 0)
+            {
+                _scrollDelta = e.Delta;
+                if (ScrollDebounce == null)
+                {
+                    ScrollDebounce = new Debouncer(() =>
+                    {
+                        if (_scrollDelta < 0)
+                            PreviewPage = Math.Min(PreviewPage + 1, PageCount);
+                        else
+                            PreviewPage = Math.Max(PreviewPage - 1, 1);
+                    }, 100);
+                }
+                ScrollDebounce.Reset();
             }
         }
         private async void Preview_SizeChanged(object sender, SizeChangedEventArgs e)
