@@ -145,8 +145,8 @@ namespace OpenSilverPdfViewer.ViewModels
             }
         }
 
-        private RulerUnits _rulerUnits = RulerUnits.Imperial;
-        public RulerUnits RulerUnits
+        private UnitMeasure _rulerUnits = UnitMeasure.Imperial;
+        public UnitMeasure RulerUnits
         {
             get => _rulerUnits;
             set
@@ -245,8 +245,8 @@ namespace OpenSilverPdfViewer.ViewModels
             if (CurrentPage < 1 || CurrentPage > PageCount)
                 return;
 
-            var unitConvert = RulerUnits == RulerUnits.Metric ? 25.4 : 1d;
-            var unitSuffix = RulerUnits == RulerUnits.Metric ? "mm" : "in";
+            var unitConvert = RulerUnits == UnitMeasure.Metric ? 25.4 : 1d;
+            var unitSuffix = RulerUnits == UnitMeasure.Metric ? "mm" : "in";
             var size = await PdfJs.GetPdfPageSizeAsync(CurrentPage);
             var logWidth = Math.Round((size.Width / 72d) * unitConvert, 2);
             var logHeight = Math.Round((size.Height / 72d) * unitConvert, 2);
@@ -259,7 +259,7 @@ namespace OpenSilverPdfViewer.ViewModels
         }
         public void SetRulerUnits(object param)
         {
-            RulerUnits = (RulerUnits)param;
+            RulerUnits = (UnitMeasure)param;
         }
 
         #endregion Methods

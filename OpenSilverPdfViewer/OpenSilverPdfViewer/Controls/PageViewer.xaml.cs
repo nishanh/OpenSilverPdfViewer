@@ -6,12 +6,8 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Shapes;
-using System.Globalization;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls.Primitives;
 
@@ -25,11 +21,6 @@ namespace OpenSilverPdfViewer.Controls
         #region Fields / Properties
 
         private bool _rulersOn = false;
-
-        private readonly FontFamily _rulerFont = new FontFamily("Verdana");
-        private readonly Brush _tickBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0xA9, 0xA9, 0xA9));
-        private readonly Brush _rulerBorderBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0x48, 0x48, 0x48));
-
         private IRenderStrategy renderStrategy;
 
         private ViewModeType _viewMode = ViewModeType.PageView;
@@ -52,6 +43,76 @@ namespace OpenSilverPdfViewer.Controls
             get { return PreviewPage > 0 && ViewMode == ViewModeType.PageView; }
         }
 
+        private double _pixelsToInches = 1 / 72d;
+        public double PixelsToInches
+        {
+            get => _pixelsToInches;
+            set
+            {
+                if (_pixelsToInches != value)
+                {
+                    _pixelsToInches = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double _scrollPosX = 0;
+        public double ScrollPosX
+        {
+            get => _scrollPosX;
+            set
+            {
+                if (_scrollPosX != value)
+                {
+                    _scrollPosX = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double _scrollPosY = 0;
+        public double ScrollPosY
+        {
+            get => _scrollPosY;
+            set
+            {
+                if (_scrollPosY != value)
+                {
+                    _scrollPosY = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double _pagePositionX = 0;
+        public double PagePositionX
+        {
+            get => _pagePositionX;
+            set
+            {
+                if (_pagePositionX != value)
+                {
+                    _pagePositionX = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double _pagePositionY = 0;
+        public double PagePositionY
+        {
+            get => _pagePositionY;
+            set
+            {
+                if (_pagePositionY != value)
+                {
+                    _pagePositionY = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         #endregion Fields / Properties
         #region Dependency Properties
 
@@ -70,8 +131,8 @@ namespace OpenSilverPdfViewer.Controls
         public static readonly DependencyProperty RenderModeProperty = DependencyProperty.Register("RenderMode", typeof(RenderModeType), typeof(PageViewer),
             new PropertyMetadata(RenderModeType.Dom, OnRenderModeChanged));
 
-        public static readonly DependencyProperty RulerUnitsProperty = DependencyProperty.Register("RulerUnits", typeof(RulerUnits), typeof(PageViewer),
-            new PropertyMetadata(RulerUnits.Imperial, OnRulerUnitsChanged));
+        public static readonly DependencyProperty RulerUnitsProperty = DependencyProperty.Register("RulerUnits", typeof(UnitMeasure), typeof(PageViewer),
+            new PropertyMetadata(UnitMeasure.Imperial, OnRulerUnitsChanged));
 
         public string Filename
         {
@@ -98,9 +159,9 @@ namespace OpenSilverPdfViewer.Controls
             get => (RenderModeType)GetValue(RenderModeProperty);
             set => SetValue(RenderModeProperty, value);
         }
-        public RulerUnits RulerUnits
+        public UnitMeasure RulerUnits
         {
-            get => (RulerUnits)GetValue(RulerUnitsProperty);
+            get => (UnitMeasure)GetValue(RulerUnitsProperty);
             set => SetValue(RulerUnitsProperty, value);
         }
 
@@ -158,7 +219,7 @@ namespace OpenSilverPdfViewer.Controls
         private static void OnRulerUnitsChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
-            ctrl.DrawRulers();
+            ctrl.SetRulers();
         }
         #endregion Dependency Property Event Handlers
         #region Implementation
@@ -177,176 +238,20 @@ namespace OpenSilverPdfViewer.Controls
             var displayScale = renderStrategy.GetDisplayScale() * 100d;
             ZoomValue = Math.Round(displayScale, 0);
             SetScrollBars();
-            DrawRulers();
+            SetRulers();
         }
-        private void DrawRulers()
+        private void SetRulers()
         {
             if (PreviewPage <= 0 || _rulersOn == false) return;
 
-            const int fontSize = 10;
             const int margin = 10; // from xaml layout
-            var metric = RulerUnits == RulerUnits.Metric;
-
-            // Tick mark length constants
-            const int wholeTickLength = 12;
-            const int sixteenthTick = wholeTickLength / 8 + 1;
-            const int eighthTick = wholeTickLength / 4 + 1;
-            const int quarterTick = wholeTickLength / 3 + 2;
-            const int halfTick = wholeTickLength / 2 + 2;
-            const int millimeterTick = quarterTick;
-
-            var pxToInches = renderStrategy.GetPixelsToInchesConversion();
-            double resRuler, wholeUnitInterval, unitConvert;
-
-            // Adjust the ruler resolution based on device-to-logical scale.
-            // This is to avoid tightly-packed tick marks at high scale values
-            if (metric)
-            {
-                const double metricScaleThreshold = 0.008;
-                var metricRes = pxToInches > metricScaleThreshold ? 10d : 1d; // centimeters or millimeters
-                resRuler = metricRes / 25.4;
-                wholeUnitInterval = (int)(10 / metricRes);
-                unitConvert = 2.54;
-            }
-            else
-            {
-                resRuler = pxToInches > .05 ? 1d : 0.5;
-                resRuler = pxToInches < .025 ? 0.25 : resRuler;
-                resRuler = pxToInches < .0125 ? 0.125 : resRuler;
-                resRuler = pxToInches < .00625 ? 0.0625 : resRuler;
-                wholeUnitInterval = (int)(1 / resRuler);
-                unitConvert = 1.0;
-            }
-
-            // Erase previous ruler ticks and text
-            horzRuler.Children.Clear();
-            vertRuler.Children.Clear();
-
-            // Clip to ruler bounds
-            horzRuler.Clip = new RectangleGeometry { Rect = new Rect(0, 0, horzRuler.ActualWidth, horzRuler.ActualHeight) };
-            vertRuler.Clip = new RectangleGeometry { Rect = new Rect(0, 0, vertRuler.ActualWidth, vertRuler.ActualHeight) };
-
-            // Draw inner borders
-            horzRuler.Children.Add(new Line
-            {
-                X1 = 0,
-                Y1 = horzRuler.ActualHeight,
-                X2 = horzRuler.ActualWidth,
-                Y2 = horzRuler.ActualHeight,
-                StrokeThickness = 2,
-                Stroke = _rulerBorderBrush
-            });
-            vertRuler.Children.Add(new Line
-            {
-                X1 = vertRuler.ActualWidth,
-                Y1 = 0,
-                X2 = vertRuler.ActualWidth,
-                Y2 = vertRuler.ActualHeight,
-                StrokeThickness = 2,
-                Stroke = _rulerBorderBrush
-            });
-
             var pagePosition = renderStrategy.GetPagePosition();
-            pagePosition.Offset(margin - pageScrollBarHorz.Value, margin - pageScrollBarVert.Value);
 
-            // Find the first tick mark we can reasonably draw.
-            // Let's say the page image is centered horizontally in the viewport in logical units such
-            // that the left-edge of the page is at 2.125". Therefore, the first tick mark that can be
-            // drawn is the fractional component of .125". Convert that result back to device units (pixels)
-            // to get the first X or Y position to draw the initial tick mark at.
-            var originX = pagePosition.X * (pxToInches * unitConvert);
-            var startX = originX % 1; // get fractional part
-            var i = -(int)(startX / resRuler);
-            var devStartX = startX / (pxToInches * unitConvert);
-
-            // Draw horizontal ruler
-            var pos = 0d;
-            while (pos < horzRuler.ActualWidth)
-            {
-                // Compute tick mark X-pos in device units
-                pos = Math.Round(devStartX + ((i * resRuler) / pxToInches), 0);
-
-                var tickLength = sixteenthTick;
-                if (i % wholeUnitInterval == 0) tickLength = wholeTickLength;
-                else if (metric) tickLength = millimeterTick;
-                else if (i % (wholeUnitInterval / 2) == 0) tickLength = halfTick;
-                else if (i % (wholeUnitInterval / 4) == 0) tickLength = quarterTick;
-                else if (i % (wholeUnitInterval / 8) == 0) tickLength = eighthTick;
-
-                // Draw the ruler tick mark
-                horzRuler.Children.Add(new Line
-                {
-                    X1 = pos, X2 = pos,
-                    Y1 = horzRuler.ActualHeight,
-                    Y2 = horzRuler.ActualHeight - tickLength,
-                    Stroke = _tickBrush,
-                    StrokeThickness = 1
-                });
-
-                // Draw the unit-value text
-                if (i % wholeUnitInterval == 0)
-                {
-                    var unitVal = (i / wholeUnitInterval) - (int)originX;
-                    var rulerVal = new TextBlock
-                    {
-                        Foreground = _tickBrush,
-                        FontFamily = _rulerFont,
-                        FontSize = fontSize,
-                        Text = unitVal.ToString(CultureInfo.InvariantCulture)
-                    };
-                    rulerVal.SetValue(Canvas.TopProperty, 2d); 
-                    rulerVal.SetValue(Canvas.LeftProperty, pos - (rulerVal.ActualWidth / 2));
-                    horzRuler.Children.Add(rulerVal);
-                }
-                i++;
-            }
-
-            var originY = pagePosition.Y * (pxToInches * unitConvert);
-            var startY = originY % 1; // get fractional part
-            i = -(int)(startY / resRuler);
-            var devStartY = startY / (pxToInches * unitConvert);
-
-            // Draw vertical ruler
-            pos = 0d;
-            while (pos < vertRuler.ActualHeight)
-            {
-                // Compute tick mark Y-pos in device units
-                pos = Math.Round(devStartY + ((i * resRuler) / pxToInches), 0);
-
-                var tickLength = sixteenthTick;
-                if (i % wholeUnitInterval == 0) tickLength = wholeTickLength;
-                else if (metric) tickLength = millimeterTick;
-                else if (i % (wholeUnitInterval / 2) == 0) tickLength = halfTick;
-                else if (i % (wholeUnitInterval / 4) == 0) tickLength = quarterTick;
-                else if (i % (wholeUnitInterval / 8) == 0) tickLength = eighthTick;
-
-                // Draw the ruler tick mark
-                vertRuler.Children.Add(new Line
-                {
-                    Y1 = pos, Y2 = pos,
-                    X1 = vertRuler.ActualWidth,
-                    X2 = vertRuler.ActualWidth - tickLength,
-                    Stroke = _tickBrush,
-                    StrokeThickness = 1
-                });
-
-                // Draw the unit-value text
-                if (i % wholeUnitInterval == 0)
-                {
-                    var unitVal = (i / wholeUnitInterval) - (int)originY;
-                    var rulerVal = new TextBlock
-                    {
-                        Foreground = _tickBrush,
-                        FontFamily = _rulerFont,
-                        FontSize = fontSize,
-                        Text = unitVal.ToString(CultureInfo.InvariantCulture)
-                    };
-                    rulerVal.SetValue(Canvas.LeftProperty, 2d);
-                    rulerVal.SetValue(Canvas.TopProperty, pos - (rulerVal.ActualHeight / 2));
-                    vertRuler.Children.Add(rulerVal);
-                }
-                i++;
-            }
+            PixelsToInches = renderStrategy.GetPixelsToInchesConversion();
+            PagePositionX = pagePosition.X + margin;
+            PagePositionY = pagePosition.Y + margin;
+            ScrollPosX = pageScrollBarHorz.Value;
+            ScrollPosY = pageScrollBarVert.Value;
         }
         private void SetScrollBars()
         {
@@ -379,7 +284,7 @@ namespace OpenSilverPdfViewer.Controls
         private void PageScrollBars_Scroll(object sender, ScrollEventArgs e)
         {
             renderStrategy.ScrollViewport((int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
-            DrawRulers(); 
+            SetRulers(); 
         }
         private void PageView_MouseWheel(object sender, MouseWheelEventArgs e)
         {
@@ -395,22 +300,11 @@ namespace OpenSilverPdfViewer.Controls
         {
             await RenderView();
         }
-        private void RulerOnStoryboard_Completed(object sender, EventArgs e)
-        {
-            _rulersOn = true;
-            DrawRulers();
-        }
-        private void RulerOffStoryboard_Completed(object sender, EventArgs e)
-        {
-            _rulersOn = false;
-            horzRuler.Children.Clear();
-            vertRuler.Children.Clear();
-        }
         public void RulerToggle(object sender, RoutedEventArgs e)
         {
             var toggleButton = (ToggleButton)sender;
-            var state = (bool)toggleButton.IsChecked ? "RulerOn" : "RulerOff";
-            VisualStateManager.GoToState(this, state, false);
+            _rulersOn = (bool)toggleButton.IsChecked;
+            SetRulers();
         }
         public void ViewModeBtn_Click(object sender, RoutedEventArgs e)
         {

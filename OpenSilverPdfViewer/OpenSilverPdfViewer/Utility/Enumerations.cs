@@ -17,7 +17,7 @@ namespace OpenSilverPdfViewer.Utility
         PageView,
         ThumbnailView
     }
-    public enum RulerUnits
+    public enum UnitMeasure
     {
         Metric,
         Imperial

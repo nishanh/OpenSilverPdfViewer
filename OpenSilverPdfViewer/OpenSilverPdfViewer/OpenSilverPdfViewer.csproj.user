@@ -11,6 +11,9 @@
     <Compile Update="Controls\PanelCtrl.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Controls\RulerCtrl.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Controls\ToolBarButton.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -23,6 +26,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Controls\PageViewer.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Controls\RulerCtrl.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Styles\BrushStyles.xaml">

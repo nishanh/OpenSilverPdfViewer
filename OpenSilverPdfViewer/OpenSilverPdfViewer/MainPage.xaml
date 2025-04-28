@@ -129,14 +129,14 @@
                             Name="rulerMetric"
                             Margin="0,0,0,5"
                             Command="{Binding SetRulerUnitsCommand}"
-                            CommandParameter="{x:Static conv:RulerUnits.Metric}"
-                            IsChecked="{Binding RulerUnits, Converter={StaticResource RulerUnitsToBoolConverter}, ConverterParameter={x:Static conv:RulerUnits.Metric}}"
+                            CommandParameter="{x:Static conv:UnitMeasure.Metric}"
+                            IsChecked="{Binding RulerUnits, Converter={StaticResource RulerUnitsToBoolConverter}, ConverterParameter={x:Static conv:UnitMeasure.Metric}}"
                             Content="Metric Ruler Units"/>
                         <RadioButton
                             Name="rulerImperial"
                             Command="{Binding SetRulerUnitsCommand}"
-                            CommandParameter="{x:Static conv:RulerUnits.Imperial}"
-                            IsChecked="{Binding RulerUnits, Converter={StaticResource RulerUnitsToBoolConverter}, ConverterParameter={x:Static conv:RulerUnits.Imperial}}"
+                            CommandParameter="{x:Static conv:UnitMeasure.Imperial}"
+                            IsChecked="{Binding RulerUnits, Converter={StaticResource RulerUnitsToBoolConverter}, ConverterParameter={x:Static conv:UnitMeasure.Imperial}}"
                             Content="Imperial Ruler Units"/>
                     </StackPanel>
                 </ctrls:PanelCtrl>

@@ -22,45 +22,12 @@
             </ResourceDictionary.MergedDictionaries>
             <conv:IntToEnabledConverter x:Key="IntToEnabledConverter"/>
             <conv:ViewModeToCheckedConverter x:Key="ViewModeToCheckedConverter"/>
+            <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <SolidColorBrush x:Key="RulerBrush" Color="#FF343434"/>
         </ResourceDictionary>
     </UserControl.Resources>
 
     <Grid>
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup x:Name="RulerStates">
-                <VisualState x:Name="RulerOn">
-                    <Storyboard 
-                        Completed="RulerOnStoryboard_Completed">
-                        <DoubleAnimation 
-                            Storyboard.TargetName="horzRulerBorder"
-                            Storyboard.TargetProperty="(FrameworkElement.Height)"
-                            Duration="0:0:0.2"
-                            To="30"/>
-                        <DoubleAnimation 
-                            Storyboard.TargetName="vertRulerBorder"
-                            Storyboard.TargetProperty="(FrameworkElement.Width)"
-                            Duration="0:0:0.2"
-                            To="30"/>
-                    </Storyboard>
-                </VisualState>
-                <VisualState x:Name="RulerOff">
-                    <Storyboard 
-                        Completed="RulerOffStoryboard_Completed">
-                        <DoubleAnimation 
-                            Storyboard.TargetName="horzRulerBorder"
-                            Storyboard.TargetProperty="(FrameworkElement.Height)"
-                            Duration="0:0:0.2"
-                            To="0"/>
-                        <DoubleAnimation 
-                            Storyboard.TargetName="vertRulerBorder"
-                            Storyboard.TargetProperty="(FrameworkElement.Width)"
-                            Duration="0:0:0.2"
-                            To="0"/>
-                    </Storyboard>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
         <Grid.RowDefinitions>
             <RowDefinition/>
             <RowDefinition Height="Auto"/>
@@ -79,25 +46,37 @@
                 </Grid.ColumnDefinitions>
                 <Rectangle 
                     Fill="{StaticResource RulerBrush}" />
-                <Border 
-                    x:Name="horzRulerBorder"
-                    Grid.Row="0" 
+                <local:RulerCtrl 
+                    x:Name="horzRulerCtrl"
+                    Grid.Row="0"
                     Grid.Column="1"
-                    Grid.ColumnSpan="2" 
+                    Grid.ColumnSpan="2"
+                    Orientation="Horizontal"
+                    FontSize="10"
+                    FontFamily="Verdana"
+                    Foreground="{StaticResource CMSCtrlButtonForegroundBrush}"
+                    BorderBrush="{StaticResource CMSSolidBorderBrush}"
+                    Visibility="{Binding IsChecked, ElementName=rulerToggleBtn, Converter={StaticResource BoolToVisibilityConverter}}"
                     Background="{StaticResource RulerBrush}"
-                    BorderBrush="{StaticResource CMSDarkBorderBrush}"
-                    Height="0">
-                    <Canvas x:Name="horzRuler"/>
-                </Border>
-                <Border 
-                    x:Name="vertRulerBorder"
-                    Grid.Row="1" 
-                    Grid.RowSpan="2" 
+                    UnitMeasure="{Binding RulerUnits, ElementName=pvCtrlInternal}"
+                    LogicalScale="{Binding PixelsToInches, ElementName=pvCtrlInternal}"
+                    PageOffset="{Binding PagePositionX, ElementName=pvCtrlInternal}"
+                    ScrollPosition="{Binding ScrollPosX, ElementName=pvCtrlInternal}"/>
+                <local:RulerCtrl 
+                    x:Name="vertRulerCtrl"
+                    Grid.Row="1"
+                    Grid.RowSpan="2"
+                    Orientation="Vertical"
+                    FontSize="10"
+                    FontFamily="Verdana"
+                    Foreground="{StaticResource CMSCtrlButtonForegroundBrush}"
+                    BorderBrush="{StaticResource CMSSolidBorderBrush}"
+                    Visibility="{Binding IsChecked, ElementName=rulerToggleBtn, Converter={StaticResource BoolToVisibilityConverter}}"
                     Background="{StaticResource RulerBrush}"
-                    BorderBrush="{StaticResource CMSDarkBorderBrush}"
-                    Width="0">
-                    <Canvas x:Name="vertRuler"/>
-                </Border>
+                    UnitMeasure="{Binding RulerUnits, ElementName=pvCtrlInternal}"
+                    LogicalScale="{Binding PixelsToInches, ElementName=pvCtrlInternal}"
+                    PageOffset="{Binding PagePositionY, ElementName=pvCtrlInternal}"
+                    ScrollPosition="{Binding ScrollPosY, ElementName=pvCtrlInternal}"/>
                 <Grid 
                     Grid.Row="1" 
                     Grid.Column="1" 
@@ -162,6 +141,7 @@
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
                     <local:ToolBarToggleButton
+                        x:Name="rulerToggleBtn"
                         IsEnabled="{Binding CurrentPage, Converter={StaticResource IntToEnabledConverter}}"
                         Click="RulerToggle"
                         Margin="0,0,5,0">

@@ -56,13 +56,13 @@ namespace OpenSilverPdfViewer.Utility
             return false;
         }
     }
-    public sealed class RulerUnitsToBoolConverter : ValueConverterBase<RulerUnits>
+    public sealed class RulerUnitsToBoolConverter : ValueConverterBase<UnitMeasure>
     {
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is RulerUnits rulerUnits)
+            if (value is UnitMeasure rulerUnits)
             {
-                return rulerUnits == (RulerUnits)parameter;
+                return rulerUnits == (UnitMeasure)parameter;
             }
             return false;
         }
