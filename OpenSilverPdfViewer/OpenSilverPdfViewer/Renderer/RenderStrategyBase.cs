@@ -31,7 +31,7 @@ namespace OpenSilverPdfViewer.Renderer
         void ClearViewport();
         void Reset();
         Task SetPageSizeRunList();
-        bool IsPageloaded(int pageNumber);
+        bool IsPageLoaded(int pageNumber);
     }
     public static class RenderStrategyFactory
     {
@@ -142,7 +142,7 @@ namespace OpenSilverPdfViewer.Renderer
         public abstract Size GetLayoutSize();
         public abstract void ClearViewport();
         public abstract void Reset();
-        public abstract bool IsPageloaded(int pageNumber);
+        public abstract bool IsPageLoaded(int pageNumber);
 
         #endregion Interface Members
         #region Methods

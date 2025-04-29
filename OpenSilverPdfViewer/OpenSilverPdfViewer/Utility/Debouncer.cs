@@ -10,26 +10,29 @@ namespace OpenSilverPdfViewer.Utility
 {
     public sealed class Debouncer
     {
-        private Action OnTimeout { get; set; }
+        public Action OnSettled { get; set; }
         private DispatcherTimer Timer { get; set; } 
-        private readonly int _delayTime = 1000;
+        public int SettleTime { get; set; }
 
-        public Debouncer(Action onTimeout, int delayTime = 1000)
+        public Debouncer(int settleTime = 1000)
         {
-            OnTimeout = onTimeout;
-            _delayTime = delayTime;
-            Timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(delayTime) };
+            SettleTime = settleTime;
+            Timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(settleTime) };
             Timer.Tick += Timer_Tick;
+        }
+        public Debouncer(Action onSettle, int settleTime = 1000) : this(settleTime)
+        {
+            OnSettled = onSettle;
         }
         private void Timer_Tick(object sender, EventArgs e)
         {
             Timer.Stop();
-            OnTimeout();
+            OnSettled();
         }
         public void Reset()
         {
             Timer.Stop();
-            Timer.Interval = TimeSpan.FromMilliseconds(_delayTime);
+            Timer.Interval = TimeSpan.FromMilliseconds(SettleTime);
             Timer.Start();
         }
     }

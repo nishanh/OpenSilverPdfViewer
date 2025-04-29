@@ -21,8 +21,6 @@ namespace OpenSilverPdfViewer.Controls
         #region Fields / Properties
 
         private bool _rulersOn = false;
-        private int _scrollDelta = 0;
-
         private IRenderStrategy renderStrategy;
 
         private ViewModeType _viewMode = ViewModeType.PageView;
@@ -44,7 +42,8 @@ namespace OpenSilverPdfViewer.Controls
         {
             get { return PreviewPage > 0 && ViewMode == ViewModeType.PageView; }
         }
-        public Debouncer ScrollDebounce { get; set; }
+
+        private Debouncer WheelDebouncer { get; set; } = new Debouncer(100);
 
         private double _pixelsToInches = 1 / 72d;
         public double PixelsToInches
@@ -315,18 +314,15 @@ namespace OpenSilverPdfViewer.Controls
             }
             else if (ZoomLevel == 0)
             {
-                _scrollDelta = e.Delta;
-                if (ScrollDebounce == null)
+                // Filter out rapid changes
+                WheelDebouncer.OnSettled = () =>
                 {
-                    ScrollDebounce = new Debouncer(() =>
-                    {
-                        if (_scrollDelta < 0)
-                            PreviewPage = Math.Min(PreviewPage + 1, PageCount);
-                        else
-                            PreviewPage = Math.Max(PreviewPage - 1, 1);
-                    }, 100);
-                }
-                ScrollDebounce.Reset();
+                    if (e.Delta < 0)
+                        PreviewPage = Math.Min(PreviewPage + 1, PageCount);
+                    else
+                        PreviewPage = Math.Max(PreviewPage - 1, 1);
+                };
+                WheelDebouncer.Reset();
             }
         }
         private async void Preview_SizeChanged(object sender, SizeChangedEventArgs e)

@@ -69,7 +69,9 @@ namespace OpenSilverPdfViewer.Renderer
             {
                 var renderScale = _renderDPI / _nativePdfDpi;
                 image = await PdfJs.GetPdfPageImageAsync(RenderPageNumber, renderScale);
-                _pageImageCache.Add(RenderPageNumber, image);
+
+                if (!_pageImageCache.ContainsKey(RenderPageNumber))
+                    _pageImageCache.Add(RenderPageNumber, image);
             }
 
             var displayScale = GetDisplayScale();
@@ -253,7 +255,7 @@ namespace OpenSilverPdfViewer.Renderer
             ClearViewport();
             _pageImageCache.Clear();
         }
-        public override bool IsPageloaded(int pageNumber)
+        public override bool IsPageLoaded(int pageNumber)
         {
             return _pageImageCache.ContainsKey(pageNumber);
         }

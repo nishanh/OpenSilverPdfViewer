@@ -71,49 +71,57 @@ namespace OpenSilverPdfViewer.JSInterop
         }
         public async Task<Image> GetPdfPageImageAsync(int pageNumber, double scaleFactor)
         {
-            await InitAsync();
-
-            var dataUrl = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("renderPageThumbnail", pageNumber, scaleFactor);
-            var sizeHeader = dataUrl.Substring(0, dataUrl.IndexOf(";"));
-            var width = double.Parse(sizeHeader.Substring(0, sizeHeader.IndexOf(":")));
-            var height = double.Parse(sizeHeader.Substring(sizeHeader.IndexOf(":") + 1));
-
-            dataUrl = dataUrl.Substring(dataUrl.IndexOf(",") + 1); // strip header
-            var imageBytes = Convert.FromBase64String(dataUrl);
-
-            Image image = new Image();
-            using (var stream = new MemoryStream(imageBytes))
+            var result = await Task.Run(async () =>
             {
-                stream.Write(imageBytes, 0, imageBytes.Length);
-                stream.Position = 0;
+                await InitAsync();
 
-                var bitmap = new BitmapImage();
-                bitmap.SetSource(stream);
-                image.Source = bitmap;
-                image.Width = width;
-                image.Height = height;
-            }
-            return image;
+                var dataUrl = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("renderPageThumbnail", pageNumber, scaleFactor);
+                var sizeHeader = dataUrl.Substring(0, dataUrl.IndexOf(";"));
+                var width = double.Parse(sizeHeader.Substring(0, sizeHeader.IndexOf(":")));
+                var height = double.Parse(sizeHeader.Substring(sizeHeader.IndexOf(":") + 1));
+
+                dataUrl = dataUrl.Substring(dataUrl.IndexOf(",") + 1); // strip header
+                var imageBytes = Convert.FromBase64String(dataUrl);
+
+                Image image = new Image();
+                using (var stream = new MemoryStream(imageBytes))
+                {
+                    stream.Write(imageBytes, 0, imageBytes.Length);
+                    stream.Position = 0;
+
+                    var bitmap = new BitmapImage();
+                    bitmap.SetSource(stream);
+                    image.Source = bitmap;
+                    image.Width = width;
+                    image.Height = height;
+                }
+                return image;
+            });
+            return result;
         }
         public async Task<BlobElement> GetPdfPageBlobElementAsync(int pageNumber, double scaleFactor)
         {
-            await InitAsync();
-
-            var blobUrl = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("renderPageToBlob", pageNumber, scaleFactor);
-            var sizeHeader = blobUrl.Substring(0, blobUrl.IndexOf(";"));
-            var width = double.Parse(sizeHeader.Substring(0, sizeHeader.IndexOf(":")));
-            var height = double.Parse(sizeHeader.Substring(sizeHeader.IndexOf(":") + 1));
-            blobUrl = blobUrl.Substring(blobUrl.IndexOf(";") + 1); // strip size header
-
-            var element = new BlobElement
+            var result = await Task.Run(async () =>
             {
-                Source = blobUrl,
-                Width = width,
-                Height = height 
-            };
-            await element.LoadBlob();
+                await InitAsync();
 
-            return element;
+                var blobUrl = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("renderPageToBlob", pageNumber, scaleFactor);
+                var sizeHeader = blobUrl.Substring(0, blobUrl.IndexOf(";"));
+                var width = double.Parse(sizeHeader.Substring(0, sizeHeader.IndexOf(":")));
+                var height = double.Parse(sizeHeader.Substring(sizeHeader.IndexOf(":") + 1));
+                blobUrl = blobUrl.Substring(blobUrl.IndexOf(";") + 1); // strip size header
+
+                var element = new BlobElement
+                {
+                    Source = blobUrl,
+                    Width = width,
+                    Height = height
+                };
+                await element.LoadBlob();
+
+                return element;
+            });
+            return result;
         }
         public async Task<string> GetPdfPageSizeRunList()
         {

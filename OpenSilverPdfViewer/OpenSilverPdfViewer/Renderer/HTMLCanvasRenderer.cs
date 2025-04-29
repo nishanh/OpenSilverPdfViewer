@@ -68,7 +68,9 @@ namespace OpenSilverPdfViewer.Renderer
             {
                 var renderScale = _renderDPI / _nativePdfDpi;
                 image = await PdfJs.GetPdfPageBlobElementAsync(RenderPageNumber, renderScale);
-                _pageImageCache.Add(RenderPageNumber, image);
+
+                if (!_pageImageCache.ContainsKey(RenderPageNumber))
+                    _pageImageCache.Add(RenderPageNumber, image);
             }
             var pagePosition = GetPagePosition();
             image.X = pagePosition.X;
@@ -256,7 +258,7 @@ namespace OpenSilverPdfViewer.Renderer
             renderCanvas.Children.Clear();
             renderCanvas.Draw();
         }
-        public override bool IsPageloaded(int pageNumber)
+        public override bool IsPageLoaded(int pageNumber)
         {
             return _pageImageCache.ContainsKey(pageNumber);
         }
