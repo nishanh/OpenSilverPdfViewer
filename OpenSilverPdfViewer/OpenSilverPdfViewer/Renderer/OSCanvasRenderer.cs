@@ -26,7 +26,7 @@ namespace OpenSilverPdfViewer.Renderer
 
         private readonly Dictionary<int, Image> _pageImageCache = new Dictionary<int, Image>();
         private readonly Canvas renderCanvas;
-        private RenderQueue<Image> RenderQueue { get; set; }
+        private ThreadedRenderQueue<Image> RenderQueue { get; set; }
         public bool ViewportItemsChanged
         {
             get
@@ -53,7 +53,7 @@ namespace OpenSilverPdfViewer.Renderer
         public OSCanvasRenderer(Canvas canvas)
         {
             renderCanvas = canvas;
-            RenderQueue = new RenderQueue<Image>(RenderWorkerCallback);
+            RenderQueue = new ThreadedRenderQueue<Image>(RenderWorkerCallback);
 
             _thumbnailFontBrush = renderCanvas.FindResource("CMSForegroundBrush") as Brush;
             _thumbnailFillBrush = renderCanvas.FindResource("CMSPopupBorderBrush") as Brush;

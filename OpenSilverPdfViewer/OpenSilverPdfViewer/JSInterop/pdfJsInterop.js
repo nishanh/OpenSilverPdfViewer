@@ -19,6 +19,9 @@ let thumbCache = new Map();
 // Before you purists complain, I know this is not the best practice and that I could be using nested 'then's
 // but I think that the IIFE approach that allows async/await syntax is more readable and maintainable.
 
+function logToConsole(message) {
+    console.log(message);
+}
 function getLibraryVersion(callback) {
     if (libVersion == undefined) {
         loadPdfJsAsync().then((pdfLib) => {
@@ -117,6 +120,7 @@ function renderPageToViewport(pageNumber, dpi, zoomLevel, canvasId, callback) {
         promise.then(result => callback(result));
     }
 }
+
 function renderThumbnailToCache(pageNumber, scale, callback) {
     var promise = (async () => await renderThumbnailToCacheAsync(pageNumber, scale))();
     if (callback != undefined) {
@@ -132,6 +136,7 @@ function renderPageThumbnail(pageNumber, thumbScale, callback) {
 }
 
 function renderPageToBlob(pageNumber, thumbScale, callback) {
+    console.log(`renderPageToBlob: page number ${pageNumber}, scale: ${thumbScale}`);
     var promise = (async () => await renderPageToBlobAsync(pageNumber, thumbScale))();
     if (callback != undefined) {
         promise.then(result => callback(result))
@@ -525,6 +530,8 @@ async function renderPageToBlobAsync(pageNumber, thumbScale) {
                 resolve(url);
             })
         });
+        console.log("Blob url: ", blobUrl);
+
         var sizeHeader = `${contentView.width}:${contentView.height};`;
         return sizeHeader.concat(blobUrl);
     }

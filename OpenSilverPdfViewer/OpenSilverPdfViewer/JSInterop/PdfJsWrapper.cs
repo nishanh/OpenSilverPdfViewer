@@ -101,6 +101,26 @@ namespace OpenSilverPdfViewer.JSInterop
         }
         public async Task<BlobElement> GetPdfPageBlobElementAsync(int pageNumber, double scaleFactor)
         {
+            await InitAsync();
+
+            var blobUrl = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("renderPageToBlob", pageNumber, scaleFactor);
+            var sizeHeader = blobUrl.Substring(0, blobUrl.IndexOf(";"));
+            var width = double.Parse(sizeHeader.Substring(0, sizeHeader.IndexOf(":")));
+            var height = double.Parse(sizeHeader.Substring(sizeHeader.IndexOf(":") + 1));
+            blobUrl = blobUrl.Substring(blobUrl.IndexOf(";") + 1); // strip size header
+
+            var element = new BlobElement
+            {
+                Source = blobUrl,
+                Width = width,
+                Height = height
+            };
+            await element.LoadBlob();
+
+            return element;
+        }
+        public async Task<BlobElement> GetPdfPageBlobElementAsync1(int pageNumber, double scaleFactor)
+        {
             var result = await Task.Run(async () =>
             {
                 await InitAsync();
@@ -132,6 +152,10 @@ namespace OpenSilverPdfViewer.JSInterop
         #endregion Asynchronous Tasks
         #region Synchronous Tasks
 
+        public void ConsoleLog(string message)
+        {
+            OpenSilver.Interop.ExecuteJavaScript("logToConsole($0)", message);
+        }
         public Size GetPageImageSize(int pageNumber)
         {
             var result = OpenSilver.Interop.ExecuteJavaScript("getDevicePageSize($0)", pageNumber);

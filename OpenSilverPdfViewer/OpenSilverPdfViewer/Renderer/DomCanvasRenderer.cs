@@ -19,7 +19,7 @@ namespace OpenSilverPdfViewer.Renderer
         private const string viewCanvasId = "pageViewCanvas"; // from xaml
         private readonly Dictionary<int, JSImageReference> _pageImageCache = new Dictionary<int, JSImageReference>();
         private List<int> _renderedIdList = new List<int>();
-        private RenderQueue<JSImageReference> RenderQueue { get; set; }
+        private ThreadedRenderQueue<JSImageReference> RenderQueue { get; set; }
         public bool ViewportItemsChanged
         {
             get
@@ -42,7 +42,7 @@ namespace OpenSilverPdfViewer.Renderer
 
         public DomCanvasRenderer()
         {
-            RenderQueue = new RenderQueue<JSImageReference>(RenderWorkerCallback);
+            RenderQueue = new ThreadedRenderQueue<JSImageReference>(RenderWorkerCallback);
         }
 
         #endregion Initialization

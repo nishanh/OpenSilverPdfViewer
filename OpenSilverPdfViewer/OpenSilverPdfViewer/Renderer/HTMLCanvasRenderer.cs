@@ -25,7 +25,7 @@ namespace OpenSilverPdfViewer.Renderer
 
         private readonly Dictionary<int, BlobElement> _pageImageCache = new Dictionary<int, BlobElement>();
         private readonly HtmlCanvas renderCanvas;
-        private RenderQueue<BlobElement> RenderQueue { get; set; }
+        private ThreadedRenderQueue<BlobElement> RenderQueue { get; set; }
         public bool ViewportItemsChanged
         {
             get
@@ -52,7 +52,7 @@ namespace OpenSilverPdfViewer.Renderer
         public HTMLCanvasRenderer(HtmlCanvas canvas) 
         {
             renderCanvas = canvas;
-            RenderQueue = new RenderQueue<BlobElement>(RenderWorkerCallback);
+            RenderQueue = new ThreadedRenderQueue<BlobElement>(RenderWorkerCallback);
 
             _thumbnailFillColor = (Color)renderCanvas.FindResource("CMSCtrlNormalStartColor");
             _thumbnailStrokeColor = (Color)renderCanvas.FindResource("CMSForegroundColor");
@@ -84,13 +84,17 @@ namespace OpenSilverPdfViewer.Renderer
         }
         protected override void RenderThumbnails()
         {
+            RenderThumbnails(false);
+        }
+        private void RenderThumbnails(bool deferredDraw = false)
+        {
             var scrollRect = ViewportScrollRect;
             var intersectList = LayoutRectList.Where(rect => rect.Intersects(scrollRect)).ToList();
-            
-            // Re-position any existing items in the viewport if the layout has changed
+
+            // Re-position any existing items in the viewport if the layout has changed due to panel resizing
             intersectList.ForEach(rect =>
             {
-                var thumbnail = renderCanvas.Children.FirstOrDefault(child => child is ContainerElement grid && int.Parse(grid.Name) == rect.Id);
+                var thumbnail = renderCanvas.Children.FirstOrDefault(child => int.Parse(child.Name) == rect.Id);
                 if (thumbnail != null)
                 {
                     thumbnail.X = rect.X;
@@ -101,7 +105,6 @@ namespace OpenSilverPdfViewer.Renderer
             // Get a list of page image ids that are currently rendered in the viewport
             var renderedIds = renderCanvas.Children
                 .Where(child => child is ContainerElement)
-                .Cast<ContainerElement>()
                 .Select(pageElem => int.Parse(pageElem.Name));
 
             // Remove all page image elements that do not exist in the current intersection list from the viewport
@@ -110,27 +113,30 @@ namespace OpenSilverPdfViewer.Renderer
                 .ToList()
                 .ForEach(id => {
                     RenderQueue.DequeueItem(id);
-                    renderCanvas.Children.Remove(renderCanvas.Children.FirstOrDefault(child => child is ContainerElement grid && int.Parse(grid.Name) == id));
+                    renderCanvas.Children.Remove(renderCanvas.Children.FirstOrDefault(child => int.Parse(child.Name) == id));
                 });
 
             // Get a list of ids from the intersection list that are NOT currently rendered in the viewport
             var addIds = intersectList
                 .Select(rect => rect.Id)
-                .Except(renderedIds).ToList();
+                .Except(renderedIds);
 
-            if (addIds.Count > 0)
+            if (addIds.Count() > 0)
             {
                 // Add those page image elements that now need to be rendered
                 var addList = addIds
                     .Select(id => intersectList.FirstOrDefault(item => item.Id == id))
-                    .Where(rect => rect != null)
-                    .ToList();
+                    .Where(rect => rect != null);
 
                 // Render the new additions
                 foreach (var rect in addList)
+                {
                     renderCanvas.Children.Add(CreateThumbnail(rect));
+                    //break;
+                }
             }
-            renderCanvas.Draw();
+            if (deferredDraw == false)
+                renderCanvas.Draw();
         }
         private ContainerElement CreateThumbnail(LayoutRect rect)
         {
@@ -171,7 +177,7 @@ namespace OpenSilverPdfViewer.Renderer
             return pageRect;
         }
 
-        // The RenderQueue invokes this when an image thumbnail completes rendering
+        // The ThreadedRenderQueue invokes this when an image thumbnail completes rendering
         private void RenderWorkerCallback(int pageNumber, BlobElement image, bool _)
         {
             if (image != null && renderCanvas.Children.FirstOrDefault(elem => elem is ContainerElement container && int.Parse(container.Name) == pageNumber) is ContainerElement pageThumbnail)
@@ -202,7 +208,7 @@ namespace OpenSilverPdfViewer.Renderer
             if (ViewMode == ViewModeType.ThumbnailView)
             {
                 if (ViewportItemsChanged)
-                    RenderThumbnails();
+                    RenderThumbnails(true);
 
                 renderCanvas.Children
                     .Where(child => child is ContainerElement)
@@ -225,6 +231,7 @@ namespace OpenSilverPdfViewer.Renderer
                 image.X = -_scrollPosition.X;
                 image.Y = -_scrollPosition.Y;
             }
+            var count = renderCanvas.Children.Count;
             renderCanvas.Draw();
         }
         public override Size GetViewportSize()

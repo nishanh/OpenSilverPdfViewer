@@ -35,5 +35,9 @@ namespace OpenSilverPdfViewer.Utility
             Timer.Interval = TimeSpan.FromMilliseconds(SettleTime);
             Timer.Start();
         }
+        public void Stop()
+        {
+            Timer.Stop();
+        }
     }
 }
