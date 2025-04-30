@@ -21,7 +21,6 @@ namespace OpenSilverPdfViewer.Controls
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(PanelCtrl), new FrameworkPropertyMetadata(typeof(PanelCtrl)));
         }
-
         public PanelCtrl()
         {
             // this.DefaultStyleKey = typeof(PanelCtrl);

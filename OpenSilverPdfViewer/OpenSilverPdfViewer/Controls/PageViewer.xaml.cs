@@ -22,6 +22,7 @@ namespace OpenSilverPdfViewer.Controls
 
         private bool _rulersOn = false;
         private IRenderStrategy renderStrategy;
+        private Debouncer WheelDebouncer { get; set; } = new Debouncer(100);
 
         private ViewModeType _viewMode = ViewModeType.PageView;
         public ViewModeType ViewMode
@@ -38,12 +39,8 @@ namespace OpenSilverPdfViewer.Controls
             }
         }
 
-        public bool CanZoom
-        {
-            get { return PreviewPage > 0 && ViewMode == ViewModeType.PageView; }
-        }
-
-        private Debouncer WheelDebouncer { get; set; } = new Debouncer(100);
+        public bool CanZoom => PreviewPage > 0 && ViewMode == ViewModeType.PageView; 
+        public bool IsFitToView => ZoomLevel == 0 && ViewMode == ViewModeType.PageView;
 
         private double _pixelsToInches = 1 / 72d;
         public double PixelsToInches
@@ -233,7 +230,7 @@ namespace OpenSilverPdfViewer.Controls
         private static void OnRulerUnitsChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
-            ctrl.SetRulers();
+            ctrl.UpdateRulers();
         }
         #endregion Dependency Property Event Handlers
         #region Implementation
@@ -251,10 +248,10 @@ namespace OpenSilverPdfViewer.Controls
             await renderStrategy.Render(ViewMode);
             var displayScale = renderStrategy.GetDisplayScale() * 100d;
             ZoomValue = Math.Round(displayScale, 0);
-            SetScrollBars();
-            SetRulers();
+            UpdateScrollBars();
+            UpdateRulers();
         }
-        private void SetRulers()
+        private void UpdateRulers()
         {
             if (PreviewPage <= 0 || _rulersOn == false) 
                 return;
@@ -267,8 +264,14 @@ namespace OpenSilverPdfViewer.Controls
             ScrollPosX = pageScrollBarHorz.Value;
             ScrollPosY = pageScrollBarVert.Value;
         }
-        private void SetScrollBars()
+        private void UpdateScrollBars()
         {
+            if (IsFitToView)
+            {
+                // Remove scrollbars and exit in 'fit to view' mode
+                pageScrollBarHorz.Maximum = pageScrollBarVert.Maximum = 0;
+                return; 
+            }
             var displayScale = renderStrategy.GetDisplayScale();
             var viewportSize = renderStrategy.GetViewportSize();
             var layoutSize = renderStrategy.GetLayoutSize();
@@ -278,14 +281,14 @@ namespace OpenSilverPdfViewer.Controls
             var scrollExtentY = Math.Max(0, scaledLayoutSize.Height - viewportSize.Height);
             var valueScale = ViewMode == ViewModeType.ThumbnailView ? 1d : displayScale;
 
-            pageScrollBarHorz.Maximum = scrollExtentX;
             pageScrollBarHorz.ViewportSize = viewportSize.Width;
             pageScrollBarHorz.LargeChange = scrollExtentX / 10;
+            pageScrollBarHorz.Maximum = scrollExtentX;
             pageScrollBarHorz.Value *= valueScale;
 
-            pageScrollBarVert.Maximum = scrollExtentY;
             pageScrollBarVert.ViewportSize = viewportSize.Height;
             pageScrollBarVert.LargeChange = scrollExtentY / 10;
+            pageScrollBarVert.Maximum = scrollExtentY;
             pageScrollBarVert.Value *= valueScale;
 
             var reposition = (ZoomLevel != 0 || ViewMode == ViewModeType.ThumbnailView) && 
@@ -301,7 +304,7 @@ namespace OpenSilverPdfViewer.Controls
         private void PageScrollBars_Scroll(object sender, ScrollEventArgs e)
         {
             renderStrategy.ScrollViewport((int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
-            SetRulers(); 
+            UpdateRulers(); 
         }
         private void PageView_MouseWheel(object sender, MouseWheelEventArgs e)
         {
@@ -312,7 +315,9 @@ namespace OpenSilverPdfViewer.Controls
                 pageScrollBarVert.Value = scrollPos;
                 PageScrollBars_Scroll(pageScrollBarVert, new ScrollEventArgs(scrollPos, delta < 0 ? ScrollEventType.SmallIncrement : ScrollEventType.SmallDecrement));
             }
-            else if (ZoomLevel == 0)
+
+            // Use mouse-wheel to navigate pages in 'fit to view' mode
+            else if (IsFitToView)
             {
                 // Filter out rapid changes
                 WheelDebouncer.OnSettled = () =>
@@ -333,7 +338,7 @@ namespace OpenSilverPdfViewer.Controls
         {
             var toggleButton = (ToggleButton)sender;
             _rulersOn = (bool)toggleButton.IsChecked;
-            SetRulers();
+            UpdateRulers();
         }
         public void ViewModeBtn_Click(object sender, RoutedEventArgs e)
         {
@@ -351,7 +356,7 @@ namespace OpenSilverPdfViewer.Controls
                 renderStrategy.Reset();
                 renderStrategy.RenderPageNumber = PreviewPage;
                 await RenderView();
-                SetRulers();
+                UpdateRulers();
             }
         }
         public event PropertyChangedEventHandler PropertyChanged;

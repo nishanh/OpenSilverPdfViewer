@@ -204,6 +204,8 @@ namespace OpenSilverPdfViewer.Renderer
 
         public override void ScrollViewport(int scrollX, int scrollY)
         {
+            if (_scrollPosition.X == scrollX && _scrollPosition.Y == scrollY) return;
+
             _scrollPosition.X = scrollX;
             _scrollPosition.Y = scrollY;
 
@@ -254,10 +256,6 @@ namespace OpenSilverPdfViewer.Renderer
         {
             ClearViewport();
             _pageImageCache.Clear();
-        }
-        public override bool IsPageLoaded(int pageNumber)
-        {
-            return _pageImageCache.ContainsKey(pageNumber);
         }
 
         #endregion Interface Implementation

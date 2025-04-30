@@ -501,6 +501,7 @@ async function renderPageThumbnailAsync(pageNumber, thumbScale) {
     }
 }
 
+// Same as renderPageToImageAsync, but doesn't use async/await pattern
 async function renderPageToBlobAsync(pageNumber, thumbScale) {
     if (!this.pdfDocument) {
         console.error('No PDF loaded. Call loadPdfFile first.');
@@ -530,7 +531,6 @@ async function renderPageToBlobAsync(pageNumber, thumbScale) {
                 resolve(url);
             })
         });
-        console.log("Blob url: ", blobUrl);
 
         var sizeHeader = `${contentView.width}:${contentView.height};`;
         return sizeHeader.concat(blobUrl);
@@ -541,7 +541,8 @@ async function renderPageToBlobAsync(pageNumber, thumbScale) {
     }
 }
 
-// Same as renderPageToBlobAsync, but doesn't use async/await pattern
+// This doesn't work because I don't know how to marshall the image correctly
+// back to .net/opensilver
 async function renderPageToImageAsync(pageNumber, thumbScale) {
     if (!this.pdfDocument) {
         console.error('No PDF loaded. Call loadPdfFile first.');
@@ -569,8 +570,8 @@ async function renderPageToImageAsync(pageNumber, thumbScale) {
             canvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const imgElement = new Image();
-                imgElement.src = url;
                 imgElement.onload = () => resolve(imgElement);
+                imgElement.src = url;
             })
         });
         return image;

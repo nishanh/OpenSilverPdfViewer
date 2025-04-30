@@ -130,10 +130,7 @@ namespace OpenSilverPdfViewer.Renderer
 
                 // Render the new additions
                 foreach (var rect in addList)
-                {
                     renderCanvas.Children.Add(CreateThumbnail(rect));
-                    //break;
-                }
             }
             if (deferredDraw == false)
                 renderCanvas.Draw();
@@ -202,6 +199,8 @@ namespace OpenSilverPdfViewer.Renderer
 
         public override void ScrollViewport(int scrollX, int scrollY)
         {
+            if (_scrollPosition.X == scrollX && _scrollPosition.Y == scrollY) return;
+
             _scrollPosition.X = scrollX;
             _scrollPosition.Y = scrollY;
 
@@ -264,10 +263,6 @@ namespace OpenSilverPdfViewer.Renderer
             _pageImageCache.Clear();
             renderCanvas.Children.Clear();
             renderCanvas.Draw();
-        }
-        public override bool IsPageLoaded(int pageNumber)
-        {
-            return _pageImageCache.ContainsKey(pageNumber);
         }
 
         #endregion Interface Implementation

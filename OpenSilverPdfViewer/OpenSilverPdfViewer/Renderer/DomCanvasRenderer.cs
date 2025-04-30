@@ -176,10 +176,6 @@ namespace OpenSilverPdfViewer.Renderer
             _pageImageCache.Clear();
             _renderedIdList.Clear();
         }
-        public override bool IsPageLoaded(int pageNumber)
-        {
-            return _pageImageCache.ContainsKey(pageNumber);
-        }
 
         #endregion Interface Implementation
     }
