@@ -147,6 +147,9 @@ namespace OpenSilverPdfViewer.Controls
         public static readonly DependencyProperty ThumbnailUpdateProperty = DependencyProperty.Register("ThumbnailUpdate", typeof(ThumbnailUpdateType), typeof(PageViewer),
             new PropertyMetadata(ThumbnailUpdateType.Random, OnThumbnailUpdateChanged));
 
+        public static readonly DependencyProperty ThumbnailSizeProperty = DependencyProperty.Register("ThumbnailSize", typeof(ThumbnailSize), typeof(PageViewer),
+            new PropertyMetadata(ThumbnailSize.Medium, OnThumbnailSizeChanged));
+
         public static readonly DependencyProperty ThumbnailAnimationProperty = DependencyProperty.Register("ThumbnailAnimation", typeof(bool), typeof(PageViewer),
             new PropertyMetadata(true, OnThumbnailAnimationChanged));
 
@@ -205,6 +208,11 @@ namespace OpenSilverPdfViewer.Controls
             get => (ThumbnailUpdateType)GetValue(ThumbnailUpdateProperty);
             set => SetValue(ThumbnailUpdateProperty, value);
         }
+        public ThumbnailSize ThumbnailSize
+        {
+            get => (ThumbnailSize)GetValue(ThumbnailSizeProperty);
+            set => SetValue(ThumbnailSizeProperty, value);
+        }
 
         #endregion Dependency Properties
         #region Dependency Property Event Handlers
@@ -212,6 +220,7 @@ namespace OpenSilverPdfViewer.Controls
         private static async void OnFilenameChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
+            ctrl.renderStrategy.ThumbnailSize = ctrl.ThumbnailSize;
             ctrl.renderStrategy.Reset();
             await ctrl.renderStrategy.SetPageSizeRunList();
 
@@ -253,6 +262,7 @@ namespace OpenSilverPdfViewer.Controls
                 ctrl.pageElementCanvas;
 
             ctrl.renderStrategy = RenderStrategyFactory.Create(renderMode, canvasElement);
+            ctrl.renderStrategy.ThumbnailSize = ctrl.ThumbnailSize;
             ctrl.renderStrategy.RenderPageNumber = ctrl.PreviewPage;
             ctrl.renderStrategy.RenderZoomLevel = ctrl.ZoomLevel;
             ctrl.renderStrategy.AnimateThumbnails = ctrl.ThumbnailAnimation;
@@ -274,6 +284,13 @@ namespace OpenSilverPdfViewer.Controls
         {
             var ctrl = depObj as PageViewer;
             ctrl.renderStrategy.SetThumbnailUpdateType((ThumbnailUpdateType)e.NewValue);
+        }
+        private static async void OnThumbnailSizeChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
+        {
+            var ctrl = depObj as PageViewer;
+            ctrl.renderStrategy.ThumbnailSize = (ThumbnailSize)e.NewValue;
+            ctrl.renderStrategy.Reset();
+            await ctrl.RenderView();
         }
         private static void OnThumbnailAnimationChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
@@ -419,7 +436,6 @@ namespace OpenSilverPdfViewer.Controls
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
         private void RenderStrategy_RenderCompleteEvent(object sender, RenderCompleteEventArgs e)
         {
             // Abort all animations if another request comes in while current animations are playing

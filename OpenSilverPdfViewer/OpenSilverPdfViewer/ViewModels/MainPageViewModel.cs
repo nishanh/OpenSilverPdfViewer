@@ -190,6 +190,20 @@ namespace OpenSilverPdfViewer.ViewModels
             }
         }
 
+        private ThumbnailSize _thumbnailSize = ThumbnailSize.Medium;
+        public ThumbnailSize ThumbnailSize
+        {
+            get => _thumbnailSize;
+            set
+            {
+                if (_thumbnailSize != value)
+                {
+                    _thumbnailSize = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public bool CanAnimateThumbnails => ThumbnailUpdate != ThumbnailUpdateType.WhenRendered && RenderMode == RenderModeType.OpenSilver;
         
         #endregion Properties
@@ -237,6 +251,15 @@ namespace OpenSilverPdfViewer.ViewModels
             get
             {
                 return _setAnimateThumbnailCommand ?? (_setAnimateThumbnailCommand = new DelegateCommand(param => { AnimateThumbnails = !AnimateThumbnails; }, (param) => true));
+            }
+        }
+
+        private ICommand _setThumbnailSizeCommand;
+        public ICommand SetThumbnailSizeCommand
+        {
+            get
+            {
+                return _setThumbnailSizeCommand ?? (_setThumbnailSizeCommand = new DelegateCommand(param => { ThumbnailSize = (ThumbnailSize)param; }, (param) => true));
             }
         }
 

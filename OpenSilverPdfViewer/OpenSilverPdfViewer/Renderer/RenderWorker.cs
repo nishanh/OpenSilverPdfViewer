@@ -128,7 +128,7 @@ namespace OpenSilverPdfViewer.Renderer
                 T result = await (Task<T>)e.Result;
 
                 if (e.Cancelled && result is BlobElement blob)
-                    blob.InvalidateImage();
+                    blob.Invalidate();
 
                 ItemComplete(PageNumber, e.Cancelled ? default : result, e.Cancelled);
             }
@@ -211,7 +211,7 @@ namespace OpenSilverPdfViewer.Renderer
                 {
                     e.Cancel = true;
                     if (e.Result is BlobElement blob)
-                        blob.InvalidateImage();
+                        blob.Invalidate();
                 }
             }
             else

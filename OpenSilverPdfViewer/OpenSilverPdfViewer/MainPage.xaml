@@ -31,6 +31,7 @@
             </ResourceDictionary.MergedDictionaries>
             <conv:RenderModeToBoolConverter x:Key="RenderModeToBoolConverter"/>
             <conv:ThumbnailUpdateTypeToBoolConverter x:Key="ThumbnailUpdateTypeToBoolConverter"/>
+            <conv:ThumbnailSizeToBoolConverter x:Key="ThumbnailSizeToBoolConverter"/>
             <conv:RulerUnitsToBoolConverter x:Key="RulerUnitsToBoolConverter"/>
             <SolidColorBrush x:Key="CMSCtrlColorUIBrush" Color="#FF0C68E9"/>
             <Style x:Key="CheckBoxBorderStyle" TargetType="Border">
@@ -186,6 +187,30 @@
                             IsChecked="{Binding ThumbnailUpdate, Converter={StaticResource ThumbnailUpdateTypeToBoolConverter}, ConverterParameter={x:Static conv:ThumbnailUpdateType.WhenRendered}}"
                             Content="When Resolved"/>
                         <StackPanel Margin="-5,20,0,10" Orientation="Horizontal">
+                            <TextBlock FontSize="14" Text="Thumbnail Size"/>
+                            <Separator Width="150" Style="{StaticResource SeparatorStyle}"/>
+                        </StackPanel>
+                        <RadioButton 
+                            Margin="0,0,0,5" 
+                            GroupName="ThumbnailSize"
+                            Command="{Binding SetThumbnailSizeCommand}"
+                            CommandParameter="{x:Static conv:ThumbnailSize.Small}"
+                            IsChecked="{Binding ThumbnailSize, Converter={StaticResource ThumbnailSizeToBoolConverter}, ConverterParameter={x:Static conv:ThumbnailSize.Small}}"
+                            Content="Small"/>
+                        <RadioButton 
+                            Margin="0,0,0,5" 
+                            GroupName="ThumbnailSize"
+                            Command="{Binding SetThumbnailSizeCommand}"
+                            CommandParameter="{x:Static conv:ThumbnailSize.Medium}"
+                            IsChecked="{Binding ThumbnailSize, Converter={StaticResource ThumbnailSizeToBoolConverter}, ConverterParameter={x:Static conv:ThumbnailSize.Medium}}"
+                            Content="Medium"/>
+                        <RadioButton 
+                            GroupName="ThumbnailSize"
+                            Command="{Binding SetThumbnailSizeCommand}"
+                            CommandParameter="{x:Static conv:ThumbnailSize.Large}"
+                            IsChecked="{Binding ThumbnailSize, Converter={StaticResource ThumbnailSizeToBoolConverter}, ConverterParameter={x:Static conv:ThumbnailSize.Large}}"
+                            Content="Large"/>
+                        <StackPanel Margin="-5,20,0,10" Orientation="Horizontal">
                             <TextBlock FontSize="14" Text="Effects"/>
                             <Separator Style="{StaticResource SeparatorStyle}"/>
                         </StackPanel>
@@ -200,9 +225,11 @@
                         <TextBlock 
                             Foreground="Yellow"
                             Margin="25,3,0,0">
-                            <Run Text="Can only be used with the Canvas renderer"/>
+                            <Run Text="Can only be used with the OpenSilver"/>
                             <LineBreak/>
-                            <Run Text="using the Sequential or Random update option"/>
+                            <Run Text="Canvas renderer using the Sequential"/>
+                            <LineBreak/>                           
+                            <Run Text="or Random update option"/>
                         </TextBlock>
                     </StackPanel>
                 </ctrls:PanelCtrl>
@@ -221,6 +248,7 @@
                             RenderMode="{Binding RenderMode}"
                             RulerUnits="{Binding RulerUnits}"
                             ThumbnailUpdate="{Binding ThumbnailUpdate}"
+                            ThumbnailSize="{Binding ThumbnailSize}"
                             ThumbnailAnimation="{Binding AnimateThumbnails}"
                             PageCount="{Binding PageCount}"
                             PreviewPage="{Binding CurrentPage, Mode=TwoWay}"

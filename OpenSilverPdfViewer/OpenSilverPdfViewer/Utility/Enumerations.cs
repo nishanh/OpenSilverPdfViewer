@@ -33,4 +33,10 @@ namespace OpenSilverPdfViewer.Utility
         Random,
         WhenRendered
     }
+    public enum ThumbnailSize
+    {
+        Small,
+        Medium,
+        Large
+    }
 }

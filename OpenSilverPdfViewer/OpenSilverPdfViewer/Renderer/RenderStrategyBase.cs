@@ -22,6 +22,7 @@ namespace OpenSilverPdfViewer.Renderer
         int RenderPageNumber { get; set; }
         int RenderZoomLevel { get; set; }
         bool AnimateThumbnails { get; set; }
+        ThumbnailSize ThumbnailSize { get; set; }
         Task Render(ViewModeType viewMode);
         void ScrollViewport(int scrollX, int scrollY);
         double GetDisplayScale();
@@ -56,9 +57,9 @@ namespace OpenSilverPdfViewer.Renderer
         protected const int _thumbnailFontSize = 12;
         protected const double _renderDPI = 144d; // Larger values produce better image quality at the cost of performance
         protected const double _nativePdfDpi = 72d; // Don't change this. The PDF spec expresses all unit-measured values in points
-        protected const double _thumbnailScale = 0.25;
         protected const int _scrollBufferZone = 100; // Viewport top/bottom expansion in pixels applied when calculating thumbnail intersections
         protected Point _scrollPosition = new Point(0, 0);
+        protected double _thumbnailScale;
 
         public event RenderCompleteEventHandler RenderCompleteEvent;
 
@@ -71,6 +72,26 @@ namespace OpenSilverPdfViewer.Renderer
         protected ViewModeType ViewMode { get; private set; }
         protected List<PageSizeRun> PageSizeRunList { get; private set; }
         protected ThumbnailUpdateType ThumbnailUpdate { get; set; }
+
+        private ThumbnailSize _thumbnailSize;
+        public ThumbnailSize ThumbnailSize 
+        { 
+            get => _thumbnailSize;
+            set
+            {
+                _thumbnailSize = value;
+                switch (_thumbnailSize)
+                {
+                    case ThumbnailSize.Small:
+                        _thumbnailScale = 0.3; break;
+                    case ThumbnailSize.Medium:
+                        _thumbnailScale = 0.45; break;
+                    case ThumbnailSize.Large:
+                        _thumbnailScale = 0.6; break;
+                }
+            }
+        }
+
         protected Rect ViewportScrollRect
         {
             get

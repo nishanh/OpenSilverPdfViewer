@@ -10,7 +10,7 @@ using System.Globalization;
 
 namespace OpenSilverPdfViewer.Utility
 {
-    public class ValueConverterBase<T> : IValueConverter
+    public abstract class ValueConverterBase<T> : IValueConverter
     {
         public virtual object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -63,6 +63,17 @@ namespace OpenSilverPdfViewer.Utility
             if (value is ThumbnailUpdateType updateType)
             {
                 return updateType == (ThumbnailUpdateType)parameter;
+            }
+            return false;
+        }
+    }
+    public sealed class ThumbnailSizeToBoolConverter : ValueConverterBase<ThumbnailSize>
+    {
+        public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is ThumbnailSize updateType)
+            {
+                return updateType == (ThumbnailSize)parameter;
             }
             return false;
         }

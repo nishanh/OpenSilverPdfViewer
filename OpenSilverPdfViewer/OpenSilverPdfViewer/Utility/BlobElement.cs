@@ -32,7 +32,7 @@ namespace OpenSilverPdfViewer.Utility
                     throw new Exception("BlobElement source can only be a blob Url");
 
                 if (value != _sourceCache && !string.IsNullOrEmpty(_sourceCache))
-                    InvalidateImage();
+                    Invalidate();
 
                 _source = value;
                 _sourceCache = value;
@@ -71,7 +71,7 @@ namespace OpenSilverPdfViewer.Utility
             _isValid = await JSAsyncTaskRunner.RunJavaScriptAsync<bool>("loadBlobImageAsync", _jsImage, Source);
             return _isValid;
         }
-        public void InvalidateImage()
+        public void Invalidate()
         {
             OpenSilver.Interop.ExecuteJavaScript("URL.revokeObjectURL($0)", Source);
             _isValid = false;

@@ -16,8 +16,11 @@ namespace OpenSilverPdfViewer.Controls
 {
     public partial class PageNavigationCtrl : INotifyPropertyChanged
     {
+        #region Fields / Properties
+
         private string _validNumericText = "";
 
+        #endregion Fields / Properties
         #region Dependency Properties
 
         /// <summary>

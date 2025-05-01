@@ -14,6 +14,8 @@ A couple of other features were developed to solve some of the issues encountere
 
 ## Known Issues
 
+- Since all Pdf loading/processing happens on the **client**, you should avoid using any memory-intensive or excessively high page count documents with this demo. Doing so will choke the browser into non-responsiveness or crash it altogether. PDF.JS is meant to stream Pdf data from a server which is absent here and partial loading is not an option on the client-side.
+
 - **HTMLCanvs** renderer with **BlobElement** content has poor performance. Especially noticeable in Thumbnail view-mode. I'm sure this is my fault somewhere.
 
 - Repeatedly acquiring Javascript **CanvasContext2d** objects is expensive in terms of performance. More work needs to be done in this area.

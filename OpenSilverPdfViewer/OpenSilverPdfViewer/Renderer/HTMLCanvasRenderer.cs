@@ -288,7 +288,7 @@ namespace OpenSilverPdfViewer.Renderer
         {
             ClearViewport();
             foreach (var pageImage in _pageImageCache.Values)
-                pageImage.InvalidateImage();
+                pageImage.Invalidate();
             _pageImageCache.Clear();
             renderCanvas.Children.Clear();
             renderCanvas.Draw();
