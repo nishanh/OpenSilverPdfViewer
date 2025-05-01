@@ -13,6 +13,12 @@ using System.Windows.Controls.Primitives;
 
 using OpenSilverPdfViewer.Utility;
 using OpenSilverPdfViewer.Renderer;
+using System.Windows.Controls;
+using System.Linq;
+using OpenSilverPdfViewer.JSInterop;
+using System.Windows.Media.Animation;
+using System.Collections.Generic;
+using System.Windows.Media;
 
 namespace OpenSilverPdfViewer.Controls
 {
@@ -21,6 +27,8 @@ namespace OpenSilverPdfViewer.Controls
         #region Fields / Properties
 
         private bool _rulersOn = false;
+        public Grid AnimatingThumbnail { get; private set; }
+
         private IRenderStrategy renderStrategy;
         private Debouncer WheelDebouncer { get; set; } = new Debouncer(100);
 
@@ -136,6 +144,18 @@ namespace OpenSilverPdfViewer.Controls
         public static readonly DependencyProperty RulerUnitsProperty = DependencyProperty.Register("RulerUnits", typeof(UnitMeasure), typeof(PageViewer),
             new PropertyMetadata(UnitMeasure.Imperial, OnRulerUnitsChanged));
 
+        public static readonly DependencyProperty ThumbnailUpdateProperty = DependencyProperty.Register("ThumbnailUpdate", typeof(ThumbnailUpdateType), typeof(PageViewer),
+            new PropertyMetadata(ThumbnailUpdateType.Random, OnThumbnailUpdateChanged));
+
+        public static readonly DependencyProperty ThumbnailAngleProperty = DependencyProperty.Register("ThumbnailAngle", typeof(double), typeof(PageViewer),
+            new PropertyMetadata(0d, OnThumbnailAngleChanged));
+
+        public double ThumbnailAngle
+        {
+            get => (double)GetValue(ThumbnailAngleProperty);
+            set => SetValue(ThumbnailAngleProperty, value);
+        }
+
         public string Filename
         {
             get => (string)GetValue(FilenameProperty);
@@ -170,6 +190,11 @@ namespace OpenSilverPdfViewer.Controls
         {
             get => (UnitMeasure)GetValue(RulerUnitsProperty);
             set => SetValue(RulerUnitsProperty, value);
+        }
+        public ThumbnailUpdateType ThumbnailUpdate
+        {
+            get => (ThumbnailUpdateType)GetValue(ThumbnailUpdateProperty);
+            set => SetValue(ThumbnailUpdateProperty, value);
         }
 
         #endregion Dependency Properties
@@ -212,6 +237,7 @@ namespace OpenSilverPdfViewer.Controls
             var renderMode = (RenderModeType)e.NewValue;
 
             ctrl.renderStrategy.Reset();
+            ctrl.renderStrategy.RenderCompleteEvent -= ctrl.RenderStrategy_RenderCompleteEvent;
 
             var canvasElement = renderMode == RenderModeType.OpenSilver ? 
                 (FrameworkElement)ctrl.pageImageCanvas :
@@ -220,6 +246,8 @@ namespace OpenSilverPdfViewer.Controls
             ctrl.renderStrategy = RenderStrategyFactory.Create(renderMode, canvasElement);
             ctrl.renderStrategy.RenderPageNumber = ctrl.PreviewPage;
             ctrl.renderStrategy.RenderZoomLevel = ctrl.ZoomLevel;
+            ctrl.renderStrategy.SetThumbnailUpdateType(ctrl.ThumbnailUpdate);
+            ctrl.renderStrategy.RenderCompleteEvent += ctrl.RenderStrategy_RenderCompleteEvent;
 
             if (!string.IsNullOrEmpty(ctrl.Filename))
             {
@@ -232,6 +260,33 @@ namespace OpenSilverPdfViewer.Controls
             var ctrl = depObj as PageViewer;
             ctrl.UpdateRulers();
         }
+        private static void OnThumbnailUpdateChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
+        {
+            var ctrl = depObj as PageViewer;
+            ctrl.renderStrategy.SetThumbnailUpdateType((ThumbnailUpdateType)e.NewValue);
+        }
+        private static void OnThumbnailAngleChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
+        {
+            var ctrl = depObj as PageViewer;
+
+            var oldValue = (int)Math.Truncate((double)e.OldValue);
+            var newValue = (int)Math.Truncate((double)e.NewValue);
+
+            if (newValue != oldValue)
+            {
+                var thumbBorder = ctrl.AnimatingThumbnail.Children[0] as Border;
+
+                // Swap out the placeholder text with the page image at the ~90deg point in the animation
+                if (newValue > 90 && thumbBorder.Child is TextBlock && thumbBorder.Tag is Image image)
+                {
+                    // Need a mirror transform to "undo" the rotate effect during the animation
+                    image.RenderTransform = new ScaleTransform { CenterX = (thumbBorder.Width - 1) / 2, ScaleX = -1, ScaleY = 1 };
+                    thumbBorder.Child = image;
+                }
+                thumbBorder.Rotate(newValue);
+            }
+        }
+
         #endregion Dependency Property Event Handlers
         #region Implementation
 
@@ -349,12 +404,42 @@ namespace OpenSilverPdfViewer.Controls
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        private void RenderStrategy_RenderCompleteEvent(object sender, RenderCompleteEventArgs e)
+        {
+            StartAnimationSequence(e.Thumbnails);
+        }
+        private void StartAnimationSequence(List<Grid> thumbnails)
+        {
+            var index = ThumbnailUpdate == ThumbnailUpdateType.Random ? new Random().Next(thumbnails.Count) : 0;
+            AnimatingThumbnail = thumbnails[index];
+            AnimatingThumbnail.SetupDOMAnimation();
+
+            var storyboard = new Storyboard();
+            var animationTime = new Duration(TimeSpan.FromMilliseconds(250));
+            var thumbAnimation = new DoubleAnimation() { Duration = animationTime, To = 180d, FillBehavior = FillBehavior.Stop };
+            Storyboard.SetTarget(thumbAnimation, this);
+            Storyboard.SetTargetProperty(thumbAnimation, new PropertyPath(ThumbnailAngleProperty));
+            storyboard.Children.Add(thumbAnimation);
+
+            storyboard.Completed += (s, e) =>
+            {
+                var border = AnimatingThumbnail.Children[0] as Border;
+                border.Child.RenderTransform = null;
+                thumbnails.RemoveAt(index);
+
+                if (thumbnails.Count > 0)
+                    StartAnimationSequence(thumbnails);
+            };
+            storyboard.Begin();
+        }
         private async void OnAsyncPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(ViewMode))
             {
                 renderStrategy.Reset();
                 renderStrategy.RenderPageNumber = PreviewPage;
+                renderStrategy.SetThumbnailUpdateType(ThumbnailUpdate);
                 await RenderView();
                 UpdateRulers();
             }

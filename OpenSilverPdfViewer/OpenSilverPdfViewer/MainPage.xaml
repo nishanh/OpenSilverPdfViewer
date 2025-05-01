@@ -30,7 +30,24 @@
                 <ResourceDictionary Source="/OpenSilverPdfViewer;component/Styles/PanelCtrlStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <conv:RenderModeToBoolConverter x:Key="RenderModeToBoolConverter"/>
+            <conv:ThumbnailUpdateTypeToBoolConverter x:Key="ThumbnailUpdateTypeToBoolConverter"/>
             <conv:RulerUnitsToBoolConverter x:Key="RulerUnitsToBoolConverter"/>
+            <SolidColorBrush x:Key="CMSCtrlColorUIBrush" Color="#FF0C68E9"/>
+            <Style x:Key="CheckBoxBorderStyle" TargetType="Border">
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Margin" Value="-1,2,0,0"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Width" Value="18"/>
+                <Setter Property="Height" Value="18"/>
+                <Setter Property="BorderBrush" Value="{StaticResource CMSCtrlColorUIBrush}"/>
+            </Style>
+            <Style x:Key="SeparatorStyle" TargetType="Separator">
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Margin" Value="5,3,0,0"/>
+                <Setter Property="Width" Value="200"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="BorderBrush" Value="{StaticResource CMSCtrlColorUIBrush}"/>
+            </Style>
         </ResourceDictionary>
     </Page.Resources>
     <Grid 
@@ -125,8 +142,13 @@
                         Margin="20,10,0,0"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top">
+                        <StackPanel Margin="-5,0,0,10" Orientation="Horizontal">
+                            <TextBlock FontSize="14" Text="Rulers"/>
+                            <Separator Style="{StaticResource SeparatorStyle}"/>
+                        </StackPanel>
                         <RadioButton
                             Name="rulerMetric"
+                            GroupName="RulerOptions"
                             Margin="0,0,0,5"
                             Command="{Binding SetRulerUnitsCommand}"
                             CommandParameter="{x:Static conv:UnitMeasure.Metric}"
@@ -134,10 +156,43 @@
                             Content="Metric Ruler Units"/>
                         <RadioButton
                             Name="rulerImperial"
+                            GroupName="RulerOptions"
                             Command="{Binding SetRulerUnitsCommand}"
                             CommandParameter="{x:Static conv:UnitMeasure.Imperial}"
                             IsChecked="{Binding RulerUnits, Converter={StaticResource RulerUnitsToBoolConverter}, ConverterParameter={x:Static conv:UnitMeasure.Imperial}}"
                             Content="Imperial Ruler Units"/>
+                        <StackPanel Margin="-5,20,0,10" Orientation="Horizontal">
+                            <TextBlock FontSize="14" Text="Thumbnail Image Update"/>
+                            <Separator Width="80" Style="{StaticResource SeparatorStyle}"/>
+                        </StackPanel>
+                        <RadioButton 
+                            Margin="0,0,0,5" 
+                            GroupName="ThumbnailOptions"
+                            Command="{Binding SetThumbnailUpdateTypeCommand}"
+                            CommandParameter="{x:Static conv:ThumbnailUpdateType.Random}"
+                            IsChecked="{Binding ThumbnailUpdate, Converter={StaticResource ThumbnailUpdateTypeToBoolConverter}, ConverterParameter={x:Static conv:ThumbnailUpdateType.Random}}"
+                            Content="Random"/>
+                        <RadioButton 
+                            Margin="0,0,0,5" 
+                            GroupName="ThumbnailOptions"
+                            Command="{Binding SetThumbnailUpdateTypeCommand}"
+                            CommandParameter="{x:Static conv:ThumbnailUpdateType.Sequential}"
+                            IsChecked="{Binding ThumbnailUpdate, Converter={StaticResource ThumbnailUpdateTypeToBoolConverter}, ConverterParameter={x:Static conv:ThumbnailUpdateType.Sequential}}"
+                            Content="Sequential"/>
+                        <RadioButton 
+                            Command="{Binding SetThumbnailUpdateTypeCommand}"
+                            GroupName="ThumbnailOptions"
+                            CommandParameter="{x:Static conv:ThumbnailUpdateType.WhenRendered}"
+                            IsChecked="{Binding ThumbnailUpdate, Converter={StaticResource ThumbnailUpdateTypeToBoolConverter}, ConverterParameter={x:Static conv:ThumbnailUpdateType.WhenRendered}}"
+                            Content="When Resolved"/>
+                        <StackPanel Margin="-5,20,0,10" Orientation="Horizontal">
+                            <TextBlock FontSize="14" Text="Effects"/>
+                            <Separator Style="{StaticResource SeparatorStyle}"/>
+                        </StackPanel>
+                        <Grid>
+                            <Border Style="{StaticResource CheckBoxBorderStyle}"/>
+                            <CheckBox Content="Thumbnail Image Plane Projection"/>
+                        </Grid>
                     </StackPanel>
                 </ctrls:PanelCtrl>
             </Grid>
@@ -154,6 +209,7 @@
                             Filename="{Binding Filename}"
                             RenderMode="{Binding RenderMode}"
                             RulerUnits="{Binding RulerUnits}"
+                            ThumbnailUpdate="{Binding ThumbnailUpdate}"
                             PageCount="{Binding PageCount}"
                             PreviewPage="{Binding CurrentPage, Mode=TwoWay}"
                             ZoomValue="{Binding PageZoomValue, Mode=TwoWay}"

@@ -25,6 +25,8 @@ namespace OpenSilverPdfViewer.Renderer
 
         private readonly Dictionary<int, BlobElement> _pageImageCache = new Dictionary<int, BlobElement>();
         private readonly HtmlCanvas renderCanvas;
+        private readonly Debouncer _thumbnailTimer = new Debouncer(50);
+
         private ThreadedRenderQueue<BlobElement> RenderQueue { get; set; }
         public bool ViewportItemsChanged
         {
@@ -52,7 +54,10 @@ namespace OpenSilverPdfViewer.Renderer
         public HTMLCanvasRenderer(HtmlCanvas canvas) 
         {
             renderCanvas = canvas;
+
             RenderQueue = new ThreadedRenderQueue<BlobElement>(RenderWorkerCallback);
+            if (ThumbnailUpdate != ThumbnailUpdateType.WhenRendered)
+                RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
 
             _thumbnailFillColor = (Color)renderCanvas.FindResource("CMSCtrlNormalStartColor");
             _thumbnailStrokeColor = (Color)renderCanvas.FindResource("CMSForegroundColor");
@@ -185,13 +190,37 @@ namespace OpenSilverPdfViewer.Renderer
                     _pageImageCache.Add(pageNumber, image);
 
                 // Replace the text placeholder with the rendered page image
-                if (pageThumbnail.Children.FirstOrDefault() is TextElement textPlaceholder)
+                if (ThumbnailUpdate == ThumbnailUpdateType.WhenRendered && pageThumbnail.Children.FirstOrDefault() is TextElement textPlaceholder)
                 {
                     pageThumbnail.Children.Remove(textPlaceholder);
                     pageThumbnail.Children.Add(image);
                     renderCanvas.Draw();
                 }
             }
+        }
+        private void RenderQueueCompleted()
+        {
+            var placeHolders = renderCanvas.Children
+                .Where(child => child is ContainerElement container && container.Children[0] is TextElement)
+                .Cast<ContainerElement>()
+                .ToList();
+
+            _thumbnailTimer.OnSettled = () =>
+            {
+                var index = ThumbnailUpdate == ThumbnailUpdateType.Random ? new Random().Next(placeHolders.Count) : 0;
+                var placeHolder = placeHolders[index];
+                placeHolders.RemoveAt(index);
+
+                if (_pageImageCache.TryGetValue(int.Parse(placeHolder.Name), out var image))
+                {
+                    placeHolder.Children.Clear();
+                    placeHolder.Children.Add(image);
+                    renderCanvas.Draw();
+                }
+                if (placeHolders.Count > 0)
+                    _thumbnailTimer.Reset();
+            };
+            _thumbnailTimer.Reset();
         }
 
         #endregion Methods
@@ -263,6 +292,14 @@ namespace OpenSilverPdfViewer.Renderer
             _pageImageCache.Clear();
             renderCanvas.Children.Clear();
             renderCanvas.Draw();
+        }
+        public override void SetThumbnailUpdateType(ThumbnailUpdateType thumbnailUpdateType)
+        {
+            ThumbnailUpdate = thumbnailUpdateType;
+            if (ThumbnailUpdate == ThumbnailUpdateType.WhenRendered)
+                RenderQueue.QueueCompletedCallback = null;
+            else if (RenderQueue.QueueCompletedCallback == null)
+                RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
         }
 
         #endregion Interface Implementation

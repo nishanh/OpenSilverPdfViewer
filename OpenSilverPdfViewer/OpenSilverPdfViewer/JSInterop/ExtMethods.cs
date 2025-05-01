@@ -8,6 +8,8 @@ using System.Linq;
 using System.Windows;
 using System.Reflection;
 using CSHTML5.Native.Html.Controls;
+using System.Runtime.CompilerServices;
+using System.Windows.Controls;
 
 namespace OpenSilverPdfViewer.JSInterop
 {
@@ -46,6 +48,19 @@ namespace OpenSilverPdfViewer.JSInterop
             {
                 throw new InvalidOperationException($"Invalid JSON size: {json}");
             }
+        }
+        public static void SetupDOMAnimation(this Grid thumbnail)
+        {
+            var domGrid = OpenSilver.Interop.GetDiv(thumbnail);
+            OpenSilver.Interop.ExecuteJavaScript("$0.style.perspective='500px'", domGrid);
+            var thumbBorder = thumbnail.Children[0] as Border;
+            var domBorder = OpenSilver.Interop.GetDiv(thumbBorder);
+            OpenSilver.Interop.ExecuteJavaScript("$0.style.transformOrigin='center'", domBorder);
+        }
+        public static void Rotate(this UIElement element, int angle)
+        {
+            var domElement = OpenSilver.Interop.GetDiv(element);
+            OpenSilver.Interop.ExecuteJavaScript($"$0.style.transform='rotateY({angle}deg)'", domElement);
         }
     }
 }

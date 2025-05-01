@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Collections.Generic;
 using OpenSilverPdfViewer.Utility;
+using System.Threading;
+using OpenSilverPdfViewer.JSInterop;
+using OpenSilverPdfViewer.Controls;
 
 namespace OpenSilverPdfViewer.Renderer
 {
@@ -19,13 +22,16 @@ namespace OpenSilverPdfViewer.Renderer
     {
         #region Fields / Properties
 
-        private Brush _thumbnailFillBrush;
-        private Brush _thumbnailStrokeBrush;
-        private Brush _thumbnailFontBrush;
-        private FontFamily _thumbnailFontFamily = new FontFamily(_thumbnailFont);
+        private readonly Brush _thumbnailFillBrush;
+        private readonly Brush _thumbnailStrokeBrush;
+        private readonly Brush _thumbnailFontBrush;
+        private readonly FontFamily _thumbnailFontFamily = new FontFamily(_thumbnailFont);
 
         private readonly Dictionary<int, Image> _pageImageCache = new Dictionary<int, Image>();
         private readonly Canvas renderCanvas;
+        private readonly Debouncer _thumbnailTimer = new Debouncer(50);
+        private readonly bool _animateThumbnails = true;
+
         private ThreadedRenderQueue<Image> RenderQueue { get; set; }
         public bool ViewportItemsChanged
         {
@@ -53,7 +59,10 @@ namespace OpenSilverPdfViewer.Renderer
         public OSCanvasRenderer(Canvas canvas)
         {
             renderCanvas = canvas;
+
             RenderQueue = new ThreadedRenderQueue<Image>(RenderWorkerCallback);
+            if (ThumbnailUpdate != ThumbnailUpdateType.WhenRendered)
+                RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
 
             _thumbnailFontBrush = renderCanvas.FindResource("CMSForegroundBrush") as Brush;
             _thumbnailFillBrush = renderCanvas.FindResource("CMSPopupBorderBrush") as Brush;
@@ -131,19 +140,31 @@ namespace OpenSilverPdfViewer.Renderer
                 .Where(rect => rect != null)
                 .ToList();
 
+            //int i = 0;
             // Render the new additions
             foreach (var rect in addList)
                 renderCanvas.Children.Add(CreateThumbnail(rect));
         }
         private Grid CreateThumbnail(LayoutRect rect)
         {
+            // var transform = new TransformGroup();
+
+            var mirror = new ScaleTransform()
+            {
+                CenterX = rect.Width / 2,
+                CenterY = rect.Height / 2,
+                ScaleX = -1,
+                ScaleY = 1
+            };
+
             var pageRect = new Grid
             {
                 Width = rect.Width,
                 Height = rect.Height,
-                Tag = rect.Id
+                Tag = rect.Id,
+                Name = $"thumbnail-{rect.Id}"
             };
-
+            
             // Use the actual cached thumbnail image
             if (_pageImageCache.TryGetValue(rect.Id, out var image))
             {
@@ -158,7 +179,7 @@ namespace OpenSilverPdfViewer.Renderer
                     Width = rect.Width,
                     Height = rect.Height,
                     Background = _thumbnailFillBrush,
-                    BorderBrush = _thumbnailStrokeBrush,
+                    BorderBrush = _thumbnailStrokeBrush, 
                     BorderThickness = new Thickness(1d)
                 };
                 var pageNumberText = new TextBlock
@@ -193,9 +214,53 @@ namespace OpenSilverPdfViewer.Renderer
                 if (_pageImageCache.ContainsKey(pageNumber) == false)
                     _pageImageCache.Add(pageNumber, image);
 
-                // Replace the placeholder with the actual page image thumbnail
-                pageThumbnail.Children.Clear();
-                pageThumbnail.Children.Add(image);
+                if (ThumbnailUpdate == ThumbnailUpdateType.WhenRendered)
+                {
+                    // Replace the placeholder with the actual page image thumbnail
+                    pageThumbnail.Children.Clear();
+                    pageThumbnail.Children.Add(image);
+                }
+            }
+        }
+        private void RenderQueueCompleted()
+        {
+            var placeHolders = renderCanvas.Children
+                .Where(child => child is Grid grid && grid.Children[0] is Border)
+                .Cast<Grid>()
+                .ToList();
+
+            if (_animateThumbnails)
+            {
+                var borderList = placeHolders
+                    .Select(child => child.Children[0])
+                    .Cast<Border>()
+                    .ToList();
+
+                var i = 0;
+                foreach (var thumb in placeHolders)
+                {
+                    if (_pageImageCache.TryGetValue((int)thumb.Tag, out var image))
+                        borderList[i++].Tag = image;
+                }
+                FireRenderCompleteEvent(placeHolders);
+            }
+            else
+            {
+                _thumbnailTimer.OnSettled = () =>
+                {
+                    var index = ThumbnailUpdate == ThumbnailUpdateType.Random ? new Random().Next(placeHolders.Count) : 0;
+                    var placeHolder = placeHolders[index];
+                    placeHolders.RemoveAt(index);
+
+                    if (_pageImageCache.TryGetValue((int)placeHolder.Tag, out var image))
+                    {
+                        placeHolder.Children.Clear();
+                        placeHolder.Children.Add(image);
+                    }
+                    if (placeHolders.Count > 0)
+                        _thumbnailTimer.Reset();
+                };
+                _thumbnailTimer.Reset();
             }
         }
 
@@ -204,6 +269,8 @@ namespace OpenSilverPdfViewer.Renderer
 
         public override void ScrollViewport(int scrollX, int scrollY)
         {
+
+
             if (_scrollPosition.X == scrollX && _scrollPosition.Y == scrollY) return;
 
             _scrollPosition.X = scrollX;
@@ -256,6 +323,14 @@ namespace OpenSilverPdfViewer.Renderer
         {
             ClearViewport();
             _pageImageCache.Clear();
+        }
+        public override void SetThumbnailUpdateType(ThumbnailUpdateType thumbnailUpdateType)
+        {
+            ThumbnailUpdate = thumbnailUpdateType;
+            if (ThumbnailUpdate == ThumbnailUpdateType.WhenRendered)
+                RenderQueue.QueueCompletedCallback = null;
+            else if (RenderQueue.QueueCompletedCallback == null)
+                RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
         }
 
         #endregion Interface Implementation

@@ -21,6 +21,7 @@ namespace OpenSilverPdfViewer.Renderer
     {
         int RenderPageNumber { get; set; }
         int RenderZoomLevel { get; set; }
+        event RenderCompleteEventHandler RenderCompleteEvent;
         Task Render(ViewModeType viewMode);
         void ScrollViewport(int scrollX, int scrollY);
         double GetDisplayScale();
@@ -31,6 +32,7 @@ namespace OpenSilverPdfViewer.Renderer
         void ClearViewport();
         void Reset();
         Task SetPageSizeRunList();
+        void SetThumbnailUpdateType(ThumbnailUpdateType thumbnailUpdateType);
     }
     public static class RenderStrategyFactory
     {
@@ -56,6 +58,8 @@ namespace OpenSilverPdfViewer.Renderer
         protected const int _scrollBufferZone = 100; // Viewport top/bottom expansion in pixels applied when calculating thumbnail intersections
         protected Point _scrollPosition = new Point(0, 0);
 
+        public event RenderCompleteEventHandler RenderCompleteEvent;
+
         public int RenderPageNumber { get; set; }
         public int RenderZoomLevel { get; set; }
         public Rect LayoutRect { get; private set; }
@@ -63,6 +67,7 @@ namespace OpenSilverPdfViewer.Renderer
         protected PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Instance;
         protected ViewModeType ViewMode { get; private set; }
         protected List<PageSizeRun> PageSizeRunList { get; private set; }
+        protected ThumbnailUpdateType ThumbnailUpdate { get; set; }
         protected Rect ViewportScrollRect
         {
             get
@@ -141,6 +146,7 @@ namespace OpenSilverPdfViewer.Renderer
         public abstract Size GetLayoutSize();
         public abstract void ClearViewport();
         public abstract void Reset();
+        public abstract void SetThumbnailUpdateType(ThumbnailUpdateType thumbnailUpdateType);
 
         #endregion Interface Members
         #region Methods
@@ -214,7 +220,11 @@ namespace OpenSilverPdfViewer.Renderer
             LayoutRectList.ForEach(rect => rect.Id = id++);
             LayoutRect = new Rect(new Size(LayoutRectList.Max(rect => rect.Right), LayoutRectList.Max(rect => rect.Bottom)));
         }
-        
+        protected void FireRenderCompleteEvent(List<Grid> thumbnails)
+        {
+            RenderCompleteEvent?.Invoke(this, new RenderCompleteEventArgs(thumbnails));
+        }
+
         #endregion Methods
     }
 }

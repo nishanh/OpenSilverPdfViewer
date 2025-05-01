@@ -27,4 +27,10 @@ namespace OpenSilverPdfViewer.Utility
         Cached,
         Exists
     }
+    public enum ThumbnailUpdateType
+    {
+        Sequential,
+        Random,
+        WhenRendered
+    }
 }

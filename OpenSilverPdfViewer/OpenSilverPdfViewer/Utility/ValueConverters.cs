@@ -56,6 +56,17 @@ namespace OpenSilverPdfViewer.Utility
             return false;
         }
     }
+    public sealed class ThumbnailUpdateTypeToBoolConverter : ValueConverterBase<ThumbnailUpdateType>
+    {
+        public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is ThumbnailUpdateType updateType)
+            {
+                return updateType == (ThumbnailUpdateType)parameter;
+            }
+            return false;
+        }
+    }
     public sealed class RulerUnitsToBoolConverter : ValueConverterBase<UnitMeasure>
     {
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)

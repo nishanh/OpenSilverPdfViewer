@@ -3,6 +3,7 @@
 // Free to use, modify, and distribute under the terms of the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System;
 using System.Linq;
 using System.Windows;
 using System.Threading.Tasks;
@@ -19,6 +20,8 @@ namespace OpenSilverPdfViewer.Renderer
         private const string viewCanvasId = "pageViewCanvas"; // from xaml
         private readonly Dictionary<int, JSImageReference> _pageImageCache = new Dictionary<int, JSImageReference>();
         private List<int> _renderedIdList = new List<int>();
+        private readonly Debouncer _thumbnailTimer = new Debouncer(50);
+
         private ThreadedRenderQueue<JSImageReference> RenderQueue { get; set; }
         public bool ViewportItemsChanged
         {
@@ -43,6 +46,8 @@ namespace OpenSilverPdfViewer.Renderer
         public DomCanvasRenderer()
         {
             RenderQueue = new ThreadedRenderQueue<JSImageReference>(RenderWorkerCallback);
+            if (ThumbnailUpdate != ThumbnailUpdateType.WhenRendered)
+                RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
         }
 
         #endregion Initialization
@@ -112,7 +117,7 @@ namespace OpenSilverPdfViewer.Renderer
                     if (_pageImageCache.ContainsKey(pageNumber) == false)
                         _pageImageCache.Add(pageNumber, image);
 
-                    if (image.Status != CacheStatus.Exists)
+                    if (ThumbnailUpdate == ThumbnailUpdateType.WhenRendered && image.Status != CacheStatus.Exists)
                     {
                         // Replace the text placeholder with the rendered page image
                         var rect = LayoutRectList.Single(rc => rc.Id == pageNumber);
@@ -120,6 +125,32 @@ namespace OpenSilverPdfViewer.Renderer
                     }
                 }
             }
+        }
+        private void RenderQueueCompleted()
+        {
+            var placeHolderArray = new int[_renderedIdList.Count];
+            _renderedIdList.CopyTo(placeHolderArray);
+            List<int> placeHolders = placeHolderArray.ToList();
+
+            _thumbnailTimer.OnSettled = () =>
+            {
+                var index = ThumbnailUpdate == ThumbnailUpdateType.Random ? new Random().Next(placeHolders.Count) : 0;
+                var placeHolderId = placeHolders[index];
+                placeHolders.RemoveAt(index);
+
+                if (_pageImageCache.TryGetValue(placeHolderId, out var image))
+                {
+                    if (image.Status != CacheStatus.Exists)
+                    {
+                        var rect = LayoutRectList.Single(rc => rc.Id == placeHolderId);
+                        PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPosition.X, rect.Y - _scrollPosition.Y, rect.Width, rect.Height, viewCanvasId);
+                        image.Status = CacheStatus.Exists;
+                    }
+                }
+                if (placeHolders.Count > 0)
+                    _thumbnailTimer.Reset();
+            };
+            _thumbnailTimer.Reset();
         }
 
         #endregion Methods
@@ -175,6 +206,14 @@ namespace OpenSilverPdfViewer.Renderer
             PdfJs.InvalidateThumbnailCache();
             _pageImageCache.Clear();
             _renderedIdList.Clear();
+        }
+        public override void SetThumbnailUpdateType(ThumbnailUpdateType thumbnailUpdateType)
+        {
+            ThumbnailUpdate = thumbnailUpdateType;
+            if (ThumbnailUpdate == ThumbnailUpdateType.WhenRendered)
+                RenderQueue.QueueCompletedCallback = null;
+            else if (RenderQueue.QueueCompletedCallback == null)
+                RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
         }
 
         #endregion Interface Implementation

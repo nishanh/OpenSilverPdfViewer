@@ -8,7 +8,7 @@ namespace OpenSilverPdfViewer.Utility
     public class JSImageReference
     {
         public int Id { get; private set; }
-        public CacheStatus Status { get; private set; }
+        public CacheStatus Status { get; set; }
         public JSImageReference(int id, CacheStatus status)
         {
             Id = id;

@@ -160,6 +160,20 @@ namespace OpenSilverPdfViewer.ViewModels
             }
         }
 
+        private ThumbnailUpdateType _thumbnailUpdate = ThumbnailUpdateType.Random;
+        public ThumbnailUpdateType ThumbnailUpdate
+        {
+            get => _thumbnailUpdate;
+            set
+            {
+                if (_thumbnailUpdate != value)
+                {
+                    _thumbnailUpdate = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         #endregion Properties
         #region Commands
 
@@ -187,6 +201,15 @@ namespace OpenSilverPdfViewer.ViewModels
             get
             {
                 return _setRulerUnitsCommand ?? (_setRulerUnitsCommand = new DelegateCommand(param => { RulerUnits = (UnitMeasure)param; }, (param) => true));
+            }
+        }
+
+        private ICommand _setThumbnailUpdateTypeCommand;
+        public ICommand SetThumbnailUpdateTypeCommand
+        {
+            get
+            {
+                return _setThumbnailUpdateTypeCommand ?? (_setThumbnailUpdateTypeCommand = new DelegateCommand(param => { ThumbnailUpdate = (ThumbnailUpdateType)param; }, (param) => true));
             }
         }
 

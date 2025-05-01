@@ -16,12 +16,15 @@ using OpenSilverPdfViewer.JSInterop;
 namespace OpenSilverPdfViewer.Renderer
 {
     public delegate void WorkerCompleteDelegate<T>(int pageNumber, T result, bool cancelled);
+    public delegate void QueueCompleted();
+
     public sealed class ThreadedRenderQueue<T>
     {
         #region Fields / Properties
 
         private readonly List<ThreadedRenderWorker<T>> _workers = new List<ThreadedRenderWorker<T>>();
         private WorkerCompleteDelegate<T> RenderCompleteCallback { get; set; }
+        public QueueCompleted QueueCompletedCallback { get; set; }
         private Debouncer RenderRequestDebouncer { get; set; }
 
         #endregion Fields / Properties
@@ -74,6 +77,9 @@ namespace OpenSilverPdfViewer.Renderer
 
             if (!cancelled)
                 RenderCompleteCallback(pageNumber, result, false);
+
+            if (_workers.Count == 0 && QueueCompletedCallback != null)
+                QueueCompletedCallback();
         }
 
         #endregion Event Handlers
@@ -136,19 +142,19 @@ namespace OpenSilverPdfViewer.Renderer
             {
                 if (typeof(T) == typeof(Image))
                 {
-                    PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Image");
+                    //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Image");
                     var task = PdfJs.GetPdfPageImageAsync(PageNumber, _scaleFactor);
                     e.Result = task;
                 }
                 else if (typeof(T) == typeof(BlobElement))
                 {
-                    PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Blob");
+                    //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Blob");
                     var task = PdfJs.GetPdfPageBlobElementAsync(PageNumber, _scaleFactor);
                     e.Result = task;
                 }
                 else if (typeof(T) == typeof(JSImageReference))
                 {
-                    PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to internal cache");
+                    //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to internal cache");
                     var task = PdfJs.RenderThumbnailToCacheAsync(PageNumber, _scaleFactor);
                     e.Result = task;
                 }
@@ -188,7 +194,7 @@ namespace OpenSilverPdfViewer.Renderer
                 }
                 else if (typeof(T) == typeof(BlobElement))
                 {
-                    PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Blob");
+                    //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Blob");
                     var task = PdfJs.GetPdfPageBlobElementAsync(PageNumber, _scaleFactor);
                     task?.Wait();
                     e.Result = task.Result;
@@ -197,7 +203,7 @@ namespace OpenSilverPdfViewer.Renderer
                 {
                     var task = PdfJs.RenderThumbnailToCacheAsync(PageNumber, _scaleFactor);
                     task?.Wait();
-                    PdfJs.ConsoleLog($"Task complete: {task.Result}");
+                    //PdfJs.ConsoleLog($"Task complete: {task.Result}");
                     e.Result = new JSImageReference(PageNumber, (CacheStatus)task.Result);
                 }
 
@@ -309,17 +315,17 @@ namespace OpenSilverPdfViewer.Renderer
         {
             if (typeof(T) == typeof(Image))
             {
-                PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Image");
+                //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Image");
                 TaskWorker = (Task<T>)(object)PdfJs.GetPdfPageImageAsync(PageNumber, _scaleFactor);
             }
             else if (typeof(T) == typeof(BlobElement))
             {
-                PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Blob");
+                //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Blob");
                 TaskWorker = (Task<T>)(object)PdfJs.GetPdfPageBlobElementAsync(PageNumber, _scaleFactor);
             }
             else
             {
-                PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to internal cache");
+                //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to internal cache");
                 TaskWorker = (Task<T>)(object)PdfJs.RenderThumbnailToCacheAsync(PageNumber, _scaleFactor);
             }
         }
