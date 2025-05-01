@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Collections.Generic;
 
+using OpenSilverPdfViewer.Utility;
 using CSHTML5.Native.Html.Controls;
 using OpenSilverPdfViewer.JSInterop;
-using OpenSilverPdfViewer.Utility;
 
 namespace OpenSilverPdfViewer.Renderer
 {
@@ -21,7 +21,7 @@ namespace OpenSilverPdfViewer.Renderer
     {
         int RenderPageNumber { get; set; }
         int RenderZoomLevel { get; set; }
-        event RenderCompleteEventHandler RenderCompleteEvent;
+        bool AnimateThumbnails { get; set; }
         Task Render(ViewModeType viewMode);
         void ScrollViewport(int scrollX, int scrollY);
         double GetDisplayScale();
@@ -33,6 +33,8 @@ namespace OpenSilverPdfViewer.Renderer
         void Reset();
         Task SetPageSizeRunList();
         void SetThumbnailUpdateType(ThumbnailUpdateType thumbnailUpdateType);
+
+        event RenderCompleteEventHandler RenderCompleteEvent;
     }
     public static class RenderStrategyFactory
     {
@@ -62,6 +64,7 @@ namespace OpenSilverPdfViewer.Renderer
 
         public int RenderPageNumber { get; set; }
         public int RenderZoomLevel { get; set; }
+        public bool AnimateThumbnails { get; set; }
         public Rect LayoutRect { get; private set; }
         public List<LayoutRect> LayoutRectList { get; private set; }
         protected PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Instance;

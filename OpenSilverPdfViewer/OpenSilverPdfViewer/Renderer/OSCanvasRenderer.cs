@@ -12,9 +12,6 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Collections.Generic;
 using OpenSilverPdfViewer.Utility;
-using System.Threading;
-using OpenSilverPdfViewer.JSInterop;
-using OpenSilverPdfViewer.Controls;
 
 namespace OpenSilverPdfViewer.Renderer
 {
@@ -30,7 +27,6 @@ namespace OpenSilverPdfViewer.Renderer
         private readonly Dictionary<int, Image> _pageImageCache = new Dictionary<int, Image>();
         private readonly Canvas renderCanvas;
         private readonly Debouncer _thumbnailTimer = new Debouncer(50);
-        private readonly bool _animateThumbnails = true;
 
         private ThreadedRenderQueue<Image> RenderQueue { get; set; }
         public bool ViewportItemsChanged
@@ -225,22 +221,22 @@ namespace OpenSilverPdfViewer.Renderer
         private void RenderQueueCompleted()
         {
             var placeHolders = renderCanvas.Children
-                .Where(child => child is Grid grid && grid.Children[0] is Border)
+                .Where(child => child is Grid grid && grid.Children[0] is Border border && border.Child is TextBlock)
                 .Cast<Grid>()
                 .ToList();
 
-            if (_animateThumbnails)
+            if (AnimateThumbnails)
             {
                 var borderList = placeHolders
                     .Select(child => child.Children[0])
                     .Cast<Border>()
                     .ToList();
 
-                var i = 0;
-                foreach (var thumb in placeHolders)
+                for (var i = 0; i < placeHolders.Count; i++)
                 {
+                    var thumb = placeHolders[i];
                     if (_pageImageCache.TryGetValue((int)thumb.Tag, out var image))
-                        borderList[i++].Tag = image;
+                        borderList[i].Tag = image;
                 }
                 FireRenderCompleteEvent(placeHolders);
             }
@@ -254,8 +250,9 @@ namespace OpenSilverPdfViewer.Renderer
 
                     if (_pageImageCache.TryGetValue((int)placeHolder.Tag, out var image))
                     {
-                        placeHolder.Children.Clear();
-                        placeHolder.Children.Add(image);
+                        var border = placeHolder.Children[0] as Border;
+                        border.BorderThickness = new Thickness(0);
+                        border.Child = image;
                     }
                     if (placeHolders.Count > 0)
                         _thumbnailTimer.Reset();

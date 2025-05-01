@@ -191,8 +191,19 @@
                         </StackPanel>
                         <Grid>
                             <Border Style="{StaticResource CheckBoxBorderStyle}"/>
-                            <CheckBox Content="Thumbnail Image Plane Projection"/>
+                            <CheckBox 
+                                IsEnabled="{Binding CanAnimateThumbnails}"
+                                Command="{Binding SetAnimateThumbnailCommand}"
+                                IsChecked="{Binding AnimateThumbnails}"
+                                Content="Animate Thumbnail Image Update"/>
                         </Grid>
+                        <TextBlock 
+                            Foreground="Yellow"
+                            Margin="25,3,0,0">
+                            <Run Text="Can only be used with the Canvas renderer"/>
+                            <LineBreak/>
+                            <Run Text="using the Sequential or Random update option"/>
+                        </TextBlock>
                     </StackPanel>
                 </ctrls:PanelCtrl>
             </Grid>
@@ -210,6 +221,7 @@
                             RenderMode="{Binding RenderMode}"
                             RulerUnits="{Binding RulerUnits}"
                             ThumbnailUpdate="{Binding ThumbnailUpdate}"
+                            ThumbnailAnimation="{Binding AnimateThumbnails}"
                             PageCount="{Binding PageCount}"
                             PreviewPage="{Binding CurrentPage, Mode=TwoWay}"
                             ZoomValue="{Binding PageZoomValue, Mode=TwoWay}"

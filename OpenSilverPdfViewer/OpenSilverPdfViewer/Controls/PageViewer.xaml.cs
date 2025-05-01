@@ -6,19 +6,18 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using System.Windows.Controls;
+using System.Collections.Generic;
+using System.Windows.Media.Animation;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls.Primitives;
 
 using OpenSilverPdfViewer.Utility;
 using OpenSilverPdfViewer.Renderer;
-using System.Windows.Controls;
-using System.Linq;
 using OpenSilverPdfViewer.JSInterop;
-using System.Windows.Media.Animation;
-using System.Collections.Generic;
-using System.Windows.Media;
 
 namespace OpenSilverPdfViewer.Controls
 {
@@ -31,6 +30,7 @@ namespace OpenSilverPdfViewer.Controls
 
         private IRenderStrategy renderStrategy;
         private Debouncer WheelDebouncer { get; set; } = new Debouncer(100);
+        private Storyboard ThumbnailStoryboard { get; set; }
 
         private ViewModeType _viewMode = ViewModeType.PageView;
         public ViewModeType ViewMode
@@ -147,6 +147,9 @@ namespace OpenSilverPdfViewer.Controls
         public static readonly DependencyProperty ThumbnailUpdateProperty = DependencyProperty.Register("ThumbnailUpdate", typeof(ThumbnailUpdateType), typeof(PageViewer),
             new PropertyMetadata(ThumbnailUpdateType.Random, OnThumbnailUpdateChanged));
 
+        public static readonly DependencyProperty ThumbnailAnimationProperty = DependencyProperty.Register("ThumbnailAnimation", typeof(bool), typeof(PageViewer),
+            new PropertyMetadata(true, OnThumbnailAnimationChanged));
+
         public static readonly DependencyProperty ThumbnailAngleProperty = DependencyProperty.Register("ThumbnailAngle", typeof(double), typeof(PageViewer),
             new PropertyMetadata(0d, OnThumbnailAngleChanged));
 
@@ -154,6 +157,12 @@ namespace OpenSilverPdfViewer.Controls
         {
             get => (double)GetValue(ThumbnailAngleProperty);
             set => SetValue(ThumbnailAngleProperty, value);
+        }
+
+        public bool ThumbnailAnimation
+        {
+            get => (bool)GetValue(ThumbnailAnimationProperty);
+            set => SetValue(ThumbnailAnimationProperty, value);
         }
 
         public string Filename
@@ -246,6 +255,7 @@ namespace OpenSilverPdfViewer.Controls
             ctrl.renderStrategy = RenderStrategyFactory.Create(renderMode, canvasElement);
             ctrl.renderStrategy.RenderPageNumber = ctrl.PreviewPage;
             ctrl.renderStrategy.RenderZoomLevel = ctrl.ZoomLevel;
+            ctrl.renderStrategy.AnimateThumbnails = ctrl.ThumbnailAnimation;
             ctrl.renderStrategy.SetThumbnailUpdateType(ctrl.ThumbnailUpdate);
             ctrl.renderStrategy.RenderCompleteEvent += ctrl.RenderStrategy_RenderCompleteEvent;
 
@@ -264,6 +274,11 @@ namespace OpenSilverPdfViewer.Controls
         {
             var ctrl = depObj as PageViewer;
             ctrl.renderStrategy.SetThumbnailUpdateType((ThumbnailUpdateType)e.NewValue);
+        }
+        private static void OnThumbnailAnimationChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
+        {
+            var ctrl = depObj as PageViewer;
+            ctrl.renderStrategy.AnimateThumbnails = (bool)e.NewValue;
         }
         private static void OnThumbnailAngleChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
@@ -407,31 +422,52 @@ namespace OpenSilverPdfViewer.Controls
 
         private void RenderStrategy_RenderCompleteEvent(object sender, RenderCompleteEventArgs e)
         {
+            // Abort all animations if another request comes in while current animations are playing
+            if (ThumbnailStoryboard != null && ThumbnailStoryboard.GetCurrentState() == ClockState.Active)
+            {
+                ThumbnailStoryboard.SkipToFill();
+                ThumbnailStoryboard.Stop();
+                ThumbnailStoryboard = null;
+            }
             StartAnimationSequence(e.Thumbnails);
         }
         private void StartAnimationSequence(List<Grid> thumbnails)
         {
             var index = ThumbnailUpdate == ThumbnailUpdateType.Random ? new Random().Next(thumbnails.Count) : 0;
             AnimatingThumbnail = thumbnails[index];
-            AnimatingThumbnail.SetupDOMAnimation();
+            var isInDom = AnimatingThumbnail.SetupDOMAnimation();
 
-            var storyboard = new Storyboard();
-            var animationTime = new Duration(TimeSpan.FromMilliseconds(250));
+            // Move to the next element if this one was removed from the DOM (by scrolling most likely)
+            if (!isInDom)
+            {
+                thumbnails.RemoveAt(index);
+                if (thumbnails.Count > 0)
+                    StartAnimationSequence(thumbnails);
+            }
+
+            ThumbnailStoryboard = new Storyboard();
+            var animationTime = new Duration(TimeSpan.FromMilliseconds(200));
             var thumbAnimation = new DoubleAnimation() { Duration = animationTime, To = 180d, FillBehavior = FillBehavior.Stop };
             Storyboard.SetTarget(thumbAnimation, this);
             Storyboard.SetTargetProperty(thumbAnimation, new PropertyPath(ThumbnailAngleProperty));
-            storyboard.Children.Add(thumbAnimation);
+            ThumbnailStoryboard.Children.Add(thumbAnimation);
 
-            storyboard.Completed += (s, e) =>
+            ThumbnailStoryboard.Completed += (s, e) =>
             {
                 var border = AnimatingThumbnail.Children[0] as Border;
                 border.Child.RenderTransform = null;
-                thumbnails.RemoveAt(index);
+                if (border.Child is Image)
+                    border.BorderThickness = new Thickness(0);
+
+                if (ThumbnailStoryboard != null)
+                    thumbnails.Remove(border.Parent as Grid);
+                else
+                    thumbnails.Clear();
 
                 if (thumbnails.Count > 0)
                     StartAnimationSequence(thumbnails);
             };
-            storyboard.Begin();
+            ThumbnailStoryboard.Begin();
         }
         private async void OnAsyncPropertyChanged(object sender, PropertyChangedEventArgs e)
         {

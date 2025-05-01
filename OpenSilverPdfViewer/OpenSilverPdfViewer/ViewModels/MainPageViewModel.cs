@@ -141,6 +141,7 @@ namespace OpenSilverPdfViewer.ViewModels
                 {
                     _renderMode = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(CanAnimateThumbnails));
                 }
             }
         }
@@ -170,10 +171,27 @@ namespace OpenSilverPdfViewer.ViewModels
                 {
                     _thumbnailUpdate = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(CanAnimateThumbnails));
                 }
             }
         }
 
+        private bool _animateThumbnails = true;
+        public bool AnimateThumbnails
+        {
+            get => _animateThumbnails;
+            set
+            {
+                if (_animateThumbnails != value)
+                {
+                    _animateThumbnails = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool CanAnimateThumbnails => ThumbnailUpdate != ThumbnailUpdateType.WhenRendered && RenderMode == RenderModeType.OpenSilver;
+        
         #endregion Properties
         #region Commands
 
@@ -210,6 +228,15 @@ namespace OpenSilverPdfViewer.ViewModels
             get
             {
                 return _setThumbnailUpdateTypeCommand ?? (_setThumbnailUpdateTypeCommand = new DelegateCommand(param => { ThumbnailUpdate = (ThumbnailUpdateType)param; }, (param) => true));
+            }
+        }
+
+        private ICommand _setAnimateThumbnailCommand;
+        public ICommand SetAnimateThumbnailCommand
+        {
+            get
+            {
+                return _setAnimateThumbnailCommand ?? (_setAnimateThumbnailCommand = new DelegateCommand(param => { AnimateThumbnails = !AnimateThumbnails; }, (param) => true));
             }
         }
 

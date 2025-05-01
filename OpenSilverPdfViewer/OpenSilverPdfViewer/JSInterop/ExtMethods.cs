@@ -7,9 +7,8 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Reflection;
-using CSHTML5.Native.Html.Controls;
-using System.Runtime.CompilerServices;
 using System.Windows.Controls;
+using CSHTML5.Native.Html.Controls;
 
 namespace OpenSilverPdfViewer.JSInterop
 {
@@ -49,18 +48,33 @@ namespace OpenSilverPdfViewer.JSInterop
                 throw new InvalidOperationException($"Invalid JSON size: {json}");
             }
         }
-        public static void SetupDOMAnimation(this Grid thumbnail)
+        public static bool SetupDOMAnimation(this Grid thumbnail)
         {
+            var status = true;
             var domGrid = OpenSilver.Interop.GetDiv(thumbnail);
-            OpenSilver.Interop.ExecuteJavaScript("$0.style.perspective='500px'", domGrid);
-            var thumbBorder = thumbnail.Children[0] as Border;
-            var domBorder = OpenSilver.Interop.GetDiv(thumbBorder);
-            OpenSilver.Interop.ExecuteJavaScript("$0.style.transformOrigin='center'", domBorder);
+            if (domGrid != null)
+            {
+                OpenSilver.Interop.ExecuteJavaScript("$0.style.perspective='500px'", domGrid);
+                var thumbBorder = thumbnail.Children[0] as Border;
+                var domBorder = OpenSilver.Interop.GetDiv(thumbBorder);
+                if (domBorder != null)
+                    OpenSilver.Interop.ExecuteJavaScript("$0.style.transformOrigin='center'", domBorder);
+                else
+                    status = false;
+            }
+            else
+                status = false;
+            
+            return status;
         }
-        public static void Rotate(this UIElement element, int angle)
+        public static void Rotate(this Border border, int angle)
         {
-            var domElement = OpenSilver.Interop.GetDiv(element);
-            OpenSilver.Interop.ExecuteJavaScript($"$0.style.transform='rotateY({angle}deg)'", domElement);
+            if (border.Parent != null)
+            {
+                var domElement = OpenSilver.Interop.GetDiv(border);
+                if (domElement != null)
+                    OpenSilver.Interop.ExecuteJavaScript($"$0.style.transform='rotateY({angle}deg)'", domElement);
+            }
         }
     }
 }
