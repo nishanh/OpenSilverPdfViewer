@@ -19,6 +19,17 @@ let thumbCache = new Map();
 // Before you purists complain, I know this is not the best practice and that I could be using nested 'then's
 // but I think that the IIFE approach that allows async/await syntax is more readable and maintainable.
 
+function getFiles() {
+    let input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = _ => {
+        // you can use this method to get file and perform respective operations
+        let files = Array.from(input.files);
+        console.log(files);
+    };
+    input.click();
+}
+
 function logToConsole(message) {
     console.log(message);
 }
@@ -346,6 +357,12 @@ async function getPageSizeRunListAsync() {
 // Load a PDF file from a URL
 async function loadPdfFileAsync(pdfFileName) {
     const loadingTask = pdfjsLib.getDocument(pdfFileName);
+
+    loadingTask.onProgress = (progressData) => {
+        var percentLoaded = (progressData.loaded / progressData.total) * 100;
+        console.log(`status: ${percentLoaded}% loaded `);
+    };
+
     try {
         const pdf = await loadingTask.promise;
         this.pdfDocument = pdf; // Cache the PDF object
@@ -362,6 +379,11 @@ async function loadPdfStreamAsync(pdfFileStream) {
     const binaryString = atob(pdfFileStream);
     const bytes = Uint8Array.from(binaryString, char => char.charCodeAt(0));
     const loadingTask = pdfjsLib.getDocument(bytes);
+
+    loadingTask.onProgress = (progressData) => {
+        var percentLoaded = (progressData.loaded / progressData.total) * 100;
+        console.log(`status: ${percentLoaded}% loaded `);
+    };
 
     try {
         const pdf = await loadingTask.promise;

@@ -27,7 +27,7 @@ namespace OpenSilverPdfViewer.Renderer
         private readonly HtmlCanvas renderCanvas;
         private readonly Debouncer _thumbnailTimer = new Debouncer(50);
 
-        private ThreadedRenderQueue<BlobElement> RenderQueue { get; set; }
+        private RenderQueue<BlobElement> RenderQueue { get; set; }
         public bool ViewportItemsChanged
         {
             get
@@ -55,7 +55,7 @@ namespace OpenSilverPdfViewer.Renderer
         {
             renderCanvas = canvas;
 
-            RenderQueue = new ThreadedRenderQueue<BlobElement>(RenderWorkerCallback);
+            RenderQueue = new RenderQueue<BlobElement>(RenderWorkerCallback);
             if (ThumbnailUpdate != ThumbnailUpdateType.WhenRendered)
                 RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
 
@@ -179,7 +179,7 @@ namespace OpenSilverPdfViewer.Renderer
             return pageRect;
         }
 
-        // The ThreadedRenderQueue invokes this when an image thumbnail completes rendering
+        // The RenderQueue invokes this when an image thumbnail completes rendering
         private void RenderWorkerCallback(int pageNumber, BlobElement image, bool _)
         {
             if (image != null && renderCanvas.Children.FirstOrDefault(elem => elem is ContainerElement container && int.Parse(container.Name) == pageNumber) is ContainerElement pageThumbnail)

@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <OpenSilverType>7</OpenSilverType>
     <PublishTrimmed>true</PublishTrimmed>
-    <WasmEnableSIMD>false</WasmEnableSIMD>
+    <WasmEnableSIMD>true</WasmEnableSIMD>
     <!-- Uncomment to enable AOT compilation when publishing -->
     <!--<RunAOTCompilation>true</RunAOTCompilation>-->
   </PropertyGroup>

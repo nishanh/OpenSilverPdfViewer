@@ -28,7 +28,7 @@ namespace OpenSilverPdfViewer.Renderer
         private readonly Canvas renderCanvas;
         private readonly Debouncer _thumbnailTimer = new Debouncer(50);
 
-        private ThreadedRenderQueue<Image> RenderQueue { get; set; }
+        private RenderQueue<Image> RenderQueue { get; set; }
         public bool ViewportItemsChanged
         {
             get
@@ -56,7 +56,7 @@ namespace OpenSilverPdfViewer.Renderer
         {
             renderCanvas = canvas;
 
-            RenderQueue = new ThreadedRenderQueue<Image>(RenderWorkerCallback);
+            RenderQueue = new RenderQueue<Image>(RenderWorkerCallback);
             if (ThumbnailUpdate != ThumbnailUpdateType.WhenRendered)
                 RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
 

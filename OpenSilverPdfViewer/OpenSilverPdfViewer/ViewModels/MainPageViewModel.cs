@@ -7,7 +7,6 @@ using System;
 using System.IO;
 using System.Windows.Input;
 using System.ComponentModel;
-using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 
 using OpenSilverPdfViewer.Utility;
@@ -204,6 +203,48 @@ namespace OpenSilverPdfViewer.ViewModels
             }
         }
 
+        private int _loadProgress = 0;
+        public int LoadProgress
+        {
+            get => _loadProgress;
+            set
+            {
+                if (_loadProgress != value)
+                {
+                    _loadProgress = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private string _loadProgressText = "0%";
+        public string LoadProgressText
+        {
+            get => _loadProgressText;
+            set
+            {
+                if (_loadProgressText != value)
+                {
+                    _loadProgressText = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private bool _isDocumentLoading;
+        public bool IsDocumentLoading 
+        {
+            get => _isDocumentLoading;
+            set
+            {
+                if (_isDocumentLoading != value)
+                {
+                    _isDocumentLoading = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public bool CanAnimateThumbnails => ThumbnailUpdate != ThumbnailUpdateType.WhenRendered && RenderMode == RenderModeType.OpenSilver;
         
         #endregion Properties
@@ -273,45 +314,31 @@ namespace OpenSilverPdfViewer.ViewModels
                 return;
 
             int pageCount;
-            
+            string filename = string.Empty;
+
             if (sourceOption == "file")
             {
-                (string filename, int pages) = await LoadPdfFileStream();
-                Filename = filename;
-                pageCount = pages;
+                var dlg = new OpenSilver.Controls.OpenFileDialog
+                {
+                    Multiselect = false,
+                    Filter = "PDF files (*.pdf)|*.pdf"
+                };
+                if ((bool)await dlg.ShowDialogAsync() == false) return;
+
+                // All the file data is read by opensilver when the dialog is dismissed.
+                // So, "dlg.File.OpenRead" is just a copy to a memory stream
+                filename = dlg.File.Name;
+                var base64Stream = Convert.ToBase64String(((MemoryStream)dlg.File.OpenRead()).ToArray());
+                pageCount = await PdfJs.LoadPdfFileStreamAsync(base64Stream);
             }
             else
             {
-                var filename = sourceOption == "sample1" ? "POH_Calidus_4.0_EN.pdf" : "compressed.tracemonkey-pldi-09.pdf";
+                filename = sourceOption == "sample1" ? "POH_Calidus_4.0_EN.pdf" : "compressed.tracemonkey-pldi-09.pdf";
                 pageCount = await PdfJs.LoadPdfFileAsync($@"Data\{filename}");
-                Filename = filename; // setting this property triggers the pageviewer, so set it *after* the document is loaded
             }
+            Filename = filename; // setting this property triggers the pageviewer, so set it *after* the document is loaded
             StatusText = $"PDF - {Filename} loaded with {pageCount} pages";
             PageCount = pageCount;
-        }
-        public async Task<(string, int)> LoadPdfFileStream()
-        {
-            string filename = string.Empty;
-            int pageCount = 0;
-
-            var dlg = new OpenSilver.Controls.OpenFileDialog
-            {
-                Multiselect = false,
-                Filter = "PDF files (*.pdf)|*.pdf"
-            };
-            
-            var result = await dlg.ShowDialogAsync();
-
-            if ((bool)result == true)
-            {
-                filename = dlg.File.Name;
-                using (var pdfStream = dlg.File.OpenRead() as MemoryStream)
-                {
-                    var base64Stream = Convert.ToBase64String(pdfStream.ToArray());
-                    pageCount = await PdfJs.LoadPdfFileStreamAsync(base64Stream);
-                }
-            }
-            return (filename, pageCount);
         }
         private async void ShowPageSize()
         {

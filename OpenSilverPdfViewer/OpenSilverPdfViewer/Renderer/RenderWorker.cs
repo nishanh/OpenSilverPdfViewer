@@ -18,11 +18,11 @@ namespace OpenSilverPdfViewer.Renderer
     public delegate void WorkerCompleteDelegate<T>(int pageNumber, T result, bool cancelled);
     public delegate void QueueCompleted();
 
-    public sealed class ThreadedRenderQueue<T>
+    public sealed class RenderQueue<T>
     {
         #region Fields / Properties
 
-        private readonly List<ThreadedRenderWorker<T>> _workers = new List<ThreadedRenderWorker<T>>();
+        private readonly List<RenderWorker<T>> _workers = new List<RenderWorker<T>>();
         private WorkerCompleteDelegate<T> RenderCompleteCallback { get; set; }
         public QueueCompleted QueueCompletedCallback { get; set; }
         private Debouncer RenderRequestDebouncer { get; set; }
@@ -30,10 +30,10 @@ namespace OpenSilverPdfViewer.Renderer
         #endregion Fields / Properties
         #region Initialization
 
-        public ThreadedRenderQueue(WorkerCompleteDelegate<T> workerCompleteDelegate)
+        public RenderQueue(WorkerCompleteDelegate<T> workerCompleteDelegate)
         {
             if (!(typeof(T) == typeof(Image) || typeof(T) == typeof(BlobElement) || typeof(T) == typeof(JSImageReference)))
-                throw new Exception($"Invalid type: {typeof(T).Name}. ThreadedRenderQueue can only be used with Image, BlobElement or JSImageReference types");
+                throw new Exception($"Invalid type: {typeof(T).Name}. RenderQueue can only be used with Image, BlobElement or JSImageReference types");
 
             RenderCompleteCallback = workerCompleteDelegate;
             RenderRequestDebouncer = new Debouncer(() => StartWorkers());
@@ -47,7 +47,7 @@ namespace OpenSilverPdfViewer.Renderer
             var renderWorker = _workers.FirstOrDefault(worker => worker.PageNumber == pageNumber);
             if (renderWorker == null)
             {
-                var worker = new ThreadedRenderWorker<T>(pageNumber, scaleFactor, WorkerCompleted);
+                var worker = new RenderWorker<T>(pageNumber, scaleFactor, WorkerCompleted);
                 _workers.Add(worker);
                 RenderRequestDebouncer.Reset();
             }
@@ -84,7 +84,7 @@ namespace OpenSilverPdfViewer.Renderer
 
         #endregion Event Handlers
     }
-    internal sealed class ThreadedRenderWorker<T>
+    internal sealed class RenderWorker<T>
     {
         #region Fields / Properties
 
@@ -97,7 +97,7 @@ namespace OpenSilverPdfViewer.Renderer
         #endregion Fields / Properties
         #region Initialization
 
-        public ThreadedRenderWorker(int pageNumber, double scaleFactor, WorkerCompleteDelegate<T> callback) 
+        public RenderWorker(int pageNumber, double scaleFactor, WorkerCompleteDelegate<T> callback) 
         {
             ItemComplete = callback;
             PageNumber = pageNumber;
@@ -134,7 +134,8 @@ namespace OpenSilverPdfViewer.Renderer
             }
         }
 
-        // Marshall the task back to the main thread to await completion
+        // Marshall the task back to the main "thread" to await completion. WASM
+        // isn't really MT though. This stuff needs to be refactored to use Web-workers
         private void Worker_DoWork(object sender, DoWorkEventArgs e)
         {
             var worker = sender as BackgroundWorker;
@@ -142,19 +143,16 @@ namespace OpenSilverPdfViewer.Renderer
             {
                 if (typeof(T) == typeof(Image))
                 {
-                    //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Image");
                     var task = PdfJs.GetPdfPageImageAsync(PageNumber, _scaleFactor);
                     e.Result = task;
                 }
                 else if (typeof(T) == typeof(BlobElement))
                 {
-                    //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Blob");
                     var task = PdfJs.GetPdfPageBlobElementAsync(PageNumber, _scaleFactor);
                     e.Result = task;
                 }
                 else if (typeof(T) == typeof(JSImageReference))
                 {
-                    //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to internal cache");
                     var task = PdfJs.RenderThumbnailToCacheAsync(PageNumber, _scaleFactor);
                     e.Result = task;
                 }
@@ -179,7 +177,8 @@ namespace OpenSilverPdfViewer.Renderer
             ItemComplete(PageNumber, result, e.Cancelled);
         }
         // Sadly, this does not work in the browser environment since there is no thread synchronization context that
-        // can make tasks awaitable in a background thread (in wasm, I guess). Works in the simulator though, so go figure...
+        // can make tasks awaitable in a background thread (in wasm, I guess). Works in the simulator though which
+        // I guess is not running in a wasm environment? So, MT works there
         [Obsolete]
         private void Worker_DoWorkOrg(object sender, DoWorkEventArgs e)
         {
@@ -194,7 +193,6 @@ namespace OpenSilverPdfViewer.Renderer
                 }
                 else if (typeof(T) == typeof(BlobElement))
                 {
-                    //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Blob");
                     var task = PdfJs.GetPdfPageBlobElementAsync(PageNumber, _scaleFactor);
                     task?.Wait();
                     e.Result = task.Result;
@@ -203,7 +201,6 @@ namespace OpenSilverPdfViewer.Renderer
                 {
                     var task = PdfJs.RenderThumbnailToCacheAsync(PageNumber, _scaleFactor);
                     task?.Wait();
-                    //PdfJs.ConsoleLog($"Task complete: {task.Result}");
                     e.Result = new JSImageReference(PageNumber, (CacheStatus)task.Result);
                 }
 
@@ -216,118 +213,6 @@ namespace OpenSilverPdfViewer.Renderer
             }
             else
                 e.Cancel = true;
-        }
-
-        #endregion Implementation
-    }
-    public sealed class RenderQueue<T>
-    {
-        #region Fields / Properties
-
-        private readonly List<RenderTask<T>> _taskList = new List<RenderTask<T>>();
-        private WorkerCompleteDelegate<T> RenderCompleteCallback { get; set; }
-        private Debouncer RenderRequestDebouncer { get; set; }
-        private Debouncer RenderTaskAwaiter { get; set; }
-
-        #endregion Fields / Properties
-        #region Initialization
-
-        public RenderQueue(WorkerCompleteDelegate<T> workerCompleteDelegate)
-        {
-            if (!(typeof(T) == typeof(Image) || typeof(T) == typeof(BlobElement) || typeof(T) == typeof(JSImageReference)))
-                throw new Exception($"Invalid type: {typeof(T).Name}. ThreadedRenderQueue can only be used with Image, BlobElement or JSImageReference types");
-
-            RenderCompleteCallback = workerCompleteDelegate;
-            RenderRequestDebouncer = new Debouncer(() => StartWorkers(), 500);
-            RenderTaskAwaiter = new Debouncer(() => UpdateWorkers(), 500);
-        }
-
-        #endregion Initialization
-        #region Implementation
-
-        public void QueueItem(int pageNumber, double scaleFactor)
-        {
-            var renderWorker = _taskList.FirstOrDefault(worker => worker.PageNumber == pageNumber);
-            if (renderWorker == null)
-            {
-                var worker = new RenderTask<T>(pageNumber, scaleFactor);
-                _taskList.Add(worker);
-                RenderRequestDebouncer.Reset();
-            }
-        }
-        public void DequeueItem(int pageNumber)
-        {
-            var renderWorker = _taskList.FirstOrDefault(worker => worker.PageNumber == pageNumber);
-            if (renderWorker != null)
-            {
-                _taskList.Remove(renderWorker);
-                RenderRequestDebouncer.Reset();
-            }
-        }
-        public void UpdateWorkers()
-        {
-            var completedTasks = _taskList.Where(task => task.TaskWorker.IsCompleted).ToList();
-            foreach (var worker in completedTasks)
-            {
-                var result = worker.TaskWorker.Result;
-                RenderCompleteCallback(worker.PageNumber, result, false);
-                _taskList.Remove(worker);
-            }
-            if (_taskList.Count > 0)
-                RenderTaskAwaiter.Reset();
-            else
-                RenderTaskAwaiter.Stop();
-        }
-        public void StartWorkers()
-        {
-            _taskList.ForEach(worker =>
-            {
-                if (worker.TaskWorker == null)
-                    worker.Start();
-            });
-            RenderTaskAwaiter.Reset();
-        }
-
-        #endregion Implementation
-    }
-    public class RenderTask<T>
-    {
-        #region Fields / Properties
-
-        private PdfJsWrapper PdfJs { get; } = PdfJsWrapper.Instance;
-        public int PageNumber { get; private set; }
-        private readonly double _scaleFactor;
-        public Task<T> TaskWorker { get; private set; }
-
-        #endregion Fields / Properties
-        #region Initialization
-
-        public RenderTask(int pageNumber, double scaleFactor)
-        {
-            PageNumber = pageNumber;
-            _scaleFactor = scaleFactor;
-        }
-
-        #endregion Initialization
-        #region Implementation
-
-        internal void Start()
-        {
-            if (typeof(T) == typeof(Image))
-            {
-                //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Image");
-                TaskWorker = (Task<T>)(object)PdfJs.GetPdfPageImageAsync(PageNumber, _scaleFactor);
-            }
-            else if (typeof(T) == typeof(BlobElement))
-            {
-                //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to Blob");
-                TaskWorker = (Task<T>)(object)PdfJs.GetPdfPageBlobElementAsync(PageNumber, _scaleFactor);
-            }
-            else
-            {
-                //PdfJs.ConsoleLog($"Worker {PageNumber} is rendering to internal cache");
-                TaskWorker = (Task<T>)(object)PdfJs.RenderThumbnailToCacheAsync(PageNumber, _scaleFactor);
-            }
         }
 
         #endregion Implementation

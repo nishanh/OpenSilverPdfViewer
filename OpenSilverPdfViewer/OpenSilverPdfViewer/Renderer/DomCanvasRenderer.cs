@@ -22,7 +22,7 @@ namespace OpenSilverPdfViewer.Renderer
         private List<int> _renderedIdList = new List<int>();
         private readonly Debouncer _thumbnailTimer = new Debouncer(50);
 
-        private ThreadedRenderQueue<JSImageReference> RenderQueue { get; set; }
+        private RenderQueue<JSImageReference> RenderQueue { get; set; }
         public bool ViewportItemsChanged
         {
             get
@@ -45,7 +45,7 @@ namespace OpenSilverPdfViewer.Renderer
 
         public DomCanvasRenderer()
         {
-            RenderQueue = new ThreadedRenderQueue<JSImageReference>(RenderWorkerCallback);
+            RenderQueue = new RenderQueue<JSImageReference>(RenderWorkerCallback);
             if (ThumbnailUpdate != ThumbnailUpdateType.WhenRendered)
                 RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
         }

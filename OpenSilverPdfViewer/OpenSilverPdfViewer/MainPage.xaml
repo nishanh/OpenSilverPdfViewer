@@ -33,6 +33,8 @@
             <conv:ThumbnailUpdateTypeToBoolConverter x:Key="ThumbnailUpdateTypeToBoolConverter"/>
             <conv:ThumbnailSizeToBoolConverter x:Key="ThumbnailSizeToBoolConverter"/>
             <conv:RulerUnitsToBoolConverter x:Key="RulerUnitsToBoolConverter"/>
+            <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <conv:BoolToEnabledConverter x:Key="BoolToEnabledConverter"/>
             <SolidColorBrush x:Key="CMSCtrlColorUIBrush" Color="#FF0C68E9"/>
             <Style x:Key="CheckBoxBorderStyle" TargetType="Border">
                 <Setter Property="HorizontalAlignment" Value="Left"/>
@@ -73,6 +75,7 @@
                 </Grid.RowDefinitions>
                 <ctrls:PanelCtrl 
                     Margin="3,3,0,0" 
+                    IsEnabled="{Binding IsDocumentLoading, Converter={StaticResource BoolToEnabledConverter}, ConverterParameter=False}"
                     Title="Pdf Source">
                     <StackPanel VerticalAlignment="Center">
                         <Button 
@@ -104,6 +107,7 @@
                 <ctrls:PanelCtrl 
                     Grid.Row="2"
                     Margin="3,0,0,0" 
+                    IsEnabled="{Binding IsDocumentLoading, Converter={StaticResource BoolToEnabledConverter}, ConverterParameter=False}"
                     Title="Render Options">
                     <StackPanel 
                         Margin="20,10,0,0"
@@ -138,6 +142,7 @@
                 <ctrls:PanelCtrl 
                     Grid.Row="4"                    
                     Margin="3,0,0,0"
+                    IsEnabled="{Binding IsDocumentLoading, Converter={StaticResource BoolToEnabledConverter}, ConverterParameter=False}"
                     Title="UI Options">
                     <StackPanel                         
                         Margin="20,10,0,0"
@@ -241,6 +246,7 @@
             <Grid Grid.Column="2">
                 <ctrls:PanelCtrl 
                     Margin="0,3,3,0"
+                    IsEnabled="{Binding IsDocumentLoading, Converter={StaticResource BoolToEnabledConverter}, ConverterParameter=False}"
                     Title="Document">
                     <Grid>
                         <ctrls:PageViewer 
@@ -254,6 +260,26 @@
                             PreviewPage="{Binding CurrentPage, Mode=TwoWay}"
                             ZoomValue="{Binding PageZoomValue, Mode=TwoWay}"
                             ZoomLevel="{Binding PageZoomLevel}"/>
+                        <Grid
+                            x:Name="progressContainer"
+                            Height="30"
+                            Width="300"
+                            Visibility="{Binding IsDocumentLoading, Converter={StaticResource BoolToVisibilityConverter}}"
+                            VerticalAlignment="Center" 
+                            HorizontalAlignment="Center">
+                            <ProgressBar 
+                                x:Name="progressBar"
+                                Value="{Binding LoadProgress}"
+                                BorderBrush="{StaticResource CMSLightBorderBrush}"
+                                Foreground="{StaticResource CMSCtrlColorUIBrush}"
+                                Maximum="100"/>
+                            <TextBlock
+                                x:Name="progressText"
+                                Text="{Binding LoadProgressText}"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                FontSize="12"/>
+                        </Grid>
                     </Grid>
                 </ctrls:PanelCtrl>
             </Grid>
