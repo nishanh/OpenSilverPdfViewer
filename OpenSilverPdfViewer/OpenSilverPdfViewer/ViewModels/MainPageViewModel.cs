@@ -314,7 +314,7 @@ namespace OpenSilverPdfViewer.ViewModels
                 return;
 
             int pageCount;
-            string filename = string.Empty;
+            string filename;
 
             if (sourceOption == "file")
             {
@@ -323,6 +323,8 @@ namespace OpenSilverPdfViewer.ViewModels
                     Multiselect = false,
                     Filter = "PDF files (*.pdf)|*.pdf"
                 };
+
+                // TODO: Push this over to the JS side so I can use the JS File API to implement file-loading progress
                 if ((bool)await dlg.ShowDialogAsync() == false) return;
 
                 // All the file data is read by opensilver when the dialog is dismissed.

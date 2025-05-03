@@ -12,7 +12,6 @@ using System.Windows.Controls;
 using System.Collections.Generic;
 
 using OpenSilverPdfViewer.Utility;
-using CSHTML5.Native.Html.Controls;
 using OpenSilverPdfViewer.JSInterop;
 
 namespace OpenSilverPdfViewer.Renderer
@@ -39,14 +38,14 @@ namespace OpenSilverPdfViewer.Renderer
     }
     public static class RenderStrategyFactory
     {
-        public static IRenderStrategy Create(RenderModeType renderMode, FrameworkElement osCanvas)
+        public static IRenderStrategy Create(RenderModeType renderMode, Panel canvasContainer)
         {
             if (renderMode == RenderModeType.Dom)
-                return new DomCanvasRenderer();
+                return new DomCanvasRenderer(canvasContainer);
             else if (renderMode == RenderModeType.OpenSilver)
-                return new OSCanvasRenderer(osCanvas as Canvas);
+                return new OSCanvasRenderer(canvasContainer);
             else
-                return new HTMLCanvasRenderer(osCanvas as HtmlCanvas);
+                return new HTMLCanvasRenderer(canvasContainer);
         }
     }
     public abstract class RenderStrategyBase : IRenderStrategy

@@ -43,6 +43,10 @@ namespace OpenSilverPdfViewer.JSInterop
                 }
             }
         }
+        public async Task<string> SelectFile()
+        {
+            return await JSAsyncTaskRunner.RunJavaScriptAsync<string>("getFiles");
+        }
         public async Task<int> LoadPdfFileAsync(string fileName)
         {
             await InitAsync();

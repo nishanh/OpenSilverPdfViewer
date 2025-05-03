@@ -8,6 +8,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Collections.Generic;
 
 using OpenSilverPdfViewer.Utility;
@@ -51,17 +52,22 @@ namespace OpenSilverPdfViewer.Renderer
         #endregion Fields / Properties
         #region Initialization
 
-        public HTMLCanvasRenderer(HtmlCanvas canvas) 
+        public HTMLCanvasRenderer(Panel canvasContainer)
         {
-            renderCanvas = canvas;
+            if (canvasContainer.Children.FirstOrDefault(child => child is HtmlCanvas) is HtmlCanvas canvas)
+            {
+                renderCanvas = canvas;
 
-            RenderQueue = new RenderQueue<BlobElement>(RenderWorkerCallback);
-            if (ThumbnailUpdate != ThumbnailUpdateType.WhenRendered)
-                RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
+                RenderQueue = new RenderQueue<BlobElement>(RenderWorkerCallback);
+                if (ThumbnailUpdate != ThumbnailUpdateType.WhenRendered)
+                    RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
 
-            _thumbnailFillColor = (Color)renderCanvas.FindResource("CMSCtrlNormalStartColor");
-            _thumbnailStrokeColor = (Color)renderCanvas.FindResource("CMSForegroundColor");
-            _thumbnailFontColor = (Color)renderCanvas.FindResource("CMSForegroundColor");
+                _thumbnailFillColor = (Color)renderCanvas.FindResource("CMSCtrlNormalStartColor");
+                _thumbnailStrokeColor = (Color)renderCanvas.FindResource("CMSForegroundColor");
+                _thumbnailFontColor = (Color)renderCanvas.FindResource("CMSForegroundColor");
+            }
+            else
+                throw new Exception("HTMLCanvasRenderer ctor: the canvas container must contain an HTMLCanvas element");
         }
 
         #endregion Initialization

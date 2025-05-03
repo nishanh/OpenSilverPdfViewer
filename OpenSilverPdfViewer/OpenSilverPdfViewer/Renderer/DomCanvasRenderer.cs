@@ -8,8 +8,11 @@ using System.Linq;
 using System.Windows;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 using OpenSilverPdfViewer.Utility;
+using System.Windows.Controls;
+using CSHTML5.Native.Html.Controls;
 
 namespace OpenSilverPdfViewer.Renderer
 {
@@ -17,7 +20,7 @@ namespace OpenSilverPdfViewer.Renderer
     {
         #region Fields / Properties
 
-        private const string viewCanvasId = "pageViewCanvas"; // from xaml
+        private readonly string viewCanvasId;
         private readonly Dictionary<int, JSImageReference> _pageImageCache = new Dictionary<int, JSImageReference>();
         private List<int> _renderedIdList = new List<int>();
         private readonly Debouncer _thumbnailTimer = new Debouncer(50);
@@ -43,11 +46,25 @@ namespace OpenSilverPdfViewer.Renderer
         #endregion Fields / Properties
         #region Initialization
 
-        public DomCanvasRenderer()
+        public DomCanvasRenderer(Panel canvasContainer)
         {
-            RenderQueue = new RenderQueue<JSImageReference>(RenderWorkerCallback);
-            if (ThumbnailUpdate != ThumbnailUpdateType.WhenRendered)
-                RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
+            if (canvasContainer.Children.FirstOrDefault(child => child is HtmlPresenter) is HtmlPresenter presenter)
+            {
+                var domElement = presenter.Html;
+                if (!domElement.StartsWith("<canvas"))
+                    throw new Exception("DomCanvasRenderer ctor: the HTMLPresenter html element must be a canvas element");
+
+                var match = Regex.Match(domElement, "id=\"([^\"]+)\"");
+                viewCanvasId = match.Success ? match.Groups[1].Value : string.Empty;
+                if (string.IsNullOrEmpty(viewCanvasId))
+                    throw new Exception("DomCanvasRenderer ctor: the HTMLPresenter html element must have a valid id");
+
+                RenderQueue = new RenderQueue<JSImageReference>(RenderWorkerCallback);
+                if (ThumbnailUpdate != ThumbnailUpdateType.WhenRendered)
+                    RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
+            }
+            else
+                throw new Exception("DomCanvasRenderer ctor: the canvas container must contain an HTMLPresenter");
         }
 
         #endregion Initialization

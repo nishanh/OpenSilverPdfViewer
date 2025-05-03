@@ -19,20 +19,6 @@ let thumbCache = new Map();
 // Before you purists complain, I know this is not the best practice and that I could be using nested 'then's
 // but I think that the IIFE approach that allows async/await syntax is more readable and maintainable.
 
-function getFiles() {
-    let input = document.createElement('input');
-    input.type = 'file';
-    input.onchange = _ => {
-        // you can use this method to get file and perform respective operations
-        let files = Array.from(input.files);
-        console.log(files);
-    };
-    input.click();
-}
-
-function logToConsole(message) {
-    console.log(message);
-}
 function getLibraryVersion(callback) {
     if (libVersion == undefined) {
         loadPdfJsAsync().then((pdfLib) => {
@@ -286,6 +272,49 @@ function getTextMetrics(text, font) {
         width: metrics.width
     };
     return JSON.stringify(textMetrics);
+}
+
+function getFiles(callback) {
+    let input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = _ => {
+        if (input.files && input.files.length > 0) {
+            console.log("File selected :", input.files[0].name);
+            readFile(input.files[0], callback);
+        }
+        else { // this never happens because onchange doesn't fire on dialog cancellation
+            console.log("File open cancelled");
+            callback("nofile");
+        }
+    };
+    input.click();
+}
+
+function readFile(file, callback) {
+    const reader = new FileReader();
+    reader.onloadstart = (event) => {
+        console.log("File load starting :", event);
+    };
+    reader.onloadend = (event) => {
+        console.log("File load complete :", event);
+    };
+    reader.onprogress = (event) => {
+        if (event.loaded && event.total) {
+            const percent = (event.loaded / event.total) * 100;
+            console.log(`Progress: ${Math.round(percent)}`);
+        }
+    };
+    reader.onload = (event) => {
+        var data = reader.result;
+        callback(data);
+        console.log("file result :", data);
+    };
+    // Convert this to a "chunked" read approach to enable progress reporting
+    reader.readAsDataURL(file);
+}
+
+function logToConsole(message) {
+    console.log(message);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Collections.Generic;
+
 using OpenSilverPdfViewer.Utility;
 
 namespace OpenSilverPdfViewer.Renderer
@@ -52,17 +53,22 @@ namespace OpenSilverPdfViewer.Renderer
         #endregion Fields / Properties
         #region Initialization
 
-        public OSCanvasRenderer(Canvas canvas)
+        public OSCanvasRenderer(Panel canvasContainer)
         {
-            renderCanvas = canvas;
+            if (canvasContainer.Children.FirstOrDefault(child => child is Canvas) is Canvas canvas)
+            {
+                renderCanvas = canvas;
 
-            RenderQueue = new RenderQueue<Image>(RenderWorkerCallback);
-            if (ThumbnailUpdate != ThumbnailUpdateType.WhenRendered)
-                RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
+                RenderQueue = new RenderQueue<Image>(RenderWorkerCallback);
+                if (ThumbnailUpdate != ThumbnailUpdateType.WhenRendered)
+                    RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
 
-            _thumbnailFontBrush = renderCanvas.FindResource("CMSForegroundBrush") as Brush;
-            _thumbnailFillBrush = renderCanvas.FindResource("CMSPopupBorderBrush") as Brush;
-            _thumbnailStrokeBrush = renderCanvas.FindResource("CMSForegroundBrush") as Brush;
+                _thumbnailFontBrush = renderCanvas.FindResource("CMSForegroundBrush") as Brush;
+                _thumbnailFillBrush = renderCanvas.FindResource("CMSPopupBorderBrush") as Brush;
+                _thumbnailStrokeBrush = renderCanvas.FindResource("CMSForegroundBrush") as Brush;
+            }
+            else
+                throw new Exception("OSCanvasRenderer ctor: the canvas container must contain a Canvas element");
         }
 
         #endregion Initialization
@@ -266,8 +272,6 @@ namespace OpenSilverPdfViewer.Renderer
 
         public override void ScrollViewport(int scrollX, int scrollY)
         {
-
-
             if (_scrollPosition.X == scrollX && _scrollPosition.Y == scrollY) return;
 
             _scrollPosition.X = scrollX;

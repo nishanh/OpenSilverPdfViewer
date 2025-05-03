@@ -87,12 +87,10 @@
                         <canvas id="pageViewCanvas"/>
                     </native:HtmlPresenter>
                     <Canvas 
-                        x:Name="pageImageCanvas" 
                         ClipToBounds="True"
                         Background="Transparent">
                     </Canvas>
                     <native:HtmlCanvas 
-                        x:Name="pageElementCanvas" 
                         ClipToBounds="True"/>
                 </Grid>
                 <ScrollBar 

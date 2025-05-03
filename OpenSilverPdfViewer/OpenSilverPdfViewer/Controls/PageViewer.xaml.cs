@@ -254,14 +254,12 @@ namespace OpenSilverPdfViewer.Controls
             var ctrl = depObj as PageViewer;
             var renderMode = (RenderModeType)e.NewValue;
 
+            // Reset and disconnect events from (soon to be) prior renderer
             ctrl.renderStrategy.Reset();
             ctrl.renderStrategy.RenderCompleteEvent -= ctrl.RenderStrategy_RenderCompleteEvent;
 
-            var canvasElement = renderMode == RenderModeType.OpenSilver ? 
-                (FrameworkElement)ctrl.pageImageCanvas :
-                ctrl.pageElementCanvas;
-
-            ctrl.renderStrategy = RenderStrategyFactory.Create(renderMode, canvasElement);
+            // Create and initialize new renderer
+            ctrl.renderStrategy = RenderStrategyFactory.Create(renderMode, ctrl.previewGrid);
             ctrl.renderStrategy.ThumbnailSize = ctrl.ThumbnailSize;
             ctrl.renderStrategy.RenderPageNumber = ctrl.PreviewPage;
             ctrl.renderStrategy.RenderZoomLevel = ctrl.ZoomLevel;
@@ -325,7 +323,7 @@ namespace OpenSilverPdfViewer.Controls
         public PageViewer()
         {
             InitializeComponent();
-            renderStrategy = RenderStrategyFactory.Create(RenderMode, pageImageCanvas);
+            renderStrategy = RenderStrategyFactory.Create(RenderMode, previewGrid);
             PropertyChanged += OnAsyncPropertyChanged;
         }
         private async Task RenderView()
@@ -463,7 +461,7 @@ namespace OpenSilverPdfViewer.Controls
 
             ThumbnailStoryboard = new Storyboard();
             var animationTime = new Duration(TimeSpan.FromMilliseconds(200));
-            var thumbAnimation = new DoubleAnimation() { Duration = animationTime, To = 180d, FillBehavior = FillBehavior.Stop };
+            var thumbAnimation = new DoubleAnimation() { Duration = animationTime, To = 180d, By = 1d, FillBehavior = FillBehavior.Stop };
             Storyboard.SetTarget(thumbAnimation, this);
             Storyboard.SetTargetProperty(thumbAnimation, new PropertyPath(ThumbnailAngleProperty));
             ThumbnailStoryboard.Children.Add(thumbAnimation);

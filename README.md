@@ -16,6 +16,8 @@ A couple of other features were developed to solve some of the issues encountere
 
 - Since all Pdf loading/processing happens on the **client**, you should avoid using any memory-intensive or excessively high page count documents with this demo. Doing so will choke the browser into non-responsiveness or crash it altogether. PDF.JS is meant to stream Pdf data from a server which is absent here and partial loading is not an option on the client-side.
 
+- Using the system file dialog within the app after launching the application into a secondary browser tab will cause Kestrel to abort. This happens even when cancelling the dialog. This is an **OpenSilver** issue.
+
 - **HTMLCanvs** renderer with **BlobElement** content has poor performance. Especially noticeable in Thumbnail view-mode. I'm sure this is my fault somewhere.
 
 - Repeatedly acquiring Javascript **CanvasContext2d** objects is expensive in terms of performance. More work needs to be done in this area.
@@ -32,5 +34,5 @@ A couple of other features were developed to solve some of the issues encountere
 
 - Only tested with the **OpenSilver** simulator, **Microsoft Edge** and **Brave** browsers.
 
-This project uses **OpenSilver 3.2** and **.NET 9**. No additional Nuget packages are used. 
+This project uses **OpenSilver 3.2** and **.NET 9 / .NET Standard 2.0**. No additional Nuget packages are used. 
 
