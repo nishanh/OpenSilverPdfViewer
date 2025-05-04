@@ -24,6 +24,9 @@
     <Page Include="Controls\RulerCtrl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\RulerHtmlCtrl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -62,6 +65,7 @@
     <Compile Include="Controls\PageViewer.xaml.cs" />
     <Compile Include="Controls\PanelCtrl.cs" />
     <Compile Include="Controls\RulerCtrl.xaml.cs" />
+    <Compile Include="Controls\RulerHtmlCtrl.xaml.cs" />
     <Compile Include="Controls\ToolBarButton.cs" />
     <Compile Include="Controls\ZoomViewCtrl.cs" />
     <Compile Include="Renderer\RenderWorker.cs" />

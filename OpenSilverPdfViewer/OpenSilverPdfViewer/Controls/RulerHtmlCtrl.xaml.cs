@@ -5,34 +5,35 @@
 
 using System;
 using System.Windows;
-using System.Globalization;
-using System.Windows.Shapes;
+using System.Windows.Media;
 using System.Windows.Controls;
 
 using OpenSilverPdfViewer.Utility;
+using CSHTML5.Native.Html.Controls;
+using OpenSilverPdfViewer.JSInterop;
 
 namespace OpenSilverPdfViewer.Controls
 {
-    public partial class RulerCtrl
+    public partial class RulerHtmlCtrl
     {
         #region Dependency Properties
 
-        public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register("Orientation", typeof(Orientation), typeof(RulerCtrl),
+        public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register("Orientation", typeof(Orientation), typeof(RulerHtmlCtrl),
             new PropertyMetadata(Orientation.Horizontal, OnOrientationChanged));
 
-        public static readonly DependencyProperty SizeProperty = DependencyProperty.Register("Size", typeof(double), typeof(RulerCtrl),
+        public static readonly DependencyProperty SizeProperty = DependencyProperty.Register("Size", typeof(double), typeof(RulerHtmlCtrl),
             new PropertyMetadata(30d, OnSizeChanged));
 
-        public static readonly DependencyProperty UnitMeasureProperty = DependencyProperty.Register("UnitMeasure", typeof(UnitMeasure), typeof(RulerCtrl),
+        public static readonly DependencyProperty UnitMeasureProperty = DependencyProperty.Register("UnitMeasure", typeof(UnitMeasure), typeof(RulerHtmlCtrl),
             new PropertyMetadata(UnitMeasure.Imperial, OnUnitMeasureChanged));
 
-        public static readonly DependencyProperty LogicalScaleProperty = DependencyProperty.Register("LogicalScale", typeof(double), typeof(RulerCtrl),
+        public static readonly DependencyProperty LogicalScaleProperty = DependencyProperty.Register("LogicalScale", typeof(double), typeof(RulerHtmlCtrl),
             new PropertyMetadata(1d / 72d, OnLogicalScaleChanged));
 
-        public static readonly DependencyProperty PageOffsetProperty = DependencyProperty.Register("PageOffset", typeof(double), typeof(RulerCtrl),
+        public static readonly DependencyProperty PageOffsetProperty = DependencyProperty.Register("PageOffset", typeof(double), typeof(RulerHtmlCtrl),
             new PropertyMetadata(0d, OnPageOffsetChanged));
 
-        public static readonly DependencyProperty ScrollPositionProperty = DependencyProperty.Register("ScrollPosition", typeof(double), typeof(RulerCtrl),
+        public static readonly DependencyProperty ScrollPositionProperty = DependencyProperty.Register("ScrollPosition", typeof(double), typeof(RulerHtmlCtrl),
             new PropertyMetadata(0d, OnScrollPositionChanged));
 
         public Orientation Orientation
@@ -71,7 +72,7 @@ namespace OpenSilverPdfViewer.Controls
 
         private static void OnOrientationChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
-            var ctrl = depObj as RulerCtrl;
+            var ctrl = depObj as RulerHtmlCtrl;
             if ((Orientation)e.NewValue == Orientation.Horizontal)
             {
                 ctrl.rulerBorder.Height = ctrl.Size;
@@ -86,7 +87,7 @@ namespace OpenSilverPdfViewer.Controls
         }
         private static void OnSizeChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
-            var ctrl = depObj as RulerCtrl;
+            var ctrl = depObj as RulerHtmlCtrl;
             if (ctrl.Orientation == Orientation.Horizontal)
                 ctrl.rulerBorder.Height = (double)e.NewValue;
             else
@@ -95,29 +96,29 @@ namespace OpenSilverPdfViewer.Controls
         }
         private static void OnUnitMeasureChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
-            var ctrl = depObj as RulerCtrl;
+            var ctrl = depObj as RulerHtmlCtrl;
             ctrl.DrawRuler();
         }
         private static void OnLogicalScaleChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
-            var ctrl = depObj as RulerCtrl;
+            var ctrl = depObj as RulerHtmlCtrl;
             ctrl.DrawRuler();
         }
         private static void OnPageOffsetChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
-            var ctrl = depObj as RulerCtrl;
+            var ctrl = depObj as RulerHtmlCtrl;
             ctrl.DrawRuler();
         }
         private static void OnScrollPositionChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
-            var ctrl = depObj as RulerCtrl;
+            var ctrl = depObj as RulerHtmlCtrl;
             ctrl.DrawRuler();
         }
 
         #endregion Dependency Property Event Handlers
         #region Initialization
 
-        public RulerCtrl()
+        public RulerHtmlCtrl()
         {
             this.InitializeComponent();
 
@@ -132,11 +133,14 @@ namespace OpenSilverPdfViewer.Controls
 
         private void DrawRuler()
         {
-            if ((int)rulerCanvas.ActualHeight == 0 || (int)rulerCanvas.ActualWidth == 0) 
+            if ((int)rulerCanvas.ActualHeight == 0 || (int)rulerCanvas.ActualWidth == 0)
                 return;
 
+            var borderColor = ((SolidColorBrush)BorderBrush).Color;
+            var tickColor = ((SolidColorBrush)Foreground).Color;
+            
             var metric = UnitMeasure == UnitMeasure.Metric;
-            const int baselineOffset = 2; // this should be computed for the font in use
+            const int baselineOffset = 4; // this should be computed for the font in use
 
             // Tick mark length constants
             const int wholeTickLength = 12;
@@ -172,14 +176,14 @@ namespace OpenSilverPdfViewer.Controls
             rulerCanvas.Children.Clear();
 
             // Draw inner borders
-            rulerCanvas.Children.Add(new Line
+            rulerCanvas.Children.Add(new LineElement
             {
                 X1 = Orientation == Orientation.Horizontal ? 0 : rulerCanvas.ActualWidth,
                 Y1 = Orientation == Orientation.Horizontal ? rulerCanvas.ActualHeight : 0,
                 X2 = rulerCanvas.ActualWidth,
                 Y2 = rulerCanvas.ActualHeight,
                 StrokeThickness = 2,
-                Stroke = BorderBrush
+                StrokeColor = borderColor
             });
 
             var pagePosition = PageOffset - ScrollPosition;
@@ -213,13 +217,13 @@ namespace OpenSilverPdfViewer.Controls
                         else if (i % (wholeUnitInterval / 8) == 0) tickLength = eighthTick;
 
                         // Draw the ruler tick mark
-                        rulerCanvas.Children.Add(new Line
+                        rulerCanvas.Children.Add(new LineElement
                         {
                             X1 = tickPos,
                             X2 = tickPos,
                             Y1 = rulerCanvas.ActualHeight,
                             Y2 = rulerCanvas.ActualHeight - tickLength,
-                            Stroke = Foreground,
+                            StrokeColor = tickColor,
                             StrokeThickness = 1
                         });
 
@@ -227,15 +231,19 @@ namespace OpenSilverPdfViewer.Controls
                         if (i % wholeUnitInterval == 0)
                         {
                             var unitVal = (i / wholeUnitInterval) - (int)originX;
-                            var rulerVal = new TextBlock
+                            var valueText = unitVal.ToString();
+                            var metrics = PdfJsWrapper.Instance.GetTextMetrics(valueText, $"bold {FontSize}px {FontFamily.Source}");
+                            var textHeight = metrics.ActualAscent + metrics.ActualDescent;
+
+                            var rulerVal = new TextElement
                             {
-                                Foreground = Foreground,
-                                FontFamily = FontFamily,
-                                FontSize = FontSize,
-                                Text = unitVal.ToString(CultureInfo.InvariantCulture)
+                                FillColor = tickColor,
+                                Font = FontFamily.Source,
+                                FontHeight = FontSize,
+                                Text = valueText,
+                                X = tickPos - (metrics.BoundingBoxRight / 2),
+                                Y = Size - textHeight - tickLength - metrics.FontDescent - baselineOffset
                             };
-                            rulerVal.SetValue(Canvas.TopProperty, Size - rulerVal.ActualHeight - tickLength); // natural font baseline offset provides a vertical gap between tick and text
-                            rulerVal.SetValue(Canvas.LeftProperty, tickPos - (rulerVal.ActualWidth / 2));
                             rulerCanvas.Children.Add(rulerVal);
                         }
                     }
@@ -265,13 +273,13 @@ namespace OpenSilverPdfViewer.Controls
                         else if (i % (wholeUnitInterval / 8) == 0) tickLength = eighthTick;
 
                         // Draw the ruler tick mark
-                        rulerCanvas.Children.Add(new Line
+                        rulerCanvas.Children.Add(new LineElement
                         {
                             Y1 = tickPos,
                             Y2 = tickPos,
                             X1 = rulerCanvas.ActualWidth,
                             X2 = rulerCanvas.ActualWidth - tickLength,
-                            Stroke = Foreground,
+                            StrokeColor = tickColor,
                             StrokeThickness = 1
                         });
 
@@ -279,21 +287,26 @@ namespace OpenSilverPdfViewer.Controls
                         if (i % wholeUnitInterval == 0)
                         {
                             var unitVal = (i / wholeUnitInterval) - (int)originY;
-                            var rulerVal = new TextBlock
+                            var valueText = unitVal.ToString();
+                            var metrics = PdfJsWrapper.Instance.GetTextMetrics(valueText, $"bold {FontSize}px {FontFamily.Source}");
+                            var textHeight = metrics.ActualAscent + metrics.ActualDescent;
+
+                            var rulerVal = new TextElement
                             {
-                                Foreground = Foreground,
-                                FontFamily = FontFamily,
-                                FontSize = FontSize,
-                                Text = unitVal.ToString(CultureInfo.InvariantCulture)
+                                FillColor = tickColor,
+                                Font = FontFamily.Source,
+                                FontHeight = FontSize,
+                                Text = valueText,
+                                X = Size - metrics.BoundingBoxRight - tickLength - 2,
+                                Y = tickPos - ((metrics.ActualAscent + textHeight) / 2)
                             };
-                            rulerVal.SetValue(Canvas.LeftProperty, Size - rulerVal.ActualWidth - tickLength - 2); // fudge factor of 2px to provide a gap between tick and text
-                            rulerVal.SetValue(Canvas.TopProperty, tickPos - (rulerVal.ActualHeight / 2) - baselineOffset);
                             rulerCanvas.Children.Add(rulerVal);
                         }
                     }
                     i++;
                 }
             }
+            rulerCanvas.Draw();
         }
         private void Ruler_SizeChangd(object sender, RoutedEventArgs e)
         {

@@ -1,0 +1,16 @@
+﻿<UserControl
+    x:Name="rulerCtrlInternal" 
+    x:Class="OpenSilverPdfViewer.Controls.RulerHtmlCtrl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:native="clr-namespace:CSHTML5.Native.Html.Controls;assembly=OpenSilver"    
+    xmlns:local="clr-namespace:OpenSilverPdfViewer.Controls">
+    
+    <Grid>
+        <Border 
+            x:Name="rulerBorder" 
+            Background="{Binding Background, ElementName=rulerCtrlInternal}">
+            <native:HtmlCanvas x:Name="rulerCanvas" ClipToBounds="True"/>
+        </Border>
+    </Grid>
+</UserControl>

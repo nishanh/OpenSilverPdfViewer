@@ -15,7 +15,7 @@
         <Border 
             x:Name="rulerBorder" 
             Background="{Binding Background, ElementName=rulerCtrlInternal}">
-            <Canvas x:Name="rulerCanvas"/>
+            <Canvas x:Name="rulerCanvas" ClipToBounds="True"/>
         </Border>
     </Grid>
 </UserControl>

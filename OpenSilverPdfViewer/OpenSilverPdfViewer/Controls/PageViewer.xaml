@@ -46,7 +46,7 @@
                 </Grid.ColumnDefinitions>
                 <Rectangle 
                     Fill="{StaticResource RulerBrush}" />
-                <local:RulerCtrl 
+                <local:RulerHtmlCtrl 
                     x:Name="horzRulerCtrl"
                     Grid.Row="0"
                     Grid.Column="1"
@@ -62,7 +62,7 @@
                     LogicalScale="{Binding PixelsToInches, ElementName=pvCtrlInternal}"
                     PageOffset="{Binding PagePositionX, ElementName=pvCtrlInternal}"
                     ScrollPosition="{Binding ScrollPosX, ElementName=pvCtrlInternal}"/>
-                <local:RulerCtrl 
+                <local:RulerHtmlCtrl 
                     x:Name="vertRulerCtrl"
                     Grid.Row="1"
                     Grid.RowSpan="2"
