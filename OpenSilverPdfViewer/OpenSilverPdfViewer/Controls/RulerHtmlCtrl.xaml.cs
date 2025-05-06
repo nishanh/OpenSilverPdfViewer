@@ -141,7 +141,8 @@ namespace OpenSilverPdfViewer.Controls
             
             var metric = UnitMeasure == UnitMeasure.Metric;
             const int baselineOffset = 4; // this should be computed for the font in use
-
+            const double halfToneOffset = 0.5; // Supresses halftoning effects but makes tick-mark placement at certain intervals slightly inaccurate
+            
             // Tick mark length constants
             const int wholeTickLength = 12;
             const int sixteenthTick = wholeTickLength / 8 + 1;
@@ -206,7 +207,7 @@ namespace OpenSilverPdfViewer.Controls
                 while (tickPos < rulerCanvas.ActualWidth)
                 {
                     // Compute tick mark X position in device units
-                    tickPos = Math.Round(devStartX + ((i * resRuler) / LogicalScale), 0);
+                    tickPos = Math.Round(devStartX + ((i * resRuler) / LogicalScale), 0) + halfToneOffset;
                     if (tickPos >= 0)
                     {
                         var tickLength = sixteenthTick;
@@ -262,7 +263,7 @@ namespace OpenSilverPdfViewer.Controls
                 while (tickPos < rulerCanvas.ActualHeight)
                 {
                     // Compute tick mark Y position in device units
-                    tickPos = Math.Round(devStartY + ((i * resRuler) / LogicalScale), 0);
+                    tickPos = Math.Round(devStartY + ((i * resRuler) / LogicalScale), 0) + halfToneOffset;
                     if (tickPos >= 0)
                     {
                         var tickLength = sixteenthTick;
