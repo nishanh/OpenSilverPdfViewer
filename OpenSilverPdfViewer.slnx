@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="OpenSilverPdfViewer/OpenSilverPdfViewer.Browser/OpenSilverPdfViewer.Browser.csproj" />
+  <Project Path="OpenSilverPdfViewer/OpenSilverPdfViewer.Simulator/OpenSilverPdfViewer.Simulator.csproj" />
+  <Project Path="OpenSilverPdfViewer/OpenSilverPdfViewer/OpenSilverPdfViewer.csproj" />
+</Solution>

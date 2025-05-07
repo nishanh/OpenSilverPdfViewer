@@ -82,12 +82,11 @@ namespace OpenSilverPdfViewer.Renderer
         protected override void RenderThumbnails()
         {
             var scrollRect = ViewportScrollRect;
-            var intersectList = LayoutRectList.Where(rect => rect.Intersects(scrollRect)).ToList();
+            var intersectList = LayoutRectList.Where(rect => rect.Intersects(scrollRect)); 
 
             // Remove all page image elements that do not exist in the current intersection list from the viewport
             _renderedIdList
                 .Except(intersectList.Select(rect => rect.Id))
-                .ToList()
                 .ForEach(id => RenderQueue.DequeueItem(id));
 
             var updatedRenderIdList = _renderedIdList.Intersect(intersectList.Select(rect => rect.Id)).ToList();
@@ -95,7 +94,7 @@ namespace OpenSilverPdfViewer.Renderer
             // Get a list of ids from the intersection list that are NOT currently rendered in the viewport
             var addIds = intersectList
                 .Select(rect => rect.Id)
-                .Except(_renderedIdList).ToList();
+                .Except(_renderedIdList);
 
             updatedRenderIdList.AddRange(addIds);
 
@@ -106,8 +105,7 @@ namespace OpenSilverPdfViewer.Renderer
             // Add those page image elements that now need to be rendered
             _renderedIdList = updatedRenderIdList;
             var renderRectList = _renderedIdList
-                .Select(id => intersectList.FirstOrDefault(item => item.Id == id))
-                .ToList();
+                .Select(id => intersectList.FirstOrDefault(item => item.Id == id));
 
             ClearViewport();
 
@@ -147,7 +145,7 @@ namespace OpenSilverPdfViewer.Renderer
         {
             var placeHolderArray = new int[_renderedIdList.Count];
             _renderedIdList.CopyTo(placeHolderArray);
-            List<int> placeHolders = placeHolderArray.ToList();
+            var placeHolders = placeHolderArray.ToList();
 
             _thumbnailTimer.OnSettled = () =>
             {
@@ -187,7 +185,7 @@ namespace OpenSilverPdfViewer.Renderer
 
                 else
                 {
-                    var renderRectList = LayoutRectList.Where(rect => _renderedIdList.Contains(rect.Id)).ToList();
+                    var renderRectList = LayoutRectList.Where(rect => _renderedIdList.Contains(rect.Id));
                     ClearViewport();
                     foreach (var rect in renderRectList)
                         PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPosition.X, rect.Y - _scrollPosition.Y, rect.Width, rect.Height, viewCanvasId);

@@ -100,7 +100,7 @@ namespace OpenSilverPdfViewer.Renderer
         private void RenderThumbnails(bool deferredDraw = false)
         {
             var scrollRect = ViewportScrollRect;
-            var intersectList = LayoutRectList.Where(rect => rect.Intersects(scrollRect)).ToList();
+            var intersectList = LayoutRectList.Where(rect => rect.Intersects(scrollRect));
 
             // Re-position any existing items in the viewport if the layout has changed due to panel resizing
             intersectList.ForEach(rect =>
@@ -121,7 +121,6 @@ namespace OpenSilverPdfViewer.Renderer
             // Remove all page image elements that do not exist in the current intersection list from the viewport
             renderedIds
                 .Except(intersectList.Select(rect => rect.Id))
-                .ToList()
                 .ForEach(id => {
                     RenderQueue.DequeueItem(id);
                     renderCanvas.Children.Remove(renderCanvas.Children.FirstOrDefault(child => int.Parse(child.Name) == id));
@@ -246,7 +245,6 @@ namespace OpenSilverPdfViewer.Renderer
 
                 renderCanvas.Children
                     .Where(child => child is ContainerElement)
-                    .ToList()
                     .ForEach(container =>
                     {
                         var layoutRect = LayoutRectList.FirstOrDefault(rect => rect.Id == int.Parse(container.Name));

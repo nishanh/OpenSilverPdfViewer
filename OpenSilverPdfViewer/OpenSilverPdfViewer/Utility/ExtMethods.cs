@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Windows.Controls;
 
 namespace OpenSilverPdfViewer.Utility
@@ -35,6 +36,11 @@ namespace OpenSilverPdfViewer.Utility
                 else if (image.Parent is Border border)
                     border.Child = null;
             }
+        }
+        public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
+        {
+            foreach (var item in source)
+                action(item);
         }
     }
 }

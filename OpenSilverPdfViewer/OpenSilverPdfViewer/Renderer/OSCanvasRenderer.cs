@@ -100,7 +100,7 @@ namespace OpenSilverPdfViewer.Renderer
         protected override void RenderThumbnails()
         {
             var scrollRect = ViewportScrollRect;
-            var intersectList = LayoutRectList.Where(rect => rect.Intersects(scrollRect)).ToList();
+            var intersectList = LayoutRectList.Where(rect => rect.Intersects(scrollRect));
 
             // Re-position any existing items in the viewport if the layout has changed
             intersectList.ForEach(rect => 
@@ -122,7 +122,6 @@ namespace OpenSilverPdfViewer.Renderer
             // Remove all page image elements that do not exist in the current intersection list from the viewport
             renderedIds
                 .Except(intersectList.Select(rect => rect.Id))
-                .ToList()
                 .ForEach(id => {
                     RenderQueue.DequeueItem(id);
                     renderCanvas.Children.Remove(renderCanvas.Children.FirstOrDefault(child => child is Grid grid && (int)grid.Tag == id));
@@ -137,15 +136,10 @@ namespace OpenSilverPdfViewer.Renderer
             if (addIds.Count == 0) return;
 
             // Add those page image elements that now need to be rendered
-            var addList = addIds
+            addIds
                 .Select(id => intersectList.FirstOrDefault(item => item.Id == id))
                 .Where(rect => rect != null)
-                .ToList();
-
-            //int i = 0;
-            // Render the new additions
-            foreach (var rect in addList)
-                renderCanvas.Children.Add(CreateThumbnail(rect));
+                .ForEach(rect => renderCanvas.Children.Add(CreateThumbnail(rect)));
         }
         private Grid CreateThumbnail(LayoutRect rect)
         {
@@ -286,7 +280,6 @@ namespace OpenSilverPdfViewer.Renderer
 
                 renderCanvas.Children
                     .Where(child => child is Grid)
-                    .ToList()
                     .ForEach(grid => grid.RenderTransform = translate);
             }
             else
