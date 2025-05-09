@@ -160,7 +160,7 @@ namespace OpenSilverPdfViewer.Renderer
         }
         public async Task SetPageSizeRunList()
         {
-            var json = await PdfJsWrapper.Instance.GetPdfPageSizeRunList();
+            var json = await PdfJs.GetPdfPageSizeRunList();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             PageSizeRunList = JsonSerializer.Deserialize<List<PageSizeRun>>(json, options);
         }

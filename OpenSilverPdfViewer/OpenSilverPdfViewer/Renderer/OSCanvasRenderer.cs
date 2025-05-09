@@ -26,7 +26,7 @@ namespace OpenSilverPdfViewer.Renderer
         private readonly FontFamily _thumbnailFontFamily = new FontFamily(_thumbnailFont);
 
         private readonly Dictionary<int, Image> _pageImageCache = new Dictionary<int, Image>();
-        private readonly Canvas renderCanvas;
+        private readonly Canvas _renderCanvas;
         private readonly Debouncer _thumbnailTimer = new Debouncer(50);
 
         private RenderQueue<Image> RenderQueue { get; set; }
@@ -40,7 +40,7 @@ namespace OpenSilverPdfViewer.Renderer
                     .Select(rect => rect.Id)
                     .Sum();
 
-                var renderedChecksum = renderCanvas.Children
+                var renderedChecksum = _renderCanvas.Children
                     .Where(child => child is Grid)
                     .Select(elem => (int)((Grid)elem).Tag)
                     .Sum();
@@ -57,15 +57,15 @@ namespace OpenSilverPdfViewer.Renderer
         {
             if (canvasContainer.Children.FirstOrDefault(child => child is Canvas) is Canvas canvas)
             {
-                renderCanvas = canvas;
+                _renderCanvas = canvas;
 
                 RenderQueue = new RenderQueue<Image>(RenderWorkerCallback);
                 if (ThumbnailUpdate != ThumbnailUpdateType.WhenRendered)
                     RenderQueue.QueueCompletedCallback = RenderQueueCompleted;
 
-                _thumbnailFontBrush = renderCanvas.FindResource("CMSForegroundBrush") as Brush;
-                _thumbnailFillBrush = renderCanvas.FindResource("CMSPopupBorderBrush") as Brush;
-                _thumbnailStrokeBrush = renderCanvas.FindResource("CMSForegroundBrush") as Brush;
+                _thumbnailFontBrush = _renderCanvas.FindResource("CMSForegroundBrush") as Brush;
+                _thumbnailFillBrush = _renderCanvas.FindResource("CMSPopupBorderBrush") as Brush;
+                _thumbnailStrokeBrush = _renderCanvas.FindResource("CMSForegroundBrush") as Brush;
             }
             else
                 throw new Exception("OSCanvasRenderer ctor: the canvas container must contain a Canvas element");
@@ -92,8 +92,8 @@ namespace OpenSilverPdfViewer.Renderer
             transform.Children.Add(new TranslateTransform() { X = pagePosition.X, Y = pagePosition.Y });
             image.RenderTransform = transform;
 
-            renderCanvas.Children.Clear();
-            renderCanvas.Children.Add(image);
+            _renderCanvas.Children.Clear();
+            _renderCanvas.Children.Add(image);
 
             return RenderPageNumber;
         }
@@ -105,7 +105,7 @@ namespace OpenSilverPdfViewer.Renderer
             // Re-position any existing items in the viewport if the layout has changed
             intersectList.ForEach(rect => 
             {
-                var thumbnail = renderCanvas.Children.FirstOrDefault(child => child is Grid grid && (int)grid.Tag == rect.Id);
+                var thumbnail = _renderCanvas.Children.FirstOrDefault(child => child is Grid grid && (int)grid.Tag == rect.Id);
                 if (thumbnail != null)
                 {
                     thumbnail.SetValue(Canvas.LeftProperty, rect.X);
@@ -114,7 +114,7 @@ namespace OpenSilverPdfViewer.Renderer
             });
             
             // Get a list of page image ids that are currently rendered in the viewport
-            var renderedIds = renderCanvas.Children
+            var renderedIds = _renderCanvas.Children
                 .Where(child => child is Grid)
                 .Cast<Grid>()
                 .Select(pageElem => (int)pageElem.Tag);
@@ -124,13 +124,14 @@ namespace OpenSilverPdfViewer.Renderer
                 .Except(intersectList.Select(rect => rect.Id))
                 .ForEach(id => {
                     RenderQueue.DequeueItem(id);
-                    renderCanvas.Children.Remove(renderCanvas.Children.FirstOrDefault(child => child is Grid grid && (int)grid.Tag == id));
+                    _renderCanvas.Children.Remove(_renderCanvas.Children.FirstOrDefault(child => child is Grid grid && (int)grid.Tag == id));
                 });
 
             // Get a list of ids from the intersection list that are NOT currently rendered in the viewport
             var addIds = intersectList
                 .Select(rect => rect.Id)
-                .Except(renderedIds).ToList();
+                .Except(renderedIds)
+                .ToList();
 
             // Return if there's nothing new to render
             if (addIds.Count == 0) return;
@@ -139,20 +140,10 @@ namespace OpenSilverPdfViewer.Renderer
             addIds
                 .Select(id => intersectList.FirstOrDefault(item => item.Id == id))
                 .Where(rect => rect != null)
-                .ForEach(rect => renderCanvas.Children.Add(CreateThumbnail(rect)));
+                .ForEach(rect => _renderCanvas.Children.Add(CreateThumbnail(rect)));
         }
         private Grid CreateThumbnail(LayoutRect rect)
         {
-            // var transform = new TransformGroup();
-
-            var mirror = new ScaleTransform()
-            {
-                CenterX = rect.Width / 2,
-                CenterY = rect.Height / 2,
-                ScaleX = -1,
-                ScaleY = 1
-            };
-
             var pageRect = new Grid
             {
                 Width = rect.Width,
@@ -203,7 +194,7 @@ namespace OpenSilverPdfViewer.Renderer
         // The RenderQueue invokes this when an image thumbnail completes rendering
         private void RenderWorkerCallback(int pageNumber, Image image, bool _)
         {
-            if (image != null && renderCanvas.Children.FirstOrDefault(elem => elem is Grid grid && (int)grid.Tag == pageNumber) is Grid pageThumbnail)
+            if (image != null && _renderCanvas.Children.FirstOrDefault(elem => elem is Grid grid && (int)grid.Tag == pageNumber) is Grid pageThumbnail)
             {
                 // This test should always pass since the cache shouldn't ever contain the image here
                 // as CreateThumbnail shouldn't be queueing items if they've been previously cached
@@ -218,9 +209,11 @@ namespace OpenSilverPdfViewer.Renderer
                 }
             }
         }
+
+        // The RenderQueue invokes this when all images in the queue have completed rendering
         private void RenderQueueCompleted()
         {
-            var placeHolders = renderCanvas.Children
+            var placeHolders = _renderCanvas.Children
                 .Where(child => child is Grid grid && grid.Children[0] is Border border && border.Child is TextBlock)
                 .Cast<Grid>()
                 .ToList();
@@ -271,14 +264,14 @@ namespace OpenSilverPdfViewer.Renderer
             _scrollPosition.X = scrollX;
             _scrollPosition.Y = scrollY;
 
-            TranslateTransform translate = new TranslateTransform { X = -_scrollPosition.X, Y = -_scrollPosition.Y };
+            var translate = new TranslateTransform { X = -_scrollPosition.X, Y = -_scrollPosition.Y };
 
             if (ViewMode == ViewModeType.ThumbnailView)
             {
                 if (ViewportItemsChanged)
                     RenderThumbnails();
 
-                renderCanvas.Children
+                _renderCanvas.Children
                     .Where(child => child is Grid)
                     .ForEach(grid => grid.RenderTransform = translate);
             }
@@ -294,7 +287,7 @@ namespace OpenSilverPdfViewer.Renderer
         }
         public override Size GetViewportSize()
         {
-            return new Size(renderCanvas.ActualWidth, renderCanvas.ActualHeight);
+            return new Size(_renderCanvas.ActualWidth, _renderCanvas.ActualHeight);
         }
         public override Size GetLayoutSize()
         {
@@ -311,7 +304,7 @@ namespace OpenSilverPdfViewer.Renderer
         }
         public override void ClearViewport()
         {
-            renderCanvas.Children.Clear();
+            _renderCanvas.Children.Clear();
         }
         public override void Reset()
         {

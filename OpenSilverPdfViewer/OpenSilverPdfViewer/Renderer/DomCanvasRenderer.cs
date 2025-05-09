@@ -7,11 +7,11 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 using OpenSilverPdfViewer.Utility;
-using System.Windows.Controls;
 using CSHTML5.Native.Html.Controls;
 
 namespace OpenSilverPdfViewer.Renderer
@@ -20,7 +20,7 @@ namespace OpenSilverPdfViewer.Renderer
     {
         #region Fields / Properties
 
-        private readonly string viewCanvasId;
+        private readonly string _viewCanvasId;
         private readonly Dictionary<int, JSImageReference> _pageImageCache = new Dictionary<int, JSImageReference>();
         private List<int> _renderedIdList = new List<int>();
         private readonly Debouncer _thumbnailTimer = new Debouncer(50);
@@ -55,8 +55,8 @@ namespace OpenSilverPdfViewer.Renderer
                     throw new Exception("DomCanvasRenderer ctor: the HTMLPresenter html element must be a canvas element");
 
                 var match = Regex.Match(domElement, "id=\"([^\"]+)\"");
-                viewCanvasId = match.Success ? match.Groups[1].Value : string.Empty;
-                if (string.IsNullOrEmpty(viewCanvasId))
+                _viewCanvasId = match.Success ? match.Groups[1].Value : string.Empty;
+                if (string.IsNullOrEmpty(_viewCanvasId))
                     throw new Exception("DomCanvasRenderer ctor: the HTMLPresenter html element must have a valid id");
 
                 RenderQueue = new RenderQueue<JSImageReference>(RenderWorkerCallback);
@@ -72,7 +72,7 @@ namespace OpenSilverPdfViewer.Renderer
 
         protected override async Task<int> RenderCurrentPage()
         {
-            var pageNumber =  await PdfJs.RenderPageToViewportAsync(RenderPageNumber, (int)_renderDPI, RenderZoomLevel, viewCanvasId);
+            var pageNumber =  await PdfJs.RenderPageToViewportAsync(RenderPageNumber, (int)_renderDPI, RenderZoomLevel, _viewCanvasId);
 
             if (!_pageImageCache.ContainsKey(pageNumber))
                 _pageImageCache.Add(pageNumber, new JSImageReference(pageNumber, CacheStatus.Cached));
@@ -112,7 +112,7 @@ namespace OpenSilverPdfViewer.Renderer
             foreach (var rect in renderRectList)
             {
                 // This will render a placeholder or the actual page image thumbnail if cached
-                PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPosition.X, rect.Y - _scrollPosition.Y, rect.Width, rect.Height, viewCanvasId);
+                PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPosition.X, rect.Y - _scrollPosition.Y, rect.Width, rect.Height, _viewCanvasId);
 
                 // Queue the item for rendering if not previously cached
                 if (_pageImageCache.ContainsKey(rect.Id) == false)
@@ -136,11 +136,13 @@ namespace OpenSilverPdfViewer.Renderer
                     {
                         // Replace the text placeholder with the rendered page image
                         var rect = LayoutRectList.Single(rc => rc.Id == pageNumber);
-                        PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPosition.X, rect.Y - _scrollPosition.Y, rect.Width, rect.Height, viewCanvasId);
+                        PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPosition.X, rect.Y - _scrollPosition.Y, rect.Width, rect.Height, _viewCanvasId);
                     }
                 }
             }
         }
+
+        // The RenderQueue invokes this when the entire queue has completed rendering
         private void RenderQueueCompleted()
         {
             var placeHolderArray = new int[_renderedIdList.Count];
@@ -158,7 +160,7 @@ namespace OpenSilverPdfViewer.Renderer
                     if (image.Status != CacheStatus.Exists)
                     {
                         var rect = LayoutRectList.Single(rc => rc.Id == placeHolderId);
-                        PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPosition.X, rect.Y - _scrollPosition.Y, rect.Width, rect.Height, viewCanvasId);
+                        PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPosition.X, rect.Y - _scrollPosition.Y, rect.Width, rect.Height, _viewCanvasId);
                         image.Status = CacheStatus.Exists;
                     }
                 }
@@ -188,17 +190,17 @@ namespace OpenSilverPdfViewer.Renderer
                     var renderRectList = LayoutRectList.Where(rect => _renderedIdList.Contains(rect.Id));
                     ClearViewport();
                     foreach (var rect in renderRectList)
-                        PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPosition.X, rect.Y - _scrollPosition.Y, rect.Width, rect.Height, viewCanvasId);
+                        PdfJs.RenderThumbnailToViewport(rect.Id, rect.X - _scrollPosition.X, rect.Y - _scrollPosition.Y, rect.Width, rect.Height, _viewCanvasId);
                 }
             }
             else
             {
-                PdfJs.ScrollViewportImage(RenderPageNumber, viewCanvasId, RenderZoomLevel, (int)_scrollPosition.X, (int)_scrollPosition.Y);
+                PdfJs.ScrollViewportImage(RenderPageNumber, _viewCanvasId, RenderZoomLevel, (int)_scrollPosition.X, (int)_scrollPosition.Y);
             }
         }
         public override Size GetViewportSize()
         {
-            return PdfJs.GetViewportSize(viewCanvasId);
+            return PdfJs.GetViewportSize(_viewCanvasId);
         }
         public override Size GetLayoutSize()
         {
@@ -212,7 +214,7 @@ namespace OpenSilverPdfViewer.Renderer
         }
         public override void ClearViewport()
         {
-            PdfJs.ClearViewport(viewCanvasId);
+            PdfJs.ClearViewport(_viewCanvasId);
         }
         public override void Reset()
         {
