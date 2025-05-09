@@ -145,9 +145,7 @@ namespace OpenSilverPdfViewer.Renderer
         // The RenderQueue invokes this when the entire queue has completed rendering
         private void RenderQueueCompleted()
         {
-            var placeHolderArray = new int[_renderedIdList.Count];
-            _renderedIdList.CopyTo(placeHolderArray);
-            var placeHolders = placeHolderArray.ToList();
+            var placeHolders = new List<int>(_renderedIdList);
 
             _thumbnailTimer.OnSettled = () =>
             {
