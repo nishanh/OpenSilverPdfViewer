@@ -122,6 +122,7 @@ namespace OpenSilverPdfViewer.Renderer
             // Remove all page image elements that do not exist in the current intersection list from the viewport
             renderedIds
                 .Except(intersectList.Select(rect => rect.Id))
+                .ToList()
                 .ForEach(id => {
                     RenderQueue.DequeueItem(id);
                     _renderCanvas.Children.Remove(_renderCanvas.Children.FirstOrDefault(child => child is Grid grid && (int)grid.Tag == id));

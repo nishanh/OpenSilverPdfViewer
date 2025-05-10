@@ -141,20 +141,22 @@ namespace OpenSilverPdfViewer.Renderer
             var worker = sender as BackgroundWorker;
             if (!worker.CancellationPending)
             {
-                if (typeof(T) == typeof(Image))
+                switch (typeof(T).Name)
                 {
-                    var task = PdfJs.GetPdfPageImageAsync(PageNumber, _scaleFactor);
-                    e.Result = task;
-                }
-                else if (typeof(T) == typeof(BlobElement))
-                {
-                    var task = PdfJs.GetPdfPageBlobElementAsync(PageNumber, _scaleFactor);
-                    e.Result = task;
-                }
-                else if (typeof(T) == typeof(JSImageReference))
-                {
-                    var task = PdfJs.RenderThumbnailToCacheAsync(PageNumber, _scaleFactor);
-                    e.Result = task;
+                    case nameof(Image):
+                        e.Result = PdfJs.GetPdfPageImageAsync(PageNumber, _scaleFactor);
+                        break;
+
+                    case nameof(BlobElement):
+                        e.Result = PdfJs.GetPdfPageBlobElementAsync(PageNumber, _scaleFactor);
+                        break;
+
+                    case nameof(JSImageReference):
+                        e.Result = PdfJs.RenderThumbnailToCacheAsync(PageNumber, _scaleFactor);
+                        break;
+
+                    default:
+                        throw new NotSupportedException($"Type {typeof(T).Name} is not supported.");
                 }
             }
             else
