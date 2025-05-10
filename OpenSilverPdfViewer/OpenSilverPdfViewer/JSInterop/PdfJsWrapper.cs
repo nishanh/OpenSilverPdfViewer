@@ -26,6 +26,14 @@ namespace OpenSilverPdfViewer.JSInterop
         public string Version { get; private set; }
 
         #endregion Fields / Properties
+        #region Initialization
+
+        private PdfJsWrapper()
+        {
+            Version = string.Empty;
+        }
+
+        #endregion Initialization
         #region Asynchronous Tasks
 
         public async Task InitAsync()

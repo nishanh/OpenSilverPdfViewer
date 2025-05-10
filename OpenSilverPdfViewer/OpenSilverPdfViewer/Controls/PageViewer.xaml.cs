@@ -26,10 +26,14 @@ namespace OpenSilverPdfViewer.Controls
         #region Fields / Properties
 
         private bool _rulersOn = false;
+        private bool _isDragging = false;
+        private Point _dragStartPoint;
+
         public Grid AnimatingThumbnail { get; private set; }
 
         private IRenderStrategy renderStrategy;
-        private Debouncer WheelDebouncer { get; set; } = new Debouncer(100);
+        private Debouncer WheelDebouncer { get; } = new Debouncer(100);
+        private Debouncer DoubleClickDetector { get; } = new Debouncer(200);
         private Storyboard ThumbnailStoryboard { get; set; }
 
         private ViewModeType _viewMode = ViewModeType.PageView;
@@ -418,6 +422,49 @@ namespace OpenSilverPdfViewer.Controls
         private async void Preview_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             await RenderView();
+        }
+        private void Preview_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (IsFitToView) return;
+
+            _isDragging = true;
+            _dragStartPoint = e.GetPosition(previewGrid);
+        }
+        private void Preview_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_isDragging)
+            {
+                var mousePos = e.GetPosition(previewGrid);
+                var deltaX = mousePos.X - _dragStartPoint.X;
+                var deltaY = mousePos.Y - _dragStartPoint.Y;
+                _dragStartPoint = mousePos;
+                pageScrollBarHorz.Value = Math.Max(0, Math.Min(pageScrollBarHorz.Maximum, pageScrollBarHorz.Value - deltaX));
+                pageScrollBarVert.Value = Math.Max(0, Math.Min(pageScrollBarVert.Maximum, pageScrollBarVert.Value - deltaY));
+                PageScrollBars_Scroll(this, null);
+            }
+        }
+        private void Preview_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            _isDragging = false;
+
+            if (ViewMode != ViewModeType.ThumbnailView) return;
+
+            if (!DoubleClickDetector.IsSettled)
+            {
+                var mousePos = e.GetPosition(previewGrid);
+                var pageNumber = renderStrategy.GetViewportPageAtPoint(mousePos);
+                if (pageNumber > 0)
+                {
+                    PreviewPage = pageNumber;
+                    ViewMode = ViewModeType.PageView;
+                }
+            }
+            else 
+                DoubleClickDetector.Reset();
+        }
+        private void Preview_MouseLeave(object sender, MouseEventArgs e)
+        {
+            _isDragging = false;
         }
         public void RulerToggle(object sender, RoutedEventArgs e)
         {

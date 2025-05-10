@@ -13,7 +13,6 @@ using System.Collections.Generic;
 
 using OpenSilverPdfViewer.Utility;
 using CSHTML5.Native.Html.Controls;
-using System.Windows.Controls.Theming;
 
 namespace OpenSilverPdfViewer.Renderer
 {

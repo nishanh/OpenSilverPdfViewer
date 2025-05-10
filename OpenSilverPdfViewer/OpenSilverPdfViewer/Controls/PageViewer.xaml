@@ -82,6 +82,10 @@
                     Grid.Row="1" 
                     Grid.Column="1" 
                     SizeChanged="Preview_SizeChanged"
+                    MouseLeftButtonUp="Preview_MouseLeftButtonUp"
+                    MouseLeftButtonDown="Preview_MouseLeftButtonDown"
+                    MouseLeave="Preview_MouseLeave"
+                    MouseMove="Preview_MouseMove"
                     Margin="10,10,10,3">
                     <native:HtmlPresenter>
                         <canvas id="pageViewCanvas"/>

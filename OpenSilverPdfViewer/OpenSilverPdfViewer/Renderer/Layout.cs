@@ -29,6 +29,10 @@ namespace OpenSilverPdfViewer.Renderer
         {
             return ((Rect)this).IntersectsWith(rect);
         }
+        public bool Contains(Point point)
+        {
+            return ((Rect)this).Contains(point);
+        }
         public static implicit operator Rect(LayoutRect layoutRect)
         {
             return new Rect { X = layoutRect.X, Y = layoutRect.Y, Width = layoutRect.Width, Height = layoutRect.Height };

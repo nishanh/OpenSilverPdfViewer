@@ -32,6 +32,7 @@ namespace OpenSilverPdfViewer.Renderer
         void ClearViewport();
         void Reset();
         Task SetPageSizeRunList();
+        int GetViewportPageAtPoint(Point point);
         void SetThumbnailUpdateType(ThumbnailUpdateType thumbnailUpdateType);
 
         event RenderCompleteEventHandler RenderCompleteEvent;
@@ -164,6 +165,13 @@ namespace OpenSilverPdfViewer.Renderer
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             PageSizeRunList = JsonSerializer.Deserialize<List<PageSizeRun>>(json, options);
         }
+        public int GetViewportPageAtPoint(Point point)
+        {
+            var ptScrolled = new Point(point.X + _scrollPosition.X, point.Y + _scrollPosition.Y);
+            var pageRect = LayoutRectList.FirstOrDefault(rect => rect.Contains(ptScrolled));
+            return pageRect != null ? pageRect.Id : 0;
+        }
+
         public abstract void ScrollViewport(int scrollX, int scrollY);
         public abstract Size GetViewportSize();
         public abstract Size GetLayoutSize();
