@@ -336,7 +336,10 @@ namespace OpenSilverPdfViewer.ViewModels
             else
             {
                 filename = sourceOption == "sample1" ? "POH_Calidus_4.0_EN.pdf" : "compressed.tracemonkey-pldi-09.pdf";
+
+                // Swap when publishing
                 pageCount = await PdfJs.LoadPdfFileAsync($@"Data\{filename}");
+                //pageCount = await PdfJs.LoadPdfFileAsync($@"PdfViewer\Data\{filename}"); 
             }
             Filename = filename; // setting this property triggers the pageviewer, so set it *after* the document is loaded
             StatusText = $"PDF - {Filename} loaded with {pageCount} pages";

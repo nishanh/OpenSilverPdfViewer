@@ -387,11 +387,12 @@ async function getPageSizeRunListAsync() {
 async function loadPdfFileAsync(pdfFileName) {
     const loadingTask = pdfjsLib.getDocument(pdfFileName);
 
+    /*
     loadingTask.onProgress = (progressData) => {
         var percentLoaded = (progressData.loaded / progressData.total) * 100;
         console.log(`status: ${percentLoaded}% loaded `);
     };
-
+    */
     try {
         const pdf = await loadingTask.promise;
         this.pdfDocument = pdf; // Cache the PDF object
@@ -409,11 +410,12 @@ async function loadPdfStreamAsync(pdfFileStream) {
     const bytes = Uint8Array.from(binaryString, char => char.charCodeAt(0));
     const loadingTask = pdfjsLib.getDocument(bytes);
 
+    /*
     loadingTask.onProgress = (progressData) => {
         var percentLoaded = (progressData.loaded / progressData.total) * 100;
         console.log(`status: ${percentLoaded}% loaded `);
     };
-
+    */
     try {
         const pdf = await loadingTask.promise;
         this.pdfDocument = pdf; // Cache the PDF object

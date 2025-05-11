@@ -137,6 +137,7 @@ namespace OpenSilverPdfViewer.Controls
 
             var metric = UnitMeasure == UnitMeasure.Metric;
             const int baselineOffset = 2; // this should be computed for the font in use
+            const double halfToneOffset = 0.5; // Supresses halftoning effects but makes tick-mark placement at certain intervals slightly inaccurate
 
             // Tick mark length constants
             const int wholeTickLength = 12;
@@ -189,113 +190,65 @@ namespace OpenSilverPdfViewer.Controls
             // that the left-edge of the page is at 2.125". Therefore, the first tick mark that can be
             // drawn is the fractional component of .125". Convert that result back to device units (pixels)
             // to get the first X or Y position to draw the initial tick mark at.
+            var origin = pagePosition * (LogicalScale * unitConvert);
+            var start = origin % 1; // get fractional part
+            var i = -(int)(start / resRuler / unitConvert);
+            var devStart = start / (LogicalScale * unitConvert);
 
-            if (Orientation == Orientation.Horizontal)
+            var tickPos = 0d;
+            var limit = Orientation == Orientation.Horizontal ? rulerCanvas.ActualWidth : rulerCanvas.ActualHeight;
+
+            while (tickPos < limit)
             {
-                var originX = pagePosition * (LogicalScale * unitConvert);
-                var startX = originX % 1; // get fractional part
-                var i = -(int)(startX / resRuler / unitConvert);
-                var devStartX = startX / (LogicalScale * unitConvert);
-
-                // Draw horizontal ruler
-                var tickPos = 0d;
-                while (tickPos < rulerCanvas.ActualWidth)
+                // Compute tick mark position in device units
+                tickPos = Math.Round(devStart + ((i * resRuler) / LogicalScale), 0) + halfToneOffset;
+                if (tickPos >= 0)
                 {
-                    // Compute tick mark X position in device units
-                    tickPos = Math.Round(devStartX + ((i * resRuler) / LogicalScale), 0);
-                    if (tickPos >= 0)
+                    var tickLength = sixteenthTick;
+                    if (i % wholeUnitInterval == 0) tickLength = wholeTickLength;
+                    else if (metric) tickLength = millimeterTick;
+                    else if (i % (wholeUnitInterval / 2) == 0) tickLength = halfTick;
+                    else if (i % (wholeUnitInterval / 4) == 0) tickLength = quarterTick;
+                    else if (i % (wholeUnitInterval / 8) == 0) tickLength = eighthTick;
+
+                    // Draw the ruler tick mark
+                    rulerCanvas.Children.Add(new Line
                     {
-                        var tickLength = sixteenthTick;
-                        if (i % wholeUnitInterval == 0) tickLength = wholeTickLength;
-                        else if (metric) tickLength = millimeterTick;
-                        else if (i % (wholeUnitInterval / 2) == 0) tickLength = halfTick;
-                        else if (i % (wholeUnitInterval / 4) == 0) tickLength = quarterTick;
-                        else if (i % (wholeUnitInterval / 8) == 0) tickLength = eighthTick;
+                        X1 = Orientation == Orientation.Horizontal ? tickPos : rulerCanvas.ActualWidth,
+                        X2 = Orientation == Orientation.Horizontal ? tickPos : rulerCanvas.ActualWidth - tickLength,
+                        Y1 = Orientation == Orientation.Horizontal ? rulerCanvas.ActualHeight : tickPos,
+                        Y2 = Orientation == Orientation.Horizontal ? rulerCanvas.ActualHeight - tickLength : tickPos,
+                        Stroke = Foreground,
+                        StrokeThickness = 1
+                    });
 
-                        // Draw the ruler tick mark
-                        rulerCanvas.Children.Add(new Line
-                        {
-                            X1 = tickPos,
-                            X2 = tickPos,
-                            Y1 = rulerCanvas.ActualHeight,
-                            Y2 = rulerCanvas.ActualHeight - tickLength,
-                            Stroke = Foreground,
-                            StrokeThickness = 1
-                        });
-
-                        // Draw the unit-value text
-                        if (i % wholeUnitInterval == 0)
-                        {
-                            var unitVal = (i / wholeUnitInterval) - (int)originX;
-                            var rulerVal = new TextBlock
-                            {
-                                Foreground = Foreground,
-                                FontFamily = FontFamily,
-                                FontSize = FontSize,
-                                Text = unitVal.ToString(CultureInfo.InvariantCulture)
-                            };
-                            rulerVal.SetValue(Canvas.TopProperty, Size - rulerVal.ActualHeight - tickLength); // natural font baseline offset provides a vertical gap between tick and text
-                            rulerVal.SetValue(Canvas.LeftProperty, tickPos - (rulerVal.ActualWidth / 2));
-                            rulerCanvas.Children.Add(rulerVal);
-                        }
-                    }
-                    i++;
-                }
-            }
-            else
-            {
-                var originY = pagePosition * (LogicalScale * unitConvert);
-                var startY = originY % 1; // get fractional part
-                var i = -(int)(startY / resRuler / unitConvert);
-                var devStartY = startY / (LogicalScale * unitConvert);
-
-                // Draw vertical ruler
-                var tickPos = 0d;
-                while (tickPos < rulerCanvas.ActualHeight)
-                {
-                    // Compute tick mark Y position in device units
-                    tickPos = Math.Round(devStartY + ((i * resRuler) / LogicalScale), 0);
-                    if (tickPos >= 0)
+                    // Draw the unit-value text
+                    if (i % wholeUnitInterval == 0)
                     {
-                        var tickLength = sixteenthTick;
-                        if (i % wholeUnitInterval == 0) tickLength = wholeTickLength;
-                        else if (metric) tickLength = millimeterTick;
-                        else if (i % (wholeUnitInterval / 2) == 0) tickLength = halfTick;
-                        else if (i % (wholeUnitInterval / 4) == 0) tickLength = quarterTick;
-                        else if (i % (wholeUnitInterval / 8) == 0) tickLength = eighthTick;
-
-                        // Draw the ruler tick mark
-                        rulerCanvas.Children.Add(new Line
+                        var unitVal = (i / wholeUnitInterval) - (int)origin;
+                        var rulerVal = new TextBlock
                         {
-                            Y1 = tickPos,
-                            Y2 = tickPos,
-                            X1 = rulerCanvas.ActualWidth,
-                            X2 = rulerCanvas.ActualWidth - tickLength,
-                            Stroke = Foreground,
-                            StrokeThickness = 1
-                        });
+                            Foreground = Foreground,
+                            FontFamily = FontFamily,
+                            FontSize = FontSize,
+                            Text = unitVal.ToString(CultureInfo.InvariantCulture)
+                        };
+                        var top = Orientation == Orientation.Horizontal ?
+                            Size - rulerVal.ActualHeight - tickLength :
+                            tickPos - (rulerVal.ActualHeight / 2) - baselineOffset;
+                        var left = Orientation == Orientation.Horizontal ?
+                            tickPos - (rulerVal.ActualWidth / 2) :
+                            Size - rulerVal.ActualWidth - tickLength - 2; // fudge factor of 2px to provide a gap between tick and text
 
-                        // Draw the unit-value text
-                        if (i % wholeUnitInterval == 0)
-                        {
-                            var unitVal = (i / wholeUnitInterval) - (int)originY;
-                            var rulerVal = new TextBlock
-                            {
-                                Foreground = Foreground,
-                                FontFamily = FontFamily,
-                                FontSize = FontSize,
-                                Text = unitVal.ToString(CultureInfo.InvariantCulture)
-                            };
-                            rulerVal.SetValue(Canvas.LeftProperty, Size - rulerVal.ActualWidth - tickLength - 2); // fudge factor of 2px to provide a gap between tick and text
-                            rulerVal.SetValue(Canvas.TopProperty, tickPos - (rulerVal.ActualHeight / 2) - baselineOffset);
-                            rulerCanvas.Children.Add(rulerVal);
-                        }
+                        rulerVal.SetValue(Canvas.TopProperty, top);
+                        rulerVal.SetValue(Canvas.LeftProperty, left);
+                        rulerCanvas.Children.Add(rulerVal);
                     }
-                    i++;
                 }
+                i++;
             }
         }
-        private void Ruler_SizeChangd(object sender, RoutedEventArgs e)
+        private void Ruler_SizeChanged(object sender, RoutedEventArgs e)
         {
             DrawRuler();
         }

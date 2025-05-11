@@ -131,30 +131,6 @@ namespace OpenSilverPdfViewer.JSInterop
 
             return element;
         }
-        public async Task<BlobElement> GetPdfPageBlobElementAsync1(int pageNumber, double scaleFactor)
-        {
-            var result = await Task.Run(async () =>
-            {
-                await InitAsync();
-
-                var blobUrl = await JSAsyncTaskRunner.RunJavaScriptAsync<string>("renderPageToBlob", pageNumber, scaleFactor);
-                var sizeHeader = blobUrl.Substring(0, blobUrl.IndexOf(";"));
-                var width = double.Parse(sizeHeader.Substring(0, sizeHeader.IndexOf(":")));
-                var height = double.Parse(sizeHeader.Substring(sizeHeader.IndexOf(":") + 1));
-                blobUrl = blobUrl.Substring(blobUrl.IndexOf(";") + 1); // strip size header
-
-                var element = new BlobElement
-                {
-                    Source = blobUrl,
-                    Width = width,
-                    Height = height
-                };
-                await element.LoadBlob();
-
-                return element;
-            });
-            return result;
-        }
         public async Task<string> GetPdfPageSizeRunList()
         {
             await InitAsync();

@@ -311,9 +311,9 @@ namespace OpenSilverPdfViewer.Controls
                 var thumbBorder = ctrl.AnimatingThumbnail.Children[0] as Border;
 
                 // Swap out the placeholder text with the page image at the ~90deg point in the animation
-                if (newValue > 90 && thumbBorder.Child is TextBlock && thumbBorder.Tag is Image image)
+                if (newValue >= 90 && thumbBorder.Child is TextBlock && thumbBorder.Tag is Image image)
                 {
-                    // Need a mirror transform to "undo" the rotate effect during the animation
+                    // Need a mirror transform to "undo" the rotate effect on the image during the animation
                     image.RenderTransform = new ScaleTransform { CenterX = (thumbBorder.Width - 1) / 2, ScaleX = -1, ScaleY = 1 };
                     thumbBorder.Child = image;
                 }
