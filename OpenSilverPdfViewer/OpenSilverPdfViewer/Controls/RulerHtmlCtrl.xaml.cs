@@ -234,7 +234,7 @@ namespace OpenSilverPdfViewer.Controls
                         var metrics = PdfJsWrapper.Instance.GetTextMetrics(valueText, $"bold {FontSize}px {FontFamily.Source}");
                         var textHeight = metrics.ActualAscent + metrics.ActualDescent;
 
-                        var rulerVal = new TextElement
+                        rulerCanvas.Children.Add(new TextElement
                         {
                             FillColor = tickColor,
                             Font = FontFamily.Source,
@@ -246,8 +246,7 @@ namespace OpenSilverPdfViewer.Controls
                             Y = Orientation == Orientation.Horizontal ? 
                                 Size - textHeight - tickLength - metrics.FontDescent - baselineOffset : 
                                 tickPos - ((metrics.ActualAscent + textHeight) / 2)
-                        };
-                        rulerCanvas.Children.Add(rulerVal);
+                        });
                     }
                 }
                 i++;

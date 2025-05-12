@@ -29,12 +29,10 @@ namespace OpenSilverPdfViewer.Controls
         private bool _isDragging = false;
         private Point _dragStartPoint;
 
-        public Grid AnimatingThumbnail { get; private set; }
-
-        private IRenderStrategy renderStrategy;
-        private Debouncer WheelDebouncer { get; } = new Debouncer(100);
-        private Debouncer DoubleClickDetector { get; } = new Debouncer(200);
-        private Storyboard ThumbnailStoryboard { get; set; }
+        private IRenderStrategy _renderStrategy;
+        private readonly Debouncer _wheelDebouncer = new Debouncer(100);
+        private readonly Debouncer _doubleClickDetector = new Debouncer(200);
+        private Storyboard _thumbnailStoryboard;
 
         private ViewModeType _viewMode = ViewModeType.PageView;
         public ViewModeType ViewMode
@@ -51,8 +49,11 @@ namespace OpenSilverPdfViewer.Controls
             }
         }
 
+        public Grid AnimatingThumbnail { get; private set; }
         public bool CanZoom => PreviewPage > 0 && ViewMode == ViewModeType.PageView; 
         public bool IsFitToView => ZoomLevel == 0 && ViewMode == ViewModeType.PageView;
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private double _pixelsToInches = 1 / 72d;
         public double PixelsToInches
@@ -165,13 +166,11 @@ namespace OpenSilverPdfViewer.Controls
             get => (double)GetValue(ThumbnailAngleProperty);
             set => SetValue(ThumbnailAngleProperty, value);
         }
-
         public bool ThumbnailAnimation
         {
             get => (bool)GetValue(ThumbnailAnimationProperty);
             set => SetValue(ThumbnailAnimationProperty, value);
         }
-
         public string Filename
         {
             get => (string)GetValue(FilenameProperty);
@@ -224,9 +223,9 @@ namespace OpenSilverPdfViewer.Controls
         private static async void OnFilenameChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
-            ctrl.renderStrategy.ThumbnailSize = ctrl.ThumbnailSize;
-            ctrl.renderStrategy.Reset();
-            await ctrl.renderStrategy.SetPageSizeRunList();
+            ctrl._renderStrategy.ThumbnailSize = ctrl.ThumbnailSize;
+            ctrl._renderStrategy.Reset();
+            await ctrl._renderStrategy.SetPageSizeRunList();
 
             // HACK: Find a better way to force this binding to update when a new document loads when on page 1
             if (ctrl.PreviewPage == 1) ctrl.PreviewPage = 0;
@@ -235,7 +234,7 @@ namespace OpenSilverPdfViewer.Controls
         private static async void OnPreviewPageChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
-            ctrl.renderStrategy.RenderPageNumber = (int)e.NewValue;
+            ctrl._renderStrategy.RenderPageNumber = (int)e.NewValue;
             ctrl.OnPropertyChanged(nameof(CanZoom));
             await ctrl.RenderView();
         }
@@ -246,7 +245,7 @@ namespace OpenSilverPdfViewer.Controls
         private static async void OnZoomLevelChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
-            ctrl.renderStrategy.RenderZoomLevel = (int)e.NewValue;
+            ctrl._renderStrategy.RenderZoomLevel = (int)e.NewValue;
             await ctrl.RenderView();
         }
         private static void OnZoomValueChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
@@ -259,21 +258,21 @@ namespace OpenSilverPdfViewer.Controls
             var renderMode = (RenderModeType)e.NewValue;
 
             // Reset and disconnect events from (soon to be) prior renderer
-            ctrl.renderStrategy.Reset();
-            ctrl.renderStrategy.RenderCompleteEvent -= ctrl.RenderStrategy_RenderCompleteEvent;
+            ctrl._renderStrategy.Reset();
+            ctrl._renderStrategy.RenderCompleteEvent -= ctrl.RenderStrategy_RenderCompleteEvent;
 
             // Create and initialize new renderer
-            ctrl.renderStrategy = RenderStrategyFactory.Create(renderMode, ctrl.previewGrid);
-            ctrl.renderStrategy.ThumbnailSize = ctrl.ThumbnailSize;
-            ctrl.renderStrategy.RenderPageNumber = ctrl.PreviewPage;
-            ctrl.renderStrategy.RenderZoomLevel = ctrl.ZoomLevel;
-            ctrl.renderStrategy.AnimateThumbnails = ctrl.ThumbnailAnimation;
-            ctrl.renderStrategy.SetThumbnailUpdateType(ctrl.ThumbnailUpdate);
-            ctrl.renderStrategy.RenderCompleteEvent += ctrl.RenderStrategy_RenderCompleteEvent;
+            ctrl._renderStrategy = RenderStrategyFactory.Create(renderMode, ctrl.previewGrid);
+            ctrl._renderStrategy.ThumbnailSize = ctrl.ThumbnailSize;
+            ctrl._renderStrategy.RenderPageNumber = ctrl.PreviewPage;
+            ctrl._renderStrategy.RenderZoomLevel = ctrl.ZoomLevel;
+            ctrl._renderStrategy.AnimateThumbnails = ctrl.ThumbnailAnimation;
+            ctrl._renderStrategy.SetThumbnailUpdateType(ctrl.ThumbnailUpdate);
+            ctrl._renderStrategy.RenderCompleteEvent += ctrl.RenderStrategy_RenderCompleteEvent;
 
             if (!string.IsNullOrEmpty(ctrl.Filename))
             {
-                await ctrl.renderStrategy.SetPageSizeRunList();
+                await ctrl._renderStrategy.SetPageSizeRunList();
                 await ctrl.RenderView();
             }
         }
@@ -285,19 +284,19 @@ namespace OpenSilverPdfViewer.Controls
         private static void OnThumbnailUpdateChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
-            ctrl.renderStrategy.SetThumbnailUpdateType((ThumbnailUpdateType)e.NewValue);
+            ctrl._renderStrategy.SetThumbnailUpdateType((ThumbnailUpdateType)e.NewValue);
         }
         private static async void OnThumbnailSizeChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
-            ctrl.renderStrategy.ThumbnailSize = (ThumbnailSize)e.NewValue;
-            ctrl.renderStrategy.Reset();
+            ctrl._renderStrategy.ThumbnailSize = (ThumbnailSize)e.NewValue;
+            ctrl._renderStrategy.Reset();
             await ctrl.RenderView();
         }
         private static void OnThumbnailAnimationChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = depObj as PageViewer;
-            ctrl.renderStrategy.AnimateThumbnails = (bool)e.NewValue;
+            ctrl._renderStrategy.AnimateThumbnails = (bool)e.NewValue;
         }
         private static void OnThumbnailAngleChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
@@ -327,16 +326,15 @@ namespace OpenSilverPdfViewer.Controls
         public PageViewer()
         {
             InitializeComponent();
-            renderStrategy = RenderStrategyFactory.Create(RenderMode, previewGrid);
+            _renderStrategy = RenderStrategyFactory.Create(RenderMode, previewGrid);
             PropertyChanged += OnAsyncPropertyChanged;
         }
         private async Task RenderView()
         {
             if (PreviewPage <= 0) return;
 
-            await renderStrategy.Render(ViewMode);
-            var displayScale = renderStrategy.GetDisplayScale() * 100d;
-            ZoomValue = Math.Round(displayScale, 0);
+            await _renderStrategy.Render(ViewMode);
+            ZoomValue = Math.Round(_renderStrategy.GetDisplayScale() * 100d, 0);
             UpdateScrollBars();
             UpdateRulers();
         }
@@ -345,11 +343,12 @@ namespace OpenSilverPdfViewer.Controls
             if (PreviewPage <= 0 || _rulersOn == false) 
                 return;
 
-            var pagePosition = renderStrategy.GetPagePosition();
+            PixelsToInches = _renderStrategy.GetPixelsToInchesConversion();
 
-            PixelsToInches = renderStrategy.GetPixelsToInchesConversion();
+            var pagePosition = _renderStrategy.GetPagePosition();
             PagePositionX = pagePosition.X + previewGrid.Margin.Left;
             PagePositionY = pagePosition.Y + previewGrid.Margin.Top;
+
             ScrollPosX = pageScrollBarHorz.Value;
             ScrollPosY = pageScrollBarVert.Value;
         }
@@ -361,9 +360,9 @@ namespace OpenSilverPdfViewer.Controls
                 pageScrollBarHorz.Maximum = pageScrollBarVert.Maximum = 0;
                 return; 
             }
-            var displayScale = renderStrategy.GetDisplayScale();
-            var viewportSize = renderStrategy.GetViewportSize();
-            var layoutSize = renderStrategy.GetLayoutSize();
+            var displayScale = _renderStrategy.GetDisplayScale();
+            var viewportSize = _renderStrategy.GetViewportSize();
+            var layoutSize = _renderStrategy.GetLayoutSize();
 
             var scaledLayoutSize = new Size(layoutSize.Width * displayScale, layoutSize.Height * displayScale);
             var scrollExtentX = Math.Max(0, scaledLayoutSize.Width - viewportSize.Width);
@@ -384,7 +383,7 @@ namespace OpenSilverPdfViewer.Controls
                 (pageScrollBarVert.Value > 0 || pageScrollBarHorz.Value > 0);
 
             if (reposition)
-                renderStrategy.ScrollViewport((int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
+                _renderStrategy.ScrollViewport((int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
         }
 
         #endregion Implementation
@@ -392,7 +391,7 @@ namespace OpenSilverPdfViewer.Controls
 
         private void PageScrollBars_Scroll(object sender, ScrollEventArgs e)
         {
-            renderStrategy.ScrollViewport((int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
+            _renderStrategy.ScrollViewport((int)pageScrollBarHorz.Value, (int)pageScrollBarVert.Value);
             UpdateRulers(); 
         }
         private void PageView_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -409,14 +408,14 @@ namespace OpenSilverPdfViewer.Controls
             else if (IsFitToView)
             {
                 // Filter out rapid changes
-                WheelDebouncer.OnSettled = () =>
+                _wheelDebouncer.OnSettled = () =>
                 {
                     if (e.Delta < 0)
                         PreviewPage = Math.Min(PreviewPage + 1, PageCount);
                     else
                         PreviewPage = Math.Max(PreviewPage - 1, 1);
                 };
-                WheelDebouncer.Reset();
+                _wheelDebouncer.Reset();
             }
         }
         private async void Preview_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -449,10 +448,10 @@ namespace OpenSilverPdfViewer.Controls
 
             if (ViewMode != ViewModeType.ThumbnailView) return;
 
-            if (!DoubleClickDetector.IsSettled)
+            if (!_doubleClickDetector.IsSettled)
             {
                 var mousePos = e.GetPosition(previewGrid);
-                var pageNumber = renderStrategy.GetViewportPageAtPoint(mousePos);
+                var pageNumber = _renderStrategy.GetViewportPageAtPoint(mousePos);
                 if (pageNumber > 0)
                 {
                     PreviewPage = pageNumber;
@@ -460,19 +459,19 @@ namespace OpenSilverPdfViewer.Controls
                 }
             }
             else 
-                DoubleClickDetector.Reset();
+                _doubleClickDetector.Reset();
         }
         private void Preview_MouseLeave(object sender, MouseEventArgs e)
         {
             _isDragging = false;
         }
-        public void RulerToggle(object sender, RoutedEventArgs e)
+        private void RulerToggle(object sender, RoutedEventArgs e)
         {
             var toggleButton = (ToggleButton)sender;
             _rulersOn = (bool)toggleButton.IsChecked;
             UpdateRulers();
         }
-        public void ViewModeBtn_Click(object sender, RoutedEventArgs e)
+        private void ViewModeBtn_Click(object sender, RoutedEventArgs e)
         {
             var toggleButton = (ToggleButton)sender;
             ViewMode = toggleButton.Name == "pageViewBtn" ? ViewModeType.PageView : ViewModeType.ThumbnailView;
@@ -484,11 +483,11 @@ namespace OpenSilverPdfViewer.Controls
         private void RenderStrategy_RenderCompleteEvent(object sender, RenderCompleteEventArgs e)
         {
             // Abort all animations if another request comes in while current animations are playing
-            if (ThumbnailStoryboard != null && ThumbnailStoryboard.GetCurrentState() == ClockState.Active)
+            if (_thumbnailStoryboard != null && _thumbnailStoryboard.GetCurrentState() == ClockState.Active)
             {
-                ThumbnailStoryboard.SkipToFill();
-                ThumbnailStoryboard.Stop();
-                ThumbnailStoryboard = null;
+                _thumbnailStoryboard.SkipToFill();
+                _thumbnailStoryboard.Stop();
+                _thumbnailStoryboard = null;
             }
             StartAnimationSequence(e.Thumbnails);
         }
@@ -506,21 +505,21 @@ namespace OpenSilverPdfViewer.Controls
                     StartAnimationSequence(thumbnails);
             }
 
-            ThumbnailStoryboard = new Storyboard();
+            _thumbnailStoryboard = new Storyboard();
             var animationTime = new Duration(TimeSpan.FromMilliseconds(200));
             var thumbAnimation = new DoubleAnimation() { Duration = animationTime, To = 180d, By = 1d, FillBehavior = FillBehavior.Stop };
             Storyboard.SetTarget(thumbAnimation, this);
             Storyboard.SetTargetProperty(thumbAnimation, new PropertyPath(ThumbnailAngleProperty));
-            ThumbnailStoryboard.Children.Add(thumbAnimation);
+            _thumbnailStoryboard.Children.Add(thumbAnimation);
 
-            ThumbnailStoryboard.Completed += (s, e) =>
+            _thumbnailStoryboard.Completed += (s, e) =>
             {
                 var border = AnimatingThumbnail.Children[0] as Border;
                 border.Child.RenderTransform = null;
                 if (border.Child is Image)
                     border.BorderThickness = new Thickness(0);
 
-                if (ThumbnailStoryboard != null)
+                if (_thumbnailStoryboard != null)
                     thumbnails.Remove(border.Parent as Grid);
                 else
                     thumbnails.Clear();
@@ -528,20 +527,19 @@ namespace OpenSilverPdfViewer.Controls
                 if (thumbnails.Count > 0)
                     StartAnimationSequence(thumbnails);
             };
-            ThumbnailStoryboard.Begin();
+            _thumbnailStoryboard.Begin();
         }
         private async void OnAsyncPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(ViewMode))
             {
-                renderStrategy.Reset();
-                renderStrategy.RenderPageNumber = PreviewPage;
-                renderStrategy.SetThumbnailUpdateType(ThumbnailUpdate);
+                _renderStrategy.Reset();
+                _renderStrategy.RenderPageNumber = PreviewPage;
+                _renderStrategy.SetThumbnailUpdateType(ThumbnailUpdate);
                 await RenderView();
                 UpdateRulers();
             }
         }
-        public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion Event Handlers
     }

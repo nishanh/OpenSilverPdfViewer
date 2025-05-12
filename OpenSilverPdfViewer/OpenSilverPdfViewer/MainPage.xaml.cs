@@ -13,8 +13,6 @@ namespace OpenSilverPdfViewer
 {
     public partial class MainPage : Page
     {
-        private MainPageViewModel ViewModel => (MainPageViewModel)DataContext;
-
         public MainPage()
         {
             InitializeComponent();
@@ -22,7 +20,8 @@ namespace OpenSilverPdfViewer
         private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
             await PdfJsWrapper.Instance.InitAsync();
-            ViewModel.StatusText = PdfJsWrapper.Instance.Version;
+            var viewModel = (MainPageViewModel)DataContext;
+            viewModel.StatusText = PdfJsWrapper.Instance.Version;
         }
     }
 }

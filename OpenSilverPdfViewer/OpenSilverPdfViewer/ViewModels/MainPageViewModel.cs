@@ -341,7 +341,7 @@ namespace OpenSilverPdfViewer.ViewModels
                 pageCount = await PdfJs.LoadPdfFileAsync($@"Data\{filename}");
                 //pageCount = await PdfJs.LoadPdfFileAsync($@"PdfViewer\Data\{filename}"); 
             }
-            Filename = filename; // setting this property triggers the pageviewer, so set it *after* the document is loaded
+            Filename = filename; // setting this property triggers the page-viewer, so set it *after* the document is loaded
             StatusText = $"PDF - {Filename} loaded with {pageCount} pages";
             PageCount = pageCount;
         }
